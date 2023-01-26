@@ -1,23 +1,19 @@
 import { h, Fragment } from 'preact'
-// import { message } from './Firebase'
-import { Logo } from './logo'
+import { AuthContext, useAuth } from './AuthProvider'
+import { Auth } from './Auth'
 
 export function App() {
-  // message({name: "yo yo yo"})
+  const { user, login, logout } = useAuth();
+
   return (
     <>
-      <Logo />
-      <p>Hello Vite + Preact!</p>
-      <p>
-        <a
-          class="link"
-          href="https://preactjs.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Preact
-        </a>
-      </p>
+    <AuthContext.Provider value={{
+      user: user,
+      login: login,
+      logout: logout,
+    }}>
+      <Auth />
+    </AuthContext.Provider>
     </>
   )
 }
