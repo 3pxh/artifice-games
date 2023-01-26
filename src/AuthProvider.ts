@@ -3,13 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { User, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail, signInAnonymously } from "@firebase/auth";
 import { auth } from './Firebase'
 
-export enum AuthType { "EmailLink", "Anonymous" };
-
-interface AuthContext {
-  user: User | null;
-  login: (t: AuthType, e?: string) => void,
-  logout: () => void,
-}
+export enum AuthType { "EmailLink", "Anonymous" }
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -32,7 +26,7 @@ export const useAuth = () => {
       }
       if (email) {
         signInWithEmailLink(auth, email, window.location.href)
-        .then((result) => {
+        .then(() => {
           window.localStorage.removeItem('emailForSignIn');
         })
         .catch((error) => {
@@ -84,9 +78,13 @@ export const useAuth = () => {
   return { user, login, logout };
 };
 
-export const AuthContext = createContext<AuthContext>({
+export const AuthContext = createContext<{
+  user: User | null;
+  login:(t: AuthType, e?: string) => void,
+  logout: () => void,
+}>({
   user: null,
-  login: (type: AuthType, e?: string) => {},
+  login: () => {},
   logout: () => {},
 });
 

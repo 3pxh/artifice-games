@@ -8,9 +8,9 @@ export function App() {
   return (
     <>
     <AuthContext.Provider value={{
-      user: user,
-      login: login,
-      logout: logout,
+      user,
+      login,
+      logout
     }}>
       <Auth />
     </AuthContext.Provider>
