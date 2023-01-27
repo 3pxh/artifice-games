@@ -29,7 +29,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       startPing: t,
       createDate: t,
       inQueue: true,
-      gameState: {},
+      gameState: {state: 0},
       players: {
         [original.user]: {state: 0}
       },

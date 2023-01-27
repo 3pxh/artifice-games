@@ -1,20 +1,24 @@
-import { h, Fragment } from "preact"
+import { h, Fragment } from "preact";
+import { useState } from "preact/hooks";
 import { AuthContext, useAuth } from "./AuthProvider"
-import { Auth } from "./Auth"
+import { Auth } from "./Auth";
 import { createGame, pingRoom } from "./actions";
-import { GameNames } from "./gameTypes"
+import { GameNames } from "./gameTypes";
+import { Game } from "./Game";
 
 export function App() {
   const { user, login, logout } = useAuth();
+  const [roomId, setRoomId] = useState<string | null>(null);
 
   const handleCreateGame = (gameName: GameNames) => {
-    const roomId = createGame(gameName);
-    if (!roomId) {
+    const id = createGame(gameName);
+    if (!id) {
       console.error("Failed to create room.");
     } else {
       // Join the room!
-      console.log("Created room", roomId);
-      pingRoom(roomId);
+      console.log("Created room", id);
+      setRoomId(id);
+      pingRoom(id);
     }
   }
 
@@ -26,7 +30,7 @@ export function App() {
       logout
     }}>
       <Auth />
-      {user && user.email // Not anon
+      {!roomId && user && user.email // Not anon
       ? <>
         <div>
           Create a game. 
@@ -43,6 +47,10 @@ export function App() {
           Room code: <input  /> <button>Join</button>
         </div>
       </>
+      : <></>}
+
+      {roomId 
+      ? <Game roomId={roomId} />
       : <></>}
     </AuthContext.Provider>
     </>
