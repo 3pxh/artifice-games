@@ -1,7 +1,7 @@
-import { createContext } from 'preact'
+import { createContext } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { User, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail, signInAnonymously } from "@firebase/auth";
-import { auth } from './Firebase'
+import { auth } from './firebaseClient';
 
 export enum AuthType { "EmailLink", "Anonymous" }
 
