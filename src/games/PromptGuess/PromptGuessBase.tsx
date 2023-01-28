@@ -1,6 +1,6 @@
 import { h, Fragment } from "preact";
 import { useState } from "preact/hooks";
-import { PromptGeneration, PromptGuessRoom } from "../../../functions/src/games/promptGuess"
+import { PromptGeneration, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
 
 export function LabeledInput(props: {prefix: string, onSubmit: (prompt: string) => void}) {
   const [input, setInput] = useState("");

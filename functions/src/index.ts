@@ -3,48 +3,28 @@ import * as admin from "firebase-admin";
 
 import { engines, GameName, MessageTypes } from "./games/games";
 
-// import { GameNames } from "../../src/gameTypes";
-// If we import this, the build folder (lib/) ends up looking like
-// lib
-//  |- functions/src/{index.js}
-//  |- src/{gameTypes.js}
-// And the build breaks, because we just want
-// lib
-//  |- index.js
-// TODO: figure out how to import types across both.
-
 admin.initializeApp();
 
 type CreateRequest = {
   user: string,
-  gameName: string,//GameNames,
+  gameName: GameName,
 }
 
 export const roomCreated = functions.database.ref("/rooms/{id}")
   .onCreate((snapshot) => {
     const original = snapshot.val() as CreateRequest;
-    functions.logger.log("Processing create request", original);
+    functions.logger.log("Processing create request", {msg: original});
+    const gameName = original.gameName as GameName;
+    const gameRoom = engines[gameName].init(original.user);
     const t = new Date().getTime();
-    // TODO: get the default config for a game of type original.gameName
-    return snapshot.ref.set({
-      templates: [{template: "$1", display: "Write something"}],
-      creator: original.user,
-      gameName: original.gameName,
-      startPing: t,
-      createDate: t,
-      inQueue: true,
-      gameState: {
-        state: "Lobby",
-        // These disappear b/c firebase ignores empty dicts, so need to be null guarded.
-        generations: {}, 
-        lies: {},
-        votes: {},
-      },
-      players: {
-        [original.user]: {state: "Lobby"}
-      },
-    });
-    
+    const roomWithQueueState = {
+      ...gameRoom,
+      _startPing: t,
+      _createDate: t,
+      _inQueue: true,
+      _creator: original.user,
+    }
+    return snapshot.ref.set(roomWithQueueState);
 });
 
 export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
@@ -56,14 +36,12 @@ export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
       // Determine if there is a queue and how long it is?
       // If there isn't, or the user is paid, jump the queue.
       // To start the game, initialize the game state.
-      return admin.database().ref(`/rooms/${context.params.id}/inQueue`).set(false);
+      return admin.database().ref(`/rooms/${context.params.id}/_inQueue`).set(false);
     } else {
       // Someone's trying to skip the queue!
       return;
     }
 });
-
-
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
   .onCreate((snapshot, context) => {
@@ -76,7 +54,7 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
         functions.logger.log("Processing message", {msg: snapshot.val(), room: room, params: context.params});
         const gameName = room.gameName as GameName;
         const message = snapshot.val() as MessageTypes[typeof gameName]; // Not sure abt this
-        const reducer = engines[gameName];
+        const reducer = engines[gameName].reducer;
         // We need to run this computation in the transaction, or else two
         // transitions could be computed simultaneously, and one oroomverwrite the other.
         // The only exception is the actual AI generation.

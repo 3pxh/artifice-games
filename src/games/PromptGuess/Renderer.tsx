@@ -1,6 +1,6 @@
 import { h, Fragment } from "preact";
 import { useAuth } from "../../AuthProvider"
-import { PromptGuessMessage, PromptGuessRoom } from "../../../functions/src/games/promptGuess"
+import { PromptGuessMessage, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
 import { PromptGuessBase } from "./PromptGuessBase";
 import { Farsketched } from "./Farsketched";
 import { GameNames } from "../../gameTypes";
@@ -45,7 +45,7 @@ export function RenderPromptGuess(props: {
     {props.gameState.state === "Prompt"
       ? <engine.Prompt onSubmit={(v: string) => {message("Prompt", v)}} />
       : <></>}
-    {props.gameState.state === "Lie"
+    {props.gameState.state === "Lie" && props.gameState.currentGeneration
       ? <>
       <engine.Lie onSubmit={(v: string) => {message("Lie", v)}} />
       <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />

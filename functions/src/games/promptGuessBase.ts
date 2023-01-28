@@ -1,8 +1,8 @@
 import * as functions from "firebase-functions";
 import { chooseOne } from "../utils";
 
-type Template = {template: string, display: string};
-type UserID = string; 
+export type Template = {template: string, display: string};
+export type UserID = string; 
 export type PromptGuessState = "Lobby" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
 export type PlayerState = PromptGuessState | "PromptDone" | "LieDone" | "VoteDone";
 export type PromptGeneration = {
@@ -12,11 +12,12 @@ export type PromptGeneration = {
   template: Template,
   value: string,
 }
+export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis" | "pgBase"
 export type PromptGuessRoom = {
+  gameName: PromptGuessGameName,
   templates: Template[],
   round: number,
   maxRound: number,
-  nPlayers: number,
   model: "StableDiffusion" | "GPT3",
   stateTransitions: Record<PromptGuessState, PromptGuessState>,
   gameState: {
@@ -26,7 +27,7 @@ export type PromptGuessRoom = {
       stateDurations: Record<PromptGuessState, number>,
     },
     state: PromptGuessState,
-    currentGeneration: UserID,
+    currentGeneration: UserID | null,
     lies: { [k: UserID]: string },
     votes: { [k: UserID]: UserID },
     scores: {
@@ -52,6 +53,38 @@ export type PromptGuessRoom = {
   }
 }
 
+export const initState = (): PromptGuessRoom => {
+  return {
+    gameName: "pgBase",
+    templates: [{template: "$1", display: "Write something"}],
+    round: 0,
+    maxRound: 3,
+    model: "StableDiffusion",
+    stateTransitions: {
+      "Lobby": "Prompt",
+      "Prompt": "Lie",
+      "Lie": "Vote",
+      "Vote": "Score",
+      "Score": "Prompt", // Hmm... we might want more states. This isn't quite right.
+      "Finish": "Finish",
+    },
+    gameState: {
+      state: "Lobby",
+      currentGeneration: null,
+      // These disappear b/c firebase ignores empty dicts, so need to be null guarded.
+      generations: {}, 
+      lies: {},
+      votes: {},
+      scores: {},
+    },
+    players: {
+      // TODO: When should this get initialized?
+      // [user]: {state: "Lobby", template: {template: "$1", display: "Write something"}}
+    },
+    history: {},
+  }
+}
+
 export type PromptGuessMessage = {
   type: "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime",
   uid: UserID,
@@ -62,6 +95,8 @@ export type PromptGuessMessage = {
 const PromptGuesserActions = {
   Start(room: PromptGuessRoom) {
     functions.logger.log("PromptGuesser:Start");
+    // When do we set the players?
+    // room.players = room.players ?? {};
     Object.keys(room.players).forEach(k => {
       room.players[k].template = chooseOne(room.templates);
     });
@@ -131,23 +166,27 @@ const PromptGuesserActions = {
 
   ContinueAfterScoring(room: PromptGuessRoom, message: PromptGuessMessage) {
     const gameState = room.gameState;
-    room.history[new Date().getTime()] = {
-      // TODO: do we have to deep copy these?
-      generation: gameState.generations[gameState.currentGeneration],
-      lies: gameState.lies,
-      votes: gameState.votes,
-    };
-    gameState.lies = {};
-    gameState.votes = {};
-    delete gameState.generations[gameState.currentGeneration];
-    const gens = Object.keys(gameState.generations);
-    if (gens.length > 0) {
-      gameState.currentGeneration = chooseOne(gens);
-      PromptGuesserActions.TransitionState(room, "Lie");
-    } else if (gens.length === 0 && room.round < room.maxRound) {
-      PromptGuesserActions.TransitionState(room, "Prompt");
-    } else if (gens.length === 0 && room.round === room.maxRound) {
-      gameState.state = "Finish";
+    if (gameState.currentGeneration) {
+      room.history[new Date().getTime()] = {
+        // TODO: do we have to deep copy these?
+        generation: gameState.generations[gameState.currentGeneration],
+        lies: gameState.lies,
+        votes: gameState.votes,
+      };
+      gameState.lies = {};
+      gameState.votes = {};
+      delete gameState.generations[gameState.currentGeneration];
+      const gens = Object.keys(gameState.generations);
+      if (gens.length > 0) {
+        gameState.currentGeneration = chooseOne(gens);
+        PromptGuesserActions.TransitionState(room, "Lie");
+      } else if (gens.length === 0 && room.round < room.maxRound) {
+        PromptGuesserActions.TransitionState(room, "Prompt");
+      } else if (gens.length === 0 && room.round === room.maxRound) {
+        gameState.state = "Finish";
+      }
+    } else {
+      // we shouldn't have gotten here...
     }
   },
 

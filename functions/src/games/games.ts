@@ -1,17 +1,17 @@
-import { PromptGuesser, PromptGuessMessage } from "./promptGuess";
-
-function AnotherEngine(room: any, message: any): any {
-  const gameState = room.gameState;
-  gameState["answer"] = 42;
-  // TODO: handle the message, return a new game state.
-  return gameState
-}
+import { PromptGuessRoom, PromptGuessMessage } from "./promptGuessBase";
+import { Farsketched, Gisticle } from "./promptGuessers";
 
 type GameName = "farsketched" | "gisticle"; // | "dixit" | "codenames" | ...
-type GameEngine = typeof PromptGuesser | typeof AnotherEngine;
+type Reducer<Room extends {gameState: any}, Message> = (gs: Room, m: Message) => Room["gameState"];
+type PromptGuessEngine = { 
+  reducer: Reducer<PromptGuessRoom, PromptGuessMessage>, 
+  init: (uid: string) => PromptGuessRoom
+}
+
+type GameEngine = PromptGuessEngine; // | AnotherEngine
 const engines:Record<GameName, GameEngine> = {
-  "farsketched": PromptGuesser,
-  "gisticle": AnotherEngine,
+  "farsketched": Farsketched,
+  "gisticle": Gisticle,
 }
 
 type MessageTypes = {
