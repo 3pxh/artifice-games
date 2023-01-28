@@ -27,7 +27,10 @@ export function Game(props: {roomId: string}) {
       <p>Welcome, {authContext.user?.displayName ?? "anonymous"}. In the lobby for room: {props.roomId}.</p>
       <p>Game state: {gameState?.state}</p>
       {gameState 
-        ? <RenderPromptGuess gameName={"farsketched"} gameState={gameState} />
+        ? <RenderPromptGuess 
+            roomId={props.roomId}
+            gameName={"farsketched"} 
+            gameState={gameState} />
         : <p>Loading Game State...</p>}
     </>
   )

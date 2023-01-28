@@ -1,6 +1,8 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+import { PromptGuesser, AnotherEngine } from "./games";
+
 // import { GameNames } from "../../src/gameTypes";
 // If we import this, the build folder (lib/) ends up looking like
 // lib
@@ -19,10 +21,11 @@ type CreateRequest = {
 }
 
 export const roomCreated = functions.database.ref("/rooms/{id}")
-  .onCreate((snapshot, context) => {
+  .onCreate((snapshot) => {
     const original = snapshot.val() as CreateRequest;
     functions.logger.log("Processing create request", original);
     const t = new Date().getTime();
+    // TODO: get the default config for a game of type original.gameName
     return snapshot.ref.set({
       creator: original.user,
       gameName: original.gameName,
@@ -51,4 +54,32 @@ export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
       // Someone's trying to skip the queue!
       return;
     }
+});
+
+type GameName = "farsketched" | "gisticle"; // | "dixit" | "codenames" | ...
+type GameEngine = typeof PromptGuesser | typeof AnotherEngine;
+const engines:Record<GameName, GameEngine> = {
+  "farsketched": PromptGuesser,
+  "gisticle": AnotherEngine,
+}
+
+export const roomMessaged = functions.database.ref("/rooms/{id}/messages")
+  .onCreate((snapshot) => {
+    const message = snapshot.val() as object;
+    const messageId = Object.keys(message)[0]; // TODO: null guard
+    functions.logger.log("Processing message", message);
+    return snapshot.ref.parent!.transaction((v) => {
+      if (v) {
+        // TODO: Get the game type and choose the appropriate engine.
+        const reducer = engines[v.gameName as GameName]
+        // We need to run this computation in the transaction, or else two
+        // transitions could be computed simultaneously, and one overwrite the other.
+        const gs = reducer(v, message);
+        v.gameState = gs;
+        // TODO: schedule message deletion for the future
+        // In the meantime, we'll leave it as a log.
+        v.messages[messageId].read = true;
+      }
+      return v;
+    })
 });

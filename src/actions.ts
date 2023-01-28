@@ -22,4 +22,9 @@ const pingRoom = (roomId: string) => {
   set(ref(db, `rooms/${roomId}/startPing`), new Date().getTime());
 }
 
-export { createGame, pingRoom }
+const messageRoom = (roomId: string, m: any) => {
+  const k = push(ref(db, `rooms/${roomId}/messages`)).key;
+  set(ref(db, `rooms/${roomId}/messages/${k}`), m);
+}
+
+export { createGame, pingRoom, messageRoom }

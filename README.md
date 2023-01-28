@@ -10,9 +10,8 @@ In the toplevel directory, run `firebase init`. Select the realtime database and
 
 To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebuilds and re-serves stuff automatically.
 
-To run firebase locally,
-`cd functions`
-`npm run emulate`
+To run firebase locally it helps to open up two terminals and `cd functions` in both.
+In one: `npm run emulate` and in the other: `npm run build:watch`. This allows hot reloading of the cloud functions as you work on them (whereas `npm run emulate` will only compile once).
 
 That should run all the emulators (realtime databse and functions) and show them with a nice UI on the appropriate port.
 
