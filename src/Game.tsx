@@ -1,16 +1,14 @@
 import { get, ref, onValue, DataSnapshot } from "@firebase/database";
 import { db } from "./firebaseClient";
-import { h, Fragment } from 'preact'
-import { useContext, useEffect, useState } from 'preact/hooks'
-import { AuthContext } from './AuthProvider'
-
-type GameState = {
-  state: number
-}
+import { h, Fragment } from "preact";
+import { useContext, useEffect, useState } from "preact/hooks";
+import { AuthContext } from "./AuthProvider";
+// TODO: figure out how we want to handle distinct rendering engines and game state objects
+import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
+import { GameState } from "./games/PromptGuess/PromptGuessBase";
 
 export function Game(props: {roomId: string}) {
   const [gameState, setGameState] = useState<GameState | null>(null);
-  const stateRef = ref(db, `rooms/${props.roomId}/gameState`);
 
   const updateGameState = (snapshot: DataSnapshot) => {
     setGameState(snapshot.val());
@@ -18,17 +16,19 @@ export function Game(props: {roomId: string}) {
   }
 
   useEffect(() => {
-    // Load once and subscribe to changes.
+    const stateRef = ref(db, `rooms/${props.roomId}/gameState`);
     get(stateRef).then(updateGameState);
     onValue(stateRef, updateGameState);
-  })
+  }, [props.roomId]);
 
   const authContext = useContext(AuthContext);
   return (
     <>
-      <p>In the lobby for room: {props.roomId}.</p>
-      {gameState === null ? <p>Loading Game State</p> : <></>}
+      <p>Welcome, {authContext.user?.displayName ?? "anonymous"}. In the lobby for room: {props.roomId}.</p>
       <p>Game state: {gameState?.state}</p>
+      {gameState 
+        ? <RenderPromptGuess gameName={"farsketched"} gameState={gameState} />
+        : <p>Loading Game State...</p>}
     </>
   )
 }
