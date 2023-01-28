@@ -1,18 +1,6 @@
 import { h, Fragment } from "preact";
 import { useState } from "preact/hooks";
-
-export enum States { Lobby, Intro, Prompt, AfterPrompt, 
-  Lie, AfterLie, Vote, AfterVote, Score, Finish
-}
-
-// TODO: figure out how to make well defined Generation types for the various games?
-// Easiest is to throw optional fields on it :/
-export type GameState = {
-  state: States,
-  generation: {type: string},
-  lies: {id: string, lie: string}[],
-  scores: {id: string, score: number}[],
-}
+import { PromptGeneration, PromptGuessRoom } from "../../../functions/src/games/promptGuess"
 
 export function LabeledInput(props: {prefix: string, onSubmit: (prompt: string) => void}) {
   const [input, setInput] = useState("");
@@ -40,32 +28,32 @@ export const PromptGuessBase = {
   
   LieChoices(props: {
     onSubmit: (id: string) => void,
-    lies: {id: string, lie: string}[],
+    lies: PromptGuessRoom["gameState"]["lies"]
   }) {
     return <>
-      {props.lies.map(l => {
+      {Object.entries(props.lies).map(([k,v]) => {
         return <>
           <button onClick={() => {
-            props.onSubmit(l.id);
-          }}>{l.lie}</button>
+            props.onSubmit(k);
+          }}>{v}</button>
         </>
       })}
     </>
   },
   
-  Generation(props: {generation: {type: string}}) {
+  Generation(props: {generation: PromptGeneration}) {
     return <>
       Unimplemented Generation renderer for {props.generation.type}
     </>
   },
   
   Scoreboard(props: {
-    scores: {score: number}[]
+    scores: PromptGuessRoom["gameState"]["scores"]
   }) {
     return <>
-      {props.scores.map(s => {
+      {Object.entries(props.scores).map(([k,v]) => {
         return <>
-          {s.score}
+          {k}: {v.current}
         </>
       })}
     </>

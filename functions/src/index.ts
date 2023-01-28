@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
-import { PromptGuesser, AnotherEngine } from "./games";
+import { engines, GameName, MessageTypes } from "./games/games";
 
 // import { GameNames } from "../../src/gameTypes";
 // If we import this, the build folder (lib/) ends up looking like
@@ -27,14 +27,21 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
     const t = new Date().getTime();
     // TODO: get the default config for a game of type original.gameName
     return snapshot.ref.set({
+      templates: [{template: "$1", display: "Write something"}],
       creator: original.user,
       gameName: original.gameName,
       startPing: t,
       createDate: t,
       inQueue: true,
-      gameState: {state: 0},
+      gameState: {
+        state: "Lobby",
+        // These disappear b/c firebase ignores empty dicts, so need to be null guarded.
+        generations: {}, 
+        lies: {},
+        votes: {},
+      },
       players: {
-        [original.user]: {state: 0}
+        [original.user]: {state: "Lobby"}
       },
     });
     
@@ -56,30 +63,28 @@ export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
     }
 });
 
-type GameName = "farsketched" | "gisticle"; // | "dixit" | "codenames" | ...
-type GameEngine = typeof PromptGuesser | typeof AnotherEngine;
-const engines:Record<GameName, GameEngine> = {
-  "farsketched": PromptGuesser,
-  "gisticle": AnotherEngine,
-}
 
-export const roomMessaged = functions.database.ref("/rooms/{id}/messages")
-  .onCreate((snapshot) => {
-    const message = snapshot.val() as object;
-    const messageId = Object.keys(message)[0]; // TODO: null guard
-    functions.logger.log("Processing message", message);
-    return snapshot.ref.parent!.transaction((v) => {
-      if (v) {
-        // TODO: Get the game type and choose the appropriate engine.
-        const reducer = engines[v.gameName as GameName]
+
+export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
+  .onCreate((snapshot, context) => {
+    // TODO: check whether or not the room is in a queue.
+    // Alternatively, define write rules on the room --
+    // if it's inQueue, then users can't write messages!
+    // (They can only touch startPing)
+    return snapshot.ref.parent!.parent!.transaction((room) => {
+      if (room) {
+        functions.logger.log("Processing message", {msg: snapshot.val(), room: room, params: context.params});
+        const gameName = room.gameName as GameName;
+        const message = snapshot.val() as MessageTypes[typeof gameName]; // Not sure abt this
+        const reducer = engines[gameName];
         // We need to run this computation in the transaction, or else two
-        // transitions could be computed simultaneously, and one overwrite the other.
-        const gs = reducer(v, message);
-        v.gameState = gs;
-        // TODO: schedule message deletion for the future
-        // In the meantime, we'll leave it as a log.
-        v.messages[messageId].read = true;
+        // transitions could be computed simultaneously, and one oroomverwrite the other.
+        // The only exception is the actual AI generation.
+        const gs = reducer(room, message);
+        room.gameState = gs;
+        // TODO: schedule deletion for the future, for now leave it as a log.
+        room.messages[context.params.key].read = true;
       }
-      return v;
+      return room;
     })
 });
