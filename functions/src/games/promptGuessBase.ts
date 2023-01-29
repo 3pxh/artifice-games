@@ -1,16 +1,19 @@
 import * as functions from "firebase-functions";
 import { chooseOne } from "../utils";
+import { Models } from "../generate";
 
 export type Template = {template: string, display: string};
 export type UserID = string; 
 export type PromptGuessState = "Lobby" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
 export type PlayerState = PromptGuessState | "PromptDone" | "LieDone" | "VoteDone";
 export type PromptGeneration = {
-  type: string,
+  model: Models,
   uid: UserID,
   prompt: string,
   template: Template,
   value: string,
+  pending: boolean,
+  error?: string,
 }
 export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis" | "pgBase"
 export type PromptGuessRoom = {
@@ -56,7 +59,7 @@ export type PromptGuessRoom = {
 export const initState = (): PromptGuessRoom => {
   return {
     gameName: "pgBase",
-    templates: [{template: "$1", display: "Write something"}],
+    templates: [{template: "{1}", display: "Write something"}],
     round: 0,
     maxRound: 3,
     model: "StableDiffusion",
@@ -78,8 +81,7 @@ export const initState = (): PromptGuessRoom => {
       scores: {},
     },
     players: {
-      // TODO: When should this get initialized?
-      // [user]: {state: "Lobby", template: {template: "$1", display: "Write something"}}
+      // This is initialized with the owner in each game's init()
     },
     history: {},
   }
@@ -112,9 +114,10 @@ const PromptGuesserActions = {
     room.gameState.generations[message.uid] = {
       uid: message.uid,
       prompt: message.value,
-      template: message.template || {template: "{1}", display: ""},
-      type: "text",
-      value: "whatever GPT3 said or URL after running SD",
+      template: room.players[message.uid]?.template || {template: "{1}", display: ""},
+      model: room.model,
+      value: "",
+      pending: true,
     };
     // How are we handling player presence? Do we want to check the nPlayers,
     // or perhaps iterate over room.players and check how many are present?

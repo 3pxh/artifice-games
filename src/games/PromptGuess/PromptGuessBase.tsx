@@ -43,7 +43,7 @@ export const PromptGuessBase = {
   
   Generation(props: {generation: PromptGeneration}) {
     return <>
-      Unimplemented Generation renderer for {props.generation.type}
+      Unimplemented Generation renderer for {props.generation.model}
     </>
   },
   

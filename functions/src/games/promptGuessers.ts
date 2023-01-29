@@ -1,9 +1,10 @@
 import { PromptGuessRoom, PromptGuesser, initState, UserID } from "./promptGuessBase";
+import { chooseOne } from "../utils";
 
 export const Farsketched = {
   reducer: PromptGuesser,
   init: (uid: UserID): PromptGuessRoom => {
-    const t = {template: "$1", display: "Make a picture!"};
+    const t = {template: "{1}", display: "Make a picture!"};
     return {
       ...initState(),
       gameName: "farsketched",
@@ -18,17 +19,21 @@ export const Farsketched = {
 
 export const Gisticle = {
   reducer: PromptGuesser,
-  init: (): PromptGuessRoom => {
+  init: (uid: string): PromptGuessRoom => {
+    const templates = [
+      {template: "List the top 5 best {1}, don't explain why", display: "List the top 5 best..."},
+      {template: "List the top 5 most ridiculous ways to {1}, don't explain why", display: "List the top 5 most ridiculous ways to..."},
+      {template: "List the top 5 most obvious signs {1}, don't explain why", display: "List the top 5 most obvious signs..."},
+      {template: "List the top 5 reasons you should {1}, don't explain why", display: "List the top 5 reasons you should..."},
+    ];
     return {
       ...initState(),
       gameName: "gisticle",
       model: "GPT3",
-      templates: [
-        {template: "List the top 5 best $1, don't explain why", display: "List the top 5 best..."},
-        {template: "List the top 5 most ridiculous ways to $1, don't explain why", display: "List the top 5 most ridiculous ways to..."},
-        {template: "List the top 5 most obvious signs $1, don't explain why", display: "List the top 5 most obvious signs..."},
-        {template: "List the top 5 reasons you should $1, don't explain why", display: "List the top 5 reasons you should..."},
-      ],
+      templates: templates,
+      players: {
+        [uid]: {state: "Lobby", template: chooseOne(templates)}
+      }
     }
   }
 }
