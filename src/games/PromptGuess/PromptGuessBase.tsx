@@ -12,17 +12,27 @@ export function LabeledInput(props: {prefix: string, onSubmit: (prompt: string) 
 }
 
 export const PromptGuessBase = {
-  Prompt(props: {onSubmit: (prompt: string) => void}) {
+  Intro(props: {introVideoUrl?: string}) {
+    return <p>Play intro video: {props.introVideoUrl ?? "video not found for this game"}</p>
+  },
+
+  Prompt(props: {
+    onSubmit: (prompt: string) => void,
+    template: {display: string},
+  }) {
     return LabeledInput({
       ...props,
-      prefix: "Make something fun:"
+      prefix: props.template.display
     })
   },
   
-  Lie(props: {onSubmit: (lie: string) => void}) {
+  Lie(props: {
+    onSubmit: (prompt: string) => void,
+    template: {display: string},
+  }) {
     return LabeledInput({
       ...props,
-      prefix: "Write a lie:"
+      prefix: props.template.display
     })
   },
   

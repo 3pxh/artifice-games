@@ -24,6 +24,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       _createDate: t,
       _inQueue: true,
       _creator: original.user,
+      _initialized: true,
     }
     return snapshot.ref.set(roomWithQueueState);
 });

@@ -4,7 +4,7 @@ import { Models } from "../generate";
 
 export type Template = {template: string, display: string};
 export type UserID = string; 
-export type PromptGuessState = "Lobby" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
+export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
 export type PlayerState = PromptGuessState | "PromptDone" | "LieDone" | "VoteDone";
 export type PromptGeneration = {
   model: Models,
@@ -18,6 +18,7 @@ export type PromptGeneration = {
 export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis" | "pgBase"
 export type PromptGuessRoom = {
   gameName: PromptGuessGameName,
+  introVideoUrl?: string,
   templates: Template[],
   round: number,
   maxRound: number,
@@ -64,7 +65,8 @@ export const initState = (): PromptGuessRoom => {
     maxRound: 3,
     model: "StableDiffusion",
     stateTransitions: {
-      "Lobby": "Prompt",
+      "Lobby": "Intro",
+      "Intro": "Prompt",
       "Prompt": "Lie",
       "Lie": "Vote",
       "Vote": "Score",

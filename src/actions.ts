@@ -1,9 +1,9 @@
 import { ref, set, push } from "@firebase/database";
+import { GameName } from "../functions/src/games/games";
 import { db } from "./firebaseClient";
-import { GameNames } from "./gameTypes";
 import { auth } from "./firebaseClient";
 
-const createGame = (gameName: GameNames): string | null => {
+const createGame = (gameName: GameName): string | null => {
   if (auth.currentUser && auth.currentUser.email) {
     const r = {
       user: auth.currentUser.uid,
