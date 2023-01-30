@@ -11,21 +11,65 @@ type CreateRequest = {
   gameName: GameName,
 }
 
+type RoomState = {
+  gameState: {state: string}
+}
+
+type ShortcodeData = {
+  room: string,
+  timestamp: number,
+}
+
+// After a day, the same shortcode can be used.
+const ROOM_EXPIRY = new Date().getTime() - 1000*60*60*24;
+
+const createShortcode = async (roomId: string, retries = 0): Promise<string> => {
+  if (retries > 10) {
+    throw new Error(`Failed to create shortcode after ${retries} retries`);
+  }
+  let shortcode = "";
+  for ( let i = 0; i < 4; i++ ) {
+    shortcode += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26));
+  }
+  const codeData = (await admin.database().ref(`/shortcodes/${shortcode}`).get()).val() as ShortcodeData | null;
+  if (codeData && codeData.timestamp > ROOM_EXPIRY) { // currently in use
+    return createShortcode(roomId, retries + 1);
+  } else {
+    await admin.database().ref(`/shortcodes/${shortcode}`).set({
+      room: roomId,
+      timestamp: new Date().getTime(),
+    });
+    return shortcode;
+  }
+}
+
+const getRoomFromShortcode = async (shortcode: string): Promise<string> => {
+  const roomId = await admin.database().ref(`/shortcodes/${shortcode}/room`).get();
+  functions.logger.log("Processing create request", { shortcode, roomId });
+  if (roomId.val()) {
+    return roomId.val();
+  } else {
+    throw new Error(`Tried to get a room for unused shortcode: ${shortcode}`);
+  }
+}
+
 export const roomCreated = functions.database.ref("/rooms/{id}")
-  .onCreate((snapshot) => {
+  .onCreate(async (snapshot, context) => {
     const original = snapshot.val() as CreateRequest;
     functions.logger.log("Processing create request", {msg: original});
     const gameName = original.gameName as GameName;
     const gameRoom = engines[gameName].init(original.user);
     const t = new Date().getTime();
+    const shortcode: string = await createShortcode(context.params.id);
     const roomWithQueueState = {
       ...gameRoom,
+      _shortcode: shortcode,
       _startPing: t,
       _createDate: t,
       _inQueue: true,
       _creator: original.user,
       _initialized: true,
-    }
+    };
     return snapshot.ref.set(roomWithQueueState);
 });
 
@@ -43,6 +87,43 @@ export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
       // Someone's trying to skip the queue!
       return;
     }
+});
+
+export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{code}/request")
+  .onCreate(async (snapshot, context) => {
+    functions.logger.log("Processing join request");
+    let roomId;
+    try {
+      roomId = await getRoomFromShortcode(context.params.code);
+    } catch (e) {
+      functions.logger.log("Error getting the roomId");
+    }
+    if (!roomId) {
+      return snapshot.ref.parent?.child("error").set("Room not found");
+    }
+    const room = (await admin.database().ref(`/rooms/${roomId}`).get()).val() as RoomState;
+    const state = room.gameState.state;
+    // TODO: move this off of gameState and into room.hasStarted, and room.allowObservers
+    // gameState should only ever be accessed by a game runner, and its schema should be
+    // allowed to change only there.
+    if (state === "Lobby") {
+      // TODO: also check if the game allows observers.
+      // TODO: add relevant records for access control
+      await admin.database().ref(`/rooms/${roomId}/messages`).push({
+        type: "NewPlayer",
+        uid: context.params.uid,
+      });
+      return snapshot.ref.parent?.child("success").set({
+        roomId,
+        timestamp: new Date().getTime()
+      });
+      } else {
+        return snapshot.ref.parent?.child("error").set(`Room is not in a Lobby, state: ${state}`);
+      }
+      // TODO: Clean up old join requests.
+      // Because it's onCreate, if the user already used this code
+      // then they aren't going to get the room. However, for 
+      // re-joining it will be nice for them find success is already set.
 });
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")

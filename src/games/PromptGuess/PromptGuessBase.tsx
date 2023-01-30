@@ -61,11 +61,12 @@ export const PromptGuessBase = {
     scores: PromptGuessRoom["gameState"]["scores"]
   }) {
     return <>
-      {Object.entries(props.scores).map(([k,v]) => {
+    <p>Scoreboard not implemented</p>
+      {/* {Object.entries(props.scores).map(([k,v]) => {
         return <>
           {k}: {v.current}
         </>
-      })}
+      })} */}
     </>
   }
 }

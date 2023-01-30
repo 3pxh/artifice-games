@@ -1,12 +1,12 @@
 import { h, Fragment } from "preact";
-import { useAuth } from "../../AuthProvider"
+import { useEffect, useContext } from "preact/hooks";
+import { AuthContext } from "../../AuthProvider"
 import { PromptGuessMessage, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
 import { GameName } from "../../../functions/src/games/games";
 import { PromptGuessBase } from "./PromptGuessBase";
 import { Farsketched, Gisticle, Tresmojis } from "./PromptGuessers";
 
 import { messageRoom } from "../../actions";
-import { useEffect } from "preact/hooks";
 import { RoomData } from "../../Room";
 
 const GameMap = new Map<GameName, typeof PromptGuessBase>();
@@ -19,7 +19,7 @@ export function RenderPromptGuess(props: {
   gameState: PromptGuessRoom["gameState"],
   players: PromptGuessRoom["players"],
 }) {
-  const { user } = useAuth();
+  const { user } = useContext(AuthContext);
   if (!user) {
     throw new Error("User isn't defined in game renderer!");
   }
@@ -37,37 +37,33 @@ export function RenderPromptGuess(props: {
     }
   }
 
-  useEffect(() => {
-    console.log("Game state changed:", props.gameState)
-  })
-
   if (!engine) {
     return <></>
   } else {
     return <>
-    {props.gameState.state === "Lobby"
+    {props.players[user.uid].state === "Lobby"
       ? <p>While you wait, this game engine has a surprise!
         <button onClick={() => {message("Start", "yum")}}>Make it go boom!</button>
       </p>
       : <></>}
-    {props.gameState.state === "Intro"
+    {props.players[user.uid].state === "Intro"
       ? <engine.Intro introVideoUrl={props.room.introVideoUrl} />
       : <></>}
-    {props.gameState.state === "Prompt"
+    {props.players[user.uid].state === "Prompt"
       ? <engine.Prompt onSubmit={(v: string) => {message("Prompt", v)}} 
                        template={props.players[user.uid].template} />
       : <></>}
-    {props.gameState.state === "Lie" && props.gameState.currentGeneration
+    {props.players[user.uid].state === "Lie" && props.gameState.currentGeneration
       ? <>
       <engine.Lie onSubmit={(v: string) => {message("Lie", v)}} 
                   template={props.gameState.generations[props.gameState.currentGeneration].template}/>
       <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
       </>
       : <></>}
-    {props.gameState.state === "Vote" 
+    {props.players[user.uid].state === "Vote" 
       ? <engine.LieChoices onSubmit={(v: string) => {message("Vote", v)}} lies={props.gameState.lies} />
       : <></>}
-    {props.gameState.state === "Score"
+    {props.players[user.uid].state === "Score"
       ? <engine.Scoreboard scores={props.gameState.scores} />
       : <></>}
     </>

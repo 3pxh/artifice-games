@@ -90,13 +90,21 @@ export const initState = (): PromptGuessRoom => {
 }
 
 export type PromptGuessMessage = {
-  type: "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime",
+  type: "NewPlayer" | "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime",
   uid: UserID,
   value: UserID | string,
   template?: Template,
 }
 
 const PromptGuesserActions = {
+  NewPlayer(room: PromptGuessRoom, message: PromptGuessMessage) {
+    functions.logger.log("PromptGuesser:NewPlayer");
+    room.players[message.uid] = {
+      state: "Lobby",
+      template: chooseOne(room.templates)
+    }
+  },
+
   Start(room: PromptGuessRoom) {
     functions.logger.log("PromptGuesser:Start");
     // When do we set the players?
@@ -136,7 +144,7 @@ const PromptGuesserActions = {
     room.gameState.lies[message.uid] = message.value;
     // For all of these checks, we also need to be able to do it
     // based on the timer. Which means we will pull them out of here.
-    if (Object.keys(room.gameState.generations).length === Object.keys(room.players).length - 1) {
+    if (Object.keys(room.gameState.lies).length === Object.keys(room.players).length - 1) {
       PromptGuesserActions.TransitionState(room, "Vote");
     }
   },
@@ -144,7 +152,7 @@ const PromptGuesserActions = {
   Vote(room: PromptGuessRoom, message: PromptGuessMessage) {
     room.gameState.votes = room.gameState.votes ?? {};
     room.gameState.votes[message.uid] = message.value;
-    if (Object.keys(room.gameState.generations).length === Object.keys(room.players).length - 1) {
+    if (Object.keys(room.gameState.votes).length === Object.keys(room.players).length - 1) {
       PromptGuesserActions.Score(room, message);
       PromptGuesserActions.TransitionState(room, "Score");
     }
@@ -152,6 +160,7 @@ const PromptGuesserActions = {
 
   Score(room: PromptGuessRoom, message: PromptGuessMessage) {
     const gameState = room.gameState;
+    gameState.scores = gameState.scores ?? {};
     Object.keys(gameState.scores).forEach(scorePlayer => {
       gameState.scores[scorePlayer].previous = gameState.scores[scorePlayer].current;
       Object.keys(gameState.votes).forEach(votePlayer => {
@@ -219,7 +228,10 @@ const PromptGuesserActions = {
 export function PromptGuesser(room: PromptGuessRoom, message: PromptGuessMessage): any {
   functions.logger.log("Prompt Guesser, reducing", {msg: message, gameState: room.gameState});
   const gameState = room.gameState;
-  if (message.type === "Start" && gameState.state === "Lobby") {
+  if (message.type === "NewPlayer" && gameState.state === "Lobby") {
+    // Alternatively if the room allows spectators
+    PromptGuesserActions.NewPlayer(room, message);
+  } else if (message.type === "Start" && gameState.state === "Lobby") {
     PromptGuesserActions.Start(room);
   } else if (message.type === gameState.state) { // Prompt, Lie, Vote
     PromptGuesserActions[message.type](room, message);

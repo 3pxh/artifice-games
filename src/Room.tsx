@@ -33,10 +33,8 @@ export function Room(props: {room: RoomData}) {
 
   useEffect(() => {
     const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
-    get(stateRef).then(updateGameState);
     onValue(stateRef, updateGameState);
     const playerRef = ref(db, `rooms/${props.room.id}/players`);
-    get(playerRef).then(updatePlayerState);
     onValue(playerRef, updatePlayerState);
   }, [props.room.id]);
 
@@ -45,7 +43,7 @@ export function Room(props: {room: RoomData}) {
     <>
       <p>Welcome, {authContext.user?.displayName ?? "anonymous"}. In the lobby for room: {props.room.id}.</p>
       <p>Game state: {gameState?.state}</p>
-      {gameState && players
+      {(gameState && players)
         ? <RenderPromptGuess 
             room={props.room}
             gameState={gameState}
