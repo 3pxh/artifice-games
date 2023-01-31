@@ -1,8 +1,12 @@
+// import * as admin from "firebase-admin";
+import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import App from "./app";
 
 export type Models =  "GPT3" | "StableDiffusion"
 export type GenerationRequest = {
+  room: string,
   uid: string,
   model: Models,
   template: {template: string},
@@ -14,6 +18,9 @@ type GenerationResponse = {
   generation: string,
 }
 
+App.instance;
+const storage = getStorage();
+
 async function runStableDiffusion(r: GenerationRequest, tryCount = 0): GenerationPromise {
   logger.log("Running Stable Diffusion");
   if (!process.env.STABILITY_API_KEY) {
@@ -21,15 +28,18 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   }
   
   const MAX_TRIES = 2;
-  // TODO: Choose between 2.0 and 1.5 in the request.
+  // TODO: Choose between 2.0 and 1.5 in the request, or on the room.
   const engineId = "stable-diffusion-512-v2-0";
   const apiHost = "https://api.stability.ai";
   const url = `${apiHost}/v1alpha/generation/${engineId}/text-to-image`;
 
   const prompt = r.template.template.replace("{1}", r.prompt);
-  const response = await axios({
+  let response, error;
+  try {
+    response = await axios({
       url: url,
       method: "POST",
+      responseType: "stream",
       headers: {
         "Content-Type": "application/json",
         Accept: "image/png",
@@ -50,20 +60,26 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
           }
         ],
       })
+    });
+  } catch (e) {
+    const err = e as AxiosError<unknown, any>;
+    if (err.status === 400) {
+      // (note, this if() never returns true. Also, we don't know exactly why this failed:
+      // https://api.stability.ai/docs#tag/v1alphageneration/operation/v1alpha/generation#textToImage
+      // It's either invalid_samples, invalid_height_or_width, or invalid_prompts.
+      // Since we control samples, and h/w, it's the prompt.
+      // Axios unfortunately masks the name. It might be better to move to node-fetch. idk.
+      throw new Error("Your prompt was not valid and may have contained filtered words.")
     }
-  );
-
-  if (!response || !response.headers) {
-    throw new Error("Request to Stable Diffusion failed")
+    // TODO: the above is broken--err.status is apparently empty, but shows if you log it. wtf.
+    throw new Error("Your prompt was not valid and may have contained filtered words.")
   }
 
-  logger.log("Got SD response", {headers: response.headers});
+  if (!response || !response.headers) {
+    throw new Error("Request to Stable Diffusion failed");
+  }
 
-  if (response.headers["goa-error"] === "invalid_prompts") {
-    throw new Error("Your prompt was not valid and may have contained filtered words.")
-  } else if (response.headers["goa-error"]) {
-    throw new Error(`StableDiffusion goa-error: ${response.headers["goa-error"]}`)
-  } else if (tryCount < MAX_TRIES && response.headers["finish-reason"] !== "SUCCESS") {
+  if (tryCount < MAX_TRIES && response.headers["finish-reason"] !== "SUCCESS") {
     return runStableDiffusion(r, tryCount + 1);
   } else if (tryCount === MAX_TRIES && response.headers["finish-reason"] !== "SUCCESS") {
     if (response.headers["finish-reason"] === "CONTENT_FILTERED") {
@@ -76,9 +92,27 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   if (response.status !== 200) {
     throw new Error(`Response from stable diffusion not ok, response: ${JSON.stringify(response.data)}`)
   }
+  // const uuid = crypto.randomUUID();
+  const seed = response.headers["seed"];
+  const filename = `${prompt}_${seed}`;//new Date().getTime();
+  
+  // const b = storageBucket.name;
+  // How do I put something in a folder T_T
+  // Also: the way to do this properly is with the room id!
+  // TODO: store this in a bucket associated with the room id for access control.
+  const s = storage.bucket().file(`${filename}.png`).createWriteStream();
+  await response.data.pipe(s);
 
   return {
-    _context: {seed: response.headers["seed"]},
+    _context: {
+      seed: seed, 
+      filename: filename, 
+      timestamp: new Date().getTime(),
+      // TODO: include full model parameters?
+      // Might want to create a separate place in firebase, e.g. /generations
+      // And store all metadata there, rather than sending lots of metadata
+      // to clients. Also to have all generations in one place?
+    },
     generation: "Stable diffusion succeeded, need to save and get the url",
   }
 }
@@ -126,8 +160,12 @@ const runners:Record<Models, Generator>  = {
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {
   if (runners[r.model]) {
-    const g = await runners[r.model](r);
-    return g;
+    try {
+      const g = await runners[r.model](r);
+      return g;
+    } catch(e) {
+      throw e;
+    }
   } else {
     throw new Error(`No generator defined for model: ${r.model}`);
   }

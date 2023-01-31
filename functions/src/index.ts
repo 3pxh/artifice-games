@@ -1,10 +1,12 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { generate, GenerationRequest } from "./generate";
+import App from "./app";
 
 import { engines, GameName, MessageTypes } from "./games/games";
+import { ExceptionMessages } from "@google-cloud/storage/build/src/storage";
 
-admin.initializeApp();
+App.instance;
 
 type CreateRequest = {
   user: string,
@@ -162,13 +164,16 @@ export const generationRequest = functions
     // TODO: check that the owner of the room is in good standing
     // And that we're willing to fulfill the request.
     // Another possibility: schedule the request to run after a delay.
-    const apiReq = snapshot.val() as GenerationRequest;
+    const apiReq = {
+      ...snapshot.val(),
+      room: context.params.roomId,
+    } as GenerationRequest;
     functions.logger.log("Processing generation", {apiReq});
     let result;
     try {
       result = await generate(apiReq);
     } catch(e) {
-      result = {error: e};
+      result = {error: (e as Error).message};
     }
     functions.logger.log("promise fulfilled", {result});
     return snapshot.ref.set({

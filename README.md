@@ -4,7 +4,7 @@ Get yarn. Then `yarn install`. May need to specify to install along with the dev
 
 Get the firebase CLI. Run `firebase login`. Make sure that you have access to the threepixelheart project with `firebase projects:list`.
 
-In the toplevel directory, run `firebase init`. Select the realtime database and functions. When asked if it's an existing project, select the threepixelheart project.
+In the toplevel directory, run `firebase init`. Select the realtime database, functions, and cloud storage. When asked if it's an existing project, select the threepixelheart project. Don't overwrite any of the files.
 
 # Developing
 
