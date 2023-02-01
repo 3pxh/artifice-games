@@ -1,6 +1,6 @@
 import { h, Fragment } from "preact";
-import { useContext, useState } from "preact/hooks";
-import { PromptGuessMessage, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
+import { useContext, useEffect, useState } from "preact/hooks";
+import { PromptGuessMessage, PromptGuessRoom, PromptGuessState } from "../../../functions/src/games/promptGuessBase"
 import { shuffle } from "../../../functions/src/utils";
 import { AuthContext } from "../../AuthProvider"
 import { GameName } from "../../../functions/src/games/games";
@@ -21,15 +21,22 @@ export function RenderPromptGuess(props: {
   players: PromptGuessRoom["players"],
 }) {
   const { user } = useContext(AuthContext);
-  // TODO: use a pre-render effect to set hasSubmitted to false
-  // each time props.gameState changes.
-  // In order to do so, we may need to store gameState.state
-  // in our own useState(PromptGuessGameState)
+  const [roomState, setRoomState] = useState<PromptGuessState>("Lobby");
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   if (!user) {
     throw new Error("User isn't defined in game renderer!");
   }
+
+  useEffect(() => {
+    // We'll need to do something like this. We could alternatively
+    // always write the player state, and account for each waiting state.
+    // But that seems unnecessarily verbose at the moment.
+    if (props.gameState.state !== roomState) {
+      setHasSubmitted(false);
+      setRoomState(props.gameState.state);
+    }
+  })
 
   const engine = GameMap.get(props.room.gameName as GameName);
 
@@ -55,17 +62,21 @@ export function RenderPromptGuess(props: {
     }
     const gen = gs.currentGeneration;
     const truth: [string, string] = [gs.generations[gen].uid, gs.generations[gen].prompt];
-    return shuffle(Object.entries(gs.lies).concat([truth])).map(([uid, prompt]) => {
+    const s = shuffle(Object.entries(gs.lies).concat([truth])).map(([uid, prompt]) => {
       return {
         uid: uid,
         prompt: prompt
       }
     });
+    return s;
   }
 
   if (!engine) {
     throw new Error("Trying to render without a game engine!");
   } else {
+    if (hasSubmitted) {
+      return <p>Waiting on other players</p>
+    } // else ...
     return <>
     {props.players[user.uid].state === "Lobby"
       ? <p>While you wait, this game engine has a surprise!
@@ -86,9 +97,23 @@ export function RenderPromptGuess(props: {
       <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
       </>
       : <></>}
-    {props.players[user.uid].state === "Vote" && props.gameState.currentGeneration && !hasSubmitted
+    {props.players[user.uid].state === "Vote" 
+      && props.gameState.currentGeneration 
+      && props.gameState.currentGeneration !== user.uid // Creator doesn't vote.
+      && !hasSubmitted
       ? <>
         <engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={shuffledOptions(props.gameState)} />
+        <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
+        </>
+      : <></>}
+    {props.players[user.uid].state === "Vote" 
+      && props.gameState.currentGeneration 
+      && props.gameState.currentGeneration === user.uid 
+      && !hasSubmitted
+      ? <><p>What did people think you said?</p><ul>
+        {shuffledOptions(props.gameState).map(o => {
+          return <li>{o.prompt}</li>
+        })}</ul>
         <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
         </>
       : <></>}
@@ -99,7 +124,6 @@ export function RenderPromptGuess(props: {
                            showPrompt={true} />
       </>
       : <></>}
-    {hasSubmitted ? <p>Waiting on other players</p> : <></>}
     </>
   }
   

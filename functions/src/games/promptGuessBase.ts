@@ -130,10 +130,13 @@ const PromptGuesserActions = {
 
   Start(room: PromptGuessRoom) {
     functions.logger.log("PromptGuesser:Start");
-    // When do we set the players?
-    // room.players = room.players ?? {};
+    room.gameState.scores = {};
     Object.keys(room.players).forEach(k => {
       room.players[k].template = chooseOne(room.templates);
+      room.gameState.scores[k] = {
+        current: 0,
+        previous: 0
+      }
     });
     PromptGuesserActions.TransitionState(room, "Prompt");
   },
@@ -183,9 +186,10 @@ const PromptGuesserActions = {
 
   Score(room: PromptGuessRoom, message: PromptGuessMessage) {
     const gameState = room.gameState;
-    gameState.scores = gameState.scores ?? {};
     Object.keys(gameState.scores).forEach(scorePlayer => {
       gameState.scores[scorePlayer].previous = gameState.scores[scorePlayer].current;
+    });
+    Object.keys(gameState.scores).forEach(scorePlayer => {
       Object.keys(gameState.votes).forEach(votePlayer => {
         if (gameState.votes[votePlayer] === scorePlayer && 
             gameState.currentGeneration === scorePlayer) {

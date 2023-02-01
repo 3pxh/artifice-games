@@ -45,11 +45,11 @@ function LieChoices(props: {
   return <>
     {props.options.map((option) => {
       return <>
-      {authContext.user?.uid === option.uid
-        ? <button onClick={() => {
+      {authContext.user?.uid !== option.uid
+        ? <button key={option.uid} onClick={() => {
             props.onSubmit(option.uid);
-          }}>{prompt}</button>
-        : <button disabled>{prompt}</button>
+          }}>{option.prompt}</button>
+        : <button key={option.uid} disabled>{option.prompt}</button>
       }
       </>
     })}
@@ -63,16 +63,16 @@ function Generation(props: {generation: PromptGeneration, showPrompt?: boolean})
   </>
 };
 
+// TODO: pass all of the vote data, players, render avatars, yadda yadda.
 function Scoreboard(props: {
     scores: PromptGuessRoom["gameState"]["scores"]
   }) {
   return <>
-  <p>Scoreboard not implemented</p>
-    {/* {Object.entries(props.scores).map(([k,v]) => {
+    {Object.entries(props.scores).map(([k,v]) => {
       return <>
-        {k}: {v.current}
+        <p>{k}: {v.current} {v.current !== v.previous ? `+${v.current-v.previous}` : ""}</p>
       </>
-    })} */}
+    })}
   </>
 }
 

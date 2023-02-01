@@ -8,7 +8,11 @@ export const Farsketched = {
     if (props.generation.error) {
       throw new Error(`Attempting to render Farsketched generation containing an error: ${props.generation.error}`)
     } else if (!props.generation.value.includes("http")) {
-      throw new Error(`Farsketched generation is not a url: ${props.generation.value}`)
+      return <>{props.generation.value}</>
+      // TODO: Throw this error. This is currently useful for debugging while
+      // we haven't actually made a URL for the image, which might take
+      // some doing with access control, buckets, etc.
+      // throw new Error(`Farsketched generation is not a url: ${props.generation.value}`)
     }
     return <>
       {/* TODO: styling! */}
