@@ -550,6 +550,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@firebase/storage@npm:^0.10.1":
+  version: 0.10.1
+  resolution: "@firebase/storage@npm:0.10.1"
+  dependencies:
+    "@firebase/component": 0.6.1
+    "@firebase/util": 1.9.0
+    node-fetch: 2.6.7
+    tslib: ^2.1.0
+  peerDependencies:
+    "@firebase/app": 0.x
+  checksum: 85c8c11ca4bf6bdbd09fb9ac94fc4640d8cae480a09449c3cc6c06f07ee02d4064b6b18480d0e999c42b6e6957558298845ddb81aa4fd2a40be23ccdfee4bf8c
+  languageName: node
+  linkType: hard
+
 "@firebase/util@npm:1.9.0":
   version: 1.9.0
   resolution: "@firebase/util@npm:1.9.0"
@@ -1888,6 +1902,7 @@ __metadata:
     "@firebase/auth": ^0.21.1
     "@firebase/database": ^0.14.1
     "@firebase/functions": ^0.9.1
+    "@firebase/storage": ^0.10.1
     "@prefresh/vite": ^1.2.1
     "@typescript-eslint/eslint-plugin": ^5.49.0
     "@typescript-eslint/parser": ^5.49.0

@@ -65,7 +65,8 @@ function Generation(props: {generation: PromptGeneration, showPrompt?: boolean})
 
 // TODO: pass all of the vote data, players, render avatars, yadda yadda.
 function Scoreboard(props: {
-    scores: PromptGuessRoom["gameState"]["scores"]
+    scores: PromptGuessRoom["gameState"]["scores"],
+    onContinue?: () => void,
   }) {
   return <>
     {Object.entries(props.scores).map(([k,v]) => {
@@ -73,6 +74,7 @@ function Scoreboard(props: {
         <p>{k}: {v.current} {v.current !== v.previous ? `+${v.current-v.previous}` : ""}</p>
       </>
     })}
+    {props.onContinue ? <button onClick={props.onContinue}>Continue</button> : ''}
   </>
 }
 

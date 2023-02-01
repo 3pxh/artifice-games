@@ -11,7 +11,7 @@ export type PromptGeneration = {
   uid: UserID,
   prompt: string,
   template: Template,
-  value: string,
+  generation: string,
   pending: boolean,
   error?: string,
 }
@@ -47,6 +47,7 @@ export type PromptGuessRoom = {
     [uid: UserID]: {
       state: PlayerState,
       template: Template,
+      isReadyToContinue: boolean,
     }
   }
   history: { // Where we're going to store generations along with all context.
@@ -112,19 +113,26 @@ export const initState = (roomOpts?: any): PromptGuessRoom => {
   }
 }
 
+type MessageType = "NewPlayer" | "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime" | "ReadyToContinue";
 export type PromptGuessMessage = {
-  type: "NewPlayer" | "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime",
+  type: MessageType,
   uid: UserID,
   value: UserID | string,
   template?: Template,
 }
 
+// TODO: type enforcement on room actions. We probably want public and private actions
+// to be separated. Some thoughts here if they were all lumped together:
+// type InternalActions = "TransitionState" | "Score" | "ContinueAfterScoring";
+// type ActionType = Record<MessageType & InternalActions, (room: PromptGuessRoom, message: PromptGuessMessage) => void>;
+// const PromptGuesserActions:ActionType = {
 const PromptGuesserActions = {
   NewPlayer(room: PromptGuessRoom, message: PromptGuessMessage) {
     functions.logger.log("PromptGuesser:NewPlayer");
     room.players[message.uid] = {
       state: "Lobby",
-      template: chooseOne(room.templates)
+      template: chooseOne(room.templates),
+      isReadyToContinue: false,
     }
   },
 
@@ -152,7 +160,7 @@ const PromptGuesserActions = {
       prompt: message.value,
       template: room.players[message.uid]?.template || {template: "{1}", display: ""},
       model: room.model,
-      value: "",
+      generation: "",
       pending: true,
     };
     // How are we handling player presence? Do we want to check the nPlayers,
@@ -205,9 +213,12 @@ const PromptGuesserActions = {
     })
   },
 
-  ContinueAfterScoring(room: PromptGuessRoom, message: PromptGuessMessage) {
+  ContinueAfterScoring(room: PromptGuessRoom) {
     const gameState = room.gameState;
     if (gameState.currentGeneration) {
+      // It's really annoying Firebase won't hold empty objects.
+      // Perhaps we should use a "safeSet" function for all object properties.
+      room.history = room.history || {};
       room.history[new Date().getTime()] = {
         // TODO: do we have to deep copy these?
         generation: gameState.generations[gameState.currentGeneration],
@@ -222,6 +233,7 @@ const PromptGuesserActions = {
         gameState.currentGeneration = chooseOne(gens);
         PromptGuesserActions.TransitionState(room, "Lie");
       } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
+        room.gameState.round += 1;
         PromptGuesserActions.TransitionState(room, "Prompt");
       } else if (gens.length === 0 && room.gameState.round === room.gameState.maxRound) {
         PromptGuesserActions.TransitionState(room, "Finish");
@@ -240,8 +252,17 @@ const PromptGuesserActions = {
       if (autoTransitions.includes(state)) {
         PromptGuesserActions.TransitionState(room, room.stateTransitions[room.gameState.state]);
       } else if (state === "Score") {
-        PromptGuesserActions.ContinueAfterScoring(room, message);
+        PromptGuesserActions.ContinueAfterScoring(room);
       }
+    }
+  },
+
+  ReadyToContinue(room: PromptGuessRoom, message: PromptGuessMessage) {
+    room.players[message.uid].isReadyToContinue = true;
+    // If everyone is ready, we want to transition.
+    if (Object.entries(room.players).every(([k, p]) => p.isReadyToContinue) &&
+        room.gameState.state === "Score") {
+      PromptGuesserActions.ContinueAfterScoring(room);
     }
   },
 
@@ -251,6 +272,7 @@ const PromptGuesserActions = {
   TransitionState(room: PromptGuessRoom, newState: PromptGuessState) {
     Object.keys(room.players).forEach(p => {
       room.players[p].state = newState;
+      room.players[p].isReadyToContinue = false;
     });
     room.gameState.state = newState;
     if (room.gameState.timer && newState !== "Finish") {
@@ -268,10 +290,10 @@ export function PromptGuesser(room: PromptGuessRoom, message: PromptGuessMessage
     PromptGuesserActions.NewPlayer(room, message);
   } else if (message.type === "Start" && gameState.state === "Lobby") {
     PromptGuesserActions.Start(room);
-  } else if (message.type === gameState.state) { // Prompt, Lie, Vote
+  } else if (message.type === gameState.state || message.type === "ReadyToContinue") { // Prompt, Lie, Vote
     PromptGuesserActions[message.type](room, message);
   } else if (message.type === "Continue" && gameState.state === "Score") {
-    PromptGuesserActions.ContinueAfterScoring(room, message);
+    PromptGuesserActions.ContinueAfterScoring(room);
   } else if (message.type === "OutOfTime") {
     PromptGuesserActions.OutOfTime(room, message);
   }

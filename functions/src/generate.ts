@@ -1,8 +1,14 @@
 // import * as admin from "firebase-admin";
+// import { Storage } from "@google-cloud/storage";
 import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
 import axios, { AxiosError } from "axios";
 import App from "./app";
+
+// const gcs = new Storage({
+//   keyFilename: "./threepixelheart-f5674-firebase-adminsdk-3rpk8-b07cebc42c.json"
+// });
+// logger.log("Got gcs", {gcs});
 
 export type Models =  "GPT3" | "StableDiffusion"
 export type GenerationRequest = {
@@ -92,16 +98,12 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   if (response.status !== 200) {
     throw new Error(`Response from stable diffusion not ok, response: ${JSON.stringify(response.data)}`)
   }
-  // const uuid = crypto.randomUUID();
   const seed = response.headers["seed"];
-  const filename = `${prompt}_${seed}`;//new Date().getTime();
-  
-  // const b = storageBucket.name;
-  // How do I put something in a folder T_T
-  // Also: the way to do this properly is with the room id!
-  // TODO: store this in a bucket associated with the room id for access control.
-  const s = storage.bucket().file(`${filename}.png`).createWriteStream();
+  const filename = `images/StableDiffusion/${r.room}/${prompt}_${seed}.png`;//new Date().getTime();
+  const s = storage.bucket().file(filename).createWriteStream();
   await response.data.pipe(s);
+  // So we can create a signed url with GCS, but it might be better
+  // to call getDownloadURL() on the client?
 
   return {
     _context: {
@@ -113,7 +115,7 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
       // And store all metadata there, rather than sending lots of metadata
       // to clients. Also to have all generations in one place?
     },
-    generation: "Stable diffusion succeeded, need to save and get the url",
+    generation: filename,
   }
 }
 

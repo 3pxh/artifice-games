@@ -11,6 +11,7 @@
     "@firebase/auth": "^0.21.1",
     "@firebase/database": "^0.14.1",
     "@firebase/functions": "^0.9.1",
+    "@firebase/storage": "^0.10.1",
     "preact": "^10.4.1"
   },
   "devDependencies": {

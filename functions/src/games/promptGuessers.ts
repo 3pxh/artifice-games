@@ -1,6 +1,8 @@
 import { PromptGuessRoom, PromptGuesser, initState, UserID } from "./promptGuessBase";
 import { chooseOne } from "../utils";
 
+const defaultPlayer:Omit<PromptGuessRoom["players"]["uid"], "template"> = {state: "Lobby", isReadyToContinue: false};
+
 export const Farsketched = {
   reducer: PromptGuesser,
   init: (uid: UserID): PromptGuessRoom => {
@@ -12,7 +14,10 @@ export const Farsketched = {
       model: "StableDiffusion",
       templates: [t],
       players: {
-        [uid]: {state: "Lobby", template: t}
+        [uid]: {
+          ...defaultPlayer,
+          template: t
+        }
       }
     }
   }
@@ -33,7 +38,10 @@ export const Gisticle = {
       model: "GPT3",
       templates: templates,
       players: {
-        [uid]: {state: "Lobby", template: chooseOne(templates)}
+        [uid]: {
+          ...defaultPlayer,
+          template: chooseOne(templates)
+        }
       }
     }
   }
@@ -55,7 +63,10 @@ export const Tresmojis = {
       model: "GPT3",
       templates: templates,
       players: {
-        [uid]: {state: "Lobby", template: chooseOne(templates)}
+        [uid]: {
+          ...defaultPlayer,
+          template: chooseOne(templates)
+        }
       }
     }
   }
