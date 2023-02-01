@@ -1,9 +1,10 @@
 import { h, Fragment } from "preact";
-import { useEffect, useContext } from "preact/hooks";
-import { AuthContext } from "../../AuthProvider"
+import { useContext, useState } from "preact/hooks";
 import { PromptGuessMessage, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
+import { shuffle } from "../../../functions/src/utils";
+import { AuthContext } from "../../AuthProvider"
 import { GameName } from "../../../functions/src/games/games";
-import { PromptGuessBase } from "./PromptGuessBase";
+import * as PromptGuessBase from "./PromptGuessBase";
 import { Farsketched, Gisticle, Tresmojis } from "./PromptGuessers";
 
 import { messageRoom } from "../../actions";
@@ -20,11 +21,22 @@ export function RenderPromptGuess(props: {
   players: PromptGuessRoom["players"],
 }) {
   const { user } = useContext(AuthContext);
+  // TODO: use a pre-render effect to set hasSubmitted to false
+  // each time props.gameState changes.
+  // In order to do so, we may need to store gameState.state
+  // in our own useState(PromptGuessGameState)
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+
   if (!user) {
     throw new Error("User isn't defined in game renderer!");
   }
 
-  const engine = GameMap.get(props.room.gameName);
+  const engine = GameMap.get(props.room.gameName as GameName);
+
+  const submit = (type: PromptGuessMessage["type"], value: string) => {
+    setHasSubmitted(true);
+    message(type, value);
+  }
 
   const message = (type: PromptGuessMessage["type"], value: string) => {
     if (user) {
@@ -37,8 +49,22 @@ export function RenderPromptGuess(props: {
     }
   }
 
+  const shuffledOptions = (gs: PromptGuessRoom["gameState"]): {uid: string, prompt: string}[] => {
+    if (!gs.currentGeneration) {
+      throw new Error("Trying to construct lies, but don't have a generation!");
+    }
+    const gen = gs.currentGeneration;
+    const truth: [string, string] = [gs.generations[gen].uid, gs.generations[gen].prompt];
+    return shuffle(Object.entries(gs.lies).concat([truth])).map(([uid, prompt]) => {
+      return {
+        uid: uid,
+        prompt: prompt
+      }
+    });
+  }
+
   if (!engine) {
-    return <></>
+    throw new Error("Trying to render without a game engine!");
   } else {
     return <>
     {props.players[user.uid].state === "Lobby"
@@ -49,23 +75,31 @@ export function RenderPromptGuess(props: {
     {props.players[user.uid].state === "Intro"
       ? <engine.Intro introVideoUrl={props.room.introVideoUrl} />
       : <></>}
-    {props.players[user.uid].state === "Prompt"
-      ? <engine.Prompt onSubmit={(v: string) => {message("Prompt", v)}} 
+    {props.players[user.uid].state === "Prompt" && !hasSubmitted
+      ? <engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
                        template={props.players[user.uid].template} />
       : <></>}
-    {props.players[user.uid].state === "Lie" && props.gameState.currentGeneration
+    {props.players[user.uid].state === "Lie" && props.gameState.currentGeneration && !hasSubmitted
       ? <>
-      <engine.Lie onSubmit={(v: string) => {message("Lie", v)}} 
-                  template={props.gameState.generations[props.gameState.currentGeneration].template}/>
+      <engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
+                  generation={props.gameState.generations[props.gameState.currentGeneration]}/>
       <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
       </>
       : <></>}
-    {props.players[user.uid].state === "Vote" 
-      ? <engine.LieChoices onSubmit={(v: string) => {message("Vote", v)}} lies={props.gameState.lies} />
+    {props.players[user.uid].state === "Vote" && props.gameState.currentGeneration && !hasSubmitted
+      ? <>
+        <engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={shuffledOptions(props.gameState)} />
+        <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
+        </>
       : <></>}
-    {props.players[user.uid].state === "Score"
-      ? <engine.Scoreboard scores={props.gameState.scores} />
+    {props.players[user.uid].state === "Score" && props.gameState.currentGeneration && !hasSubmitted
+      ? <>
+        <engine.Scoreboard scores={props.gameState.scores} />
+        <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]}
+                           showPrompt={true} />
+      </>
       : <></>}
+    {hasSubmitted ? <p>Waiting on other players</p> : <></>}
     </>
   }
   

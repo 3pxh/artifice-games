@@ -4,7 +4,6 @@ import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
 import { engines, GameName, MessageTypes } from "./games/games";
-import { ExceptionMessages } from "@google-cloud/storage/build/src/storage";
 
 App.instance;
 
@@ -55,6 +54,15 @@ const getRoomFromShortcode = async (shortcode: string): Promise<string> => {
   }
 }
 
+export type QueueRoom = {
+  _shortcode: string,
+  _startPing: number,
+  _createDate: number,
+  _inQueue: boolean,
+  _creator: string,
+  _initialized: boolean,
+}
+
 export const roomCreated = functions.database.ref("/rooms/{id}")
   .onCreate(async (snapshot, context) => {
     const original = snapshot.val() as CreateRequest;
@@ -71,7 +79,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       _inQueue: true,
       _creator: original.user,
       _initialized: true,
-    };
+    } satisfies QueueRoom;
     return snapshot.ref.set(roomWithQueueState);
 });
 

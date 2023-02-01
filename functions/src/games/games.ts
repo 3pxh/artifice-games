@@ -1,7 +1,7 @@
-import { PromptGuessRoom, PromptGuessMessage } from "./promptGuessBase";
+import { PromptGuessRoom, PromptGuessMessage, PromptGuessGameName } from "./promptGuessBase";
 import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
 
-type GameName = "farsketched" | "gisticle" | "tresmojis"; // | "dixit" | "codenames" | ...
+type GameName = PromptGuessGameName; // | "dixit" | "codenames" | ...
 type Reducer<Room extends {gameState: any}, Message> = (gs: Room, m: Message) => Room["gameState"];
 type PromptGuessEngine = { 
   reducer: Reducer<PromptGuessRoom, PromptGuessMessage>, 

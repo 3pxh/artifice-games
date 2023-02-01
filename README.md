@@ -16,3 +16,5 @@ In one: `npm run emulate` and in the other: `npm run build:watch`. This allows h
 That should run all the emulators (realtime databse and functions) and show them with a nice UI on the appropriate port.
 
 Local dev won't hit the production database, just the local emulated db. If in the future we need certain data in the db at boot then we'll add an initializer and check it in (and use --import-data)
+
+If you like, add the preact devtools extension (preferably on a browser on which has no credentials/logins, as I haven't vetted what actually ships in the extension) https://preactjs.github.io/preact-devtools/

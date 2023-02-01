@@ -15,22 +15,23 @@ export type PromptGeneration = {
   pending: boolean,
   error?: string,
 }
-export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis" | "pgBase"
+type PromptGuessTimer = {
+  started: number,
+  duration: number,
+  stateDurations: Record<PromptGuessState, number>,
+}
+export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis"
 export type PromptGuessRoom = {
   gameName: PromptGuessGameName,
   introVideoUrl?: string,
   templates: Template[],
-  round: number,
-  maxRound: number,
   model: "StableDiffusion" | "GPT3",
   stateTransitions: Record<PromptGuessState, PromptGuessState>,
   gameState: {
-    timer?: {
-      started: number,
-      duration: number,
-      stateDurations: Record<PromptGuessState, number>,
-    },
+    timer?: PromptGuessTimer,
     state: PromptGuessState,
+    round: number,
+    maxRound: number,
     currentGeneration: UserID | null,
     lies: { [k: UserID]: string },
     votes: { [k: UserID]: UserID },
@@ -57,12 +58,32 @@ export type PromptGuessRoom = {
   }
 }
 
-export const initState = (): PromptGuessRoom => {
+// TODO: define roomOpts -- e.g. how fast is the timer, is it a shared display, etc.
+// We can even specify alternative models for the games. E.g. DALLE for Farsketched.
+export const initState = (roomOpts?: any): PromptGuessRoom => {
+  let timer:{timer: PromptGuessTimer} | null = null;
+  if (roomOpts && roomOpts.timer) {
+    timer = {timer: { // This nesting is so we can spread it.
+      started: 0,
+      duration: 0,
+      stateDurations: {
+        "Lobby": Number.MAX_VALUE, // Needs all states for typing :/
+        "Intro": 132 * 1000, //Farsketched video is 128 seconds.
+        // TODO: parametrize these by timer options, player count, etc.
+        // Move timer initialization into its own function.
+        // We may want to override it per game as well.
+        "Prompt": 40 * 1000,
+        "Lie": 30 * 1000,
+        "Vote": 30 * 1000,
+        "Score": 30 * 1000,
+        "Finish": Number.MAX_VALUE
+      },
+    }};
+  }
   return {
-    gameName: "pgBase",
+    ...(timer || {}),
+    gameName: "farsketched", // This feels a bit wrong.
     templates: [{template: "{1}", display: "Write something"}],
-    round: 0,
-    maxRound: 3,
     model: "StableDiffusion",
     stateTransitions: {
       "Lobby": "Intro",
@@ -70,11 +91,13 @@ export const initState = (): PromptGuessRoom => {
       "Prompt": "Lie",
       "Lie": "Vote",
       "Vote": "Score",
-      "Score": "Prompt", // Hmm... we might want more states. This isn't quite right.
+      "Score": "Prompt",
       "Finish": "Finish",
     },
     gameState: {
       state: "Lobby",
+      round: 0,
+      maxRound: 3,
       currentGeneration: null,
       // These disappear b/c firebase ignores empty dicts, so need to be null guarded.
       generations: {}, 
@@ -194,32 +217,40 @@ const PromptGuesserActions = {
       if (gens.length > 0) {
         gameState.currentGeneration = chooseOne(gens);
         PromptGuesserActions.TransitionState(room, "Lie");
-      } else if (gens.length === 0 && room.round < room.maxRound) {
+      } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
         PromptGuesserActions.TransitionState(room, "Prompt");
-      } else if (gens.length === 0 && room.round === room.maxRound) {
-        gameState.state = "Finish";
+      } else if (gens.length === 0 && room.gameState.round === room.gameState.maxRound) {
+        PromptGuesserActions.TransitionState(room, "Finish");
       }
     } else {
       // we shouldn't have gotten here...
     }
   },
 
-  ContinueByTimer(room: PromptGuessRoom, message: PromptGuessMessage) {
+  OutOfTime(room: PromptGuessRoom, message: PromptGuessMessage) {
     const t = room.gameState.timer;
     const now = new Date().getTime();
-    if (t && t.duration + t.started < now) { // Out of time
-      PromptGuesserActions.TransitionState(room, room.stateTransitions[room.gameState.state]);
+    if (t && t.duration + t.started < now) { // Actually out of time
+      const state = room.gameState.state;
+      const autoTransitions:PromptGuessState[] = ["Intro", "Prompt", "Lie", "Vote"];
+      if (autoTransitions.includes(state)) {
+        PromptGuesserActions.TransitionState(room, room.stateTransitions[room.gameState.state]);
+      } else if (state === "Score") {
+        PromptGuesserActions.ContinueAfterScoring(room, message);
+      }
     }
   },
 
-  TransitionState(room: PromptGuessRoom, s: PromptGuessState) {
-    // Handles setting the game state along with resetting the timer.
+  // All gameState.state transitions MUST happen through here if the game
+  // is to function properly with the timer. We could enforce this by having
+  // some private / protected methods. TODO: protect these state changes.
+  TransitionState(room: PromptGuessRoom, newState: PromptGuessState) {
     Object.keys(room.players).forEach(p => {
-      room.players[p].state = s;
-    })
-    room.gameState.state = s;
-    if (room.gameState.timer) {
-      room.gameState.timer.duration = room.gameState.timer.stateDurations[s];
+      room.players[p].state = newState;
+    });
+    room.gameState.state = newState;
+    if (room.gameState.timer && newState !== "Finish") {
+      room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
       room.gameState.timer.started = new Date().getTime();
     }
   }
@@ -238,7 +269,7 @@ export function PromptGuesser(room: PromptGuessRoom, message: PromptGuessMessage
   } else if (message.type === "Continue" && gameState.state === "Score") {
     PromptGuesserActions.ContinueAfterScoring(room, message);
   } else if (message.type === "OutOfTime") {
-    PromptGuesserActions.ContinueByTimer(room, message);
+    PromptGuesserActions.OutOfTime(room, message);
   }
   return gameState
 }

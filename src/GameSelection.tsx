@@ -13,7 +13,7 @@ export default function GameSelection() {
   const handleCreateGame = (gameName: GameName) => {
     const id = createGame(gameName);
     if (!id) {
-      console.error("Failed to create room.");
+      throw new Error(`Failed to create room for game: ${gameName}`);
     } else {
       console.log("Created room", id);
       // TODO: set up regular pings if the room is _inQueue
@@ -24,34 +24,36 @@ export default function GameSelection() {
   }
 
   const handleJoinRoom = (roomCode: string) => {
-    console.log("Trying to join room", roomCode);
-    joinRoom(roomCode, setRoom);
+    const code = roomCode.toUpperCase();
+    console.log("Trying to join room", code);
+    joinRoom(code, setRoom);
   }
 
-  return (
-    <>
-      {!room && user && user.email // Not anon
-      ? <>
-        <div>
-          Create a game. 
-          <button onClick={() => {handleCreateGame("farsketched")}}>Farsketched</button>
-          <button onClick={() => {handleCreateGame("gisticle")}}>Gisticle</button>
-          <button onClick={() => {handleCreateGame("tresmojis")}}>Tresmojis</button>
-        </div>
-      </>
-      : <></>}
+  const Join = () => {
+    return <div class="GameSelection-Join">
+      <SubmittableInput label="Room code" onSubmit={handleJoinRoom} buttonText="Join" />
+    </div>
+  }
 
-      {user 
-      ? <>
-        <div>
-          <SubmittableInput label="Room code" onSubmit={handleJoinRoom} buttonText="Join" />
-        </div>
-      </>
-      : <></>}
+  if (!user) {
+    throw new Error("Cannot render GameSelection without a user.")
+  }
 
-      {room 
-      ? <Room room={room} />
-      : <></>}
+  if (!room) {
+    if (user.isAnonymous) {
+      return <Join />
+    } else {
+      return <>
+      <div>
+        Create a game. 
+        <button onClick={() => {handleCreateGame("farsketched")}}>Farsketched</button>
+        <button onClick={() => {handleCreateGame("gisticle")}}>Gisticle</button>
+        <button onClick={() => {handleCreateGame("tresmojis")}}>Tresmojis</button>
+      </div>
+      <Join />
     </>
-  )
+    }
+  } else {
+    return <Room room={room} />
+  }
 }

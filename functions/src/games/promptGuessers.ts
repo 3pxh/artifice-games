@@ -4,11 +4,11 @@ import { chooseOne } from "../utils";
 export const Farsketched = {
   reducer: PromptGuesser,
   init: (uid: UserID): PromptGuessRoom => {
-    const t = {template: "{1}", display: "Make a picture!"};
+    const t = {template: "{1}", display: "What would you like to see?"};
     return {
       ...initState(),
       gameName: "farsketched",
-      introVideoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+      introVideoUrl: "https://www.youtube.com/embed/3Cn3A8ad4x8",
       model: "StableDiffusion",
       templates: [t],
       players: {

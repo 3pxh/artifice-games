@@ -34,7 +34,7 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   const url = `${apiHost}/v1alpha/generation/${engineId}/text-to-image`;
 
   const prompt = r.template.template.replace("{1}", r.prompt);
-  let response, error;
+  let response;
   try {
     response = await axios({
       url: url,

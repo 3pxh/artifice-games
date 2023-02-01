@@ -1,72 +1,79 @@
 import { h, Fragment } from "preact";
-import { useState } from "preact/hooks";
+import { useContext } from "preact/hooks";
+import { AuthContext } from "../../AuthProvider";
 import { PromptGeneration, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
+import SubmittableInput from "../../components/SubmittableInput";
 
-export function LabeledInput(props: {prefix: string, onSubmit: (prompt: string) => void}) {
-  const [input, setInput] = useState("");
+function Intro(props: {introVideoUrl?: string}) {
+  return <p>Play intro video: {props.introVideoUrl ?? "video not found for this game"}</p>
+};
+
+function Prompt(props: {
+    onSubmit: (prompt: string) => void,
+    template: {display: string},
+  }) {
+  return <div class="Prompt-Hero">
+    <SubmittableInput 
+      onSubmit={props.onSubmit} 
+      label={props.template.display} 
+      buttonText="Make it!" />
+  </div>
+};
+  
+function Lie(props: {
+    onSubmit: (prompt: string) => void,
+    generation: PromptGeneration,
+  }) {
+  const authContext = useContext(AuthContext);
+  // TODO: include the generation too?
   return <>
-    {props.prefix ?? "Make something fun:"}
-    <input onChange={(e) => { setInput(e.currentTarget.value) }} />
-    <button onClick={() => { props.onSubmit(input) }}>Go</button>
+  {authContext.user?.uid === props.generation.uid 
+    ? <p>You are responsible for this masterpiece. Well done.</p>
+    : <SubmittableInput
+      onSubmit={props.onSubmit}
+      label={props.generation.template.display}
+      buttonText="Lie!" />
+  }
+  </>
+};
+
+function LieChoices(props: {
+    onSubmit: (uid: string) => void,
+    options: {uid: string, prompt: string}[]
+  }) {
+  const authContext = useContext(AuthContext);
+  return <>
+    {props.options.map((option) => {
+      return <>
+      {authContext.user?.uid === option.uid
+        ? <button onClick={() => {
+            props.onSubmit(option.uid);
+          }}>{prompt}</button>
+        : <button disabled>{prompt}</button>
+      }
+      </>
+    })}
+  </>
+};
+  
+function Generation(props: {generation: PromptGeneration, showPrompt?: boolean}) {
+  return <>
+    Unimplemented Generation renderer for {props.generation.model}.
+    {props.showPrompt ? props.generation.prompt : ""}
+  </>
+};
+
+function Scoreboard(props: {
+    scores: PromptGuessRoom["gameState"]["scores"]
+  }) {
+  return <>
+  <p>Scoreboard not implemented</p>
+    {/* {Object.entries(props.scores).map(([k,v]) => {
+      return <>
+        {k}: {v.current}
+      </>
+    })} */}
   </>
 }
 
-export const PromptGuessBase = {
-  Intro(props: {introVideoUrl?: string}) {
-    return <p>Play intro video: {props.introVideoUrl ?? "video not found for this game"}</p>
-  },
-
-  Prompt(props: {
-    onSubmit: (prompt: string) => void,
-    template: {display: string},
-  }) {
-    return LabeledInput({
-      ...props,
-      prefix: props.template.display
-    })
-  },
-  
-  Lie(props: {
-    onSubmit: (prompt: string) => void,
-    template: {display: string},
-  }) {
-    return LabeledInput({
-      ...props,
-      prefix: props.template.display
-    })
-  },
-  
-  LieChoices(props: {
-    onSubmit: (id: string) => void,
-    lies: PromptGuessRoom["gameState"]["lies"]
-  }) {
-    return <>
-      {Object.entries(props.lies).map(([k,v]) => {
-        return <>
-          <button onClick={() => {
-            props.onSubmit(k);
-          }}>{v}</button>
-        </>
-      })}
-    </>
-  },
-  
-  Generation(props: {generation: PromptGeneration}) {
-    return <>
-      Unimplemented Generation renderer for {props.generation.model}
-    </>
-  },
-  
-  Scoreboard(props: {
-    scores: PromptGuessRoom["gameState"]["scores"]
-  }) {
-    return <>
-    <p>Scoreboard not implemented</p>
-      {/* {Object.entries(props.scores).map(([k,v]) => {
-        return <>
-          {k}: {v.current}
-        </>
-      })} */}
-    </>
-  }
-}
+export {Intro, Prompt, Lie, LieChoices, Generation, Scoreboard}
