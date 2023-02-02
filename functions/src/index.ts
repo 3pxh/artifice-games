@@ -187,6 +187,6 @@ export const generationRequest = functions
     return snapshot.ref.set({
       ...apiReq,
       ...result,
-      pending: false,
+      fulfilled: true,
     });
 });

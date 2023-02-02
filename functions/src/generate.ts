@@ -19,9 +19,10 @@ export type GenerationRequest = {
   prompt: string,
 }
 
-type GenerationResponse = {
-  _context: any,
+export type GenerationResponse = {
+  _context?: any,
   generation: string,
+  timeFulfilled?: number,
 }
 
 App.instance;
@@ -108,14 +109,10 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   return {
     _context: {
       seed: seed, 
-      filename: filename, 
-      timestamp: new Date().getTime(),
       // TODO: include full model parameters?
-      // Might want to create a separate place in firebase, e.g. /generations
-      // And store all metadata there, rather than sending lots of metadata
-      // to clients. Also to have all generations in one place?
     },
     generation: filename,
+    timeFulfilled: new Date().getTime(),
   }
 }
 
@@ -147,6 +144,7 @@ async function runGPT3(r: GenerationRequest): GenerationPromise {
     return {
       _context: {},
       generation: response.choices[0].text,
+      timeFulfilled: new Date().getTime(),
     }
   } else {
     throw new Error(`GPT3 runner failed on response: ${JSON.stringify(response)}`)

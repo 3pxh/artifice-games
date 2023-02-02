@@ -56,7 +56,7 @@ function LieChoices(props: {
   </>
 };
   
-function Generation(props: {generation: PromptGeneration, showPrompt?: boolean}) {
+function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, delay?: number}) {
   return <>
     Unimplemented Generation renderer for {props.generation.model}.
     {props.showPrompt ? props.generation.prompt : ""}

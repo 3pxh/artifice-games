@@ -1,18 +1,17 @@
 import * as functions from "firebase-functions";
 import { chooseOne } from "../utils";
-import { Models } from "../generate";
+import { Models, GenerationResponse } from "../generate";
 
 export type Template = {template: string, display: string};
 export type UserID = string; 
 export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
 export type PlayerState = PromptGuessState | "PromptDone" | "LieDone" | "VoteDone";
-export type PromptGeneration = {
+export type PromptGeneration = GenerationResponse & {
   model: Models,
   uid: UserID,
   prompt: string,
   template: Template,
-  generation: string,
-  pending: boolean,
+  fulfilled: boolean,
   error?: string,
 }
 type PromptGuessTimer = {
@@ -156,12 +155,13 @@ const PromptGuesserActions = {
     // then it'll retry, and hit the expensive API again (and take a long time!).
     room.gameState.generations = room.gameState.generations ?? {};
     room.gameState.generations[message.uid] = {
+      _context: {},
       uid: message.uid,
       prompt: message.value,
       template: room.players[message.uid]?.template || {template: "{1}", display: ""},
       model: room.model,
       generation: "",
-      pending: true,
+      fulfilled: false,
     };
     // How are we handling player presence? Do we want to check the nPlayers,
     // or perhaps iterate over room.players and check how many are present?
