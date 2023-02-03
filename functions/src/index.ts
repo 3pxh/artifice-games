@@ -3,14 +3,13 @@ import * as admin from "firebase-admin";
 import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
-import { engines, GameName, MessageTypes } from "./games/games";
+import { engines, GameName, MessageTypes, GameCreateData } from "./games/games";
 
 App.instance;
 
-type CreateRequest = {
-  user: string,
+export type CreateRequest = {
   gameName: GameName,
-}
+} & GameCreateData;
 
 type RoomState = {
   gameState: {state: string}
@@ -65,10 +64,10 @@ export type QueueRoom = {
 
 export const roomCreated = functions.database.ref("/rooms/{id}")
   .onCreate(async (snapshot, context) => {
-    const original = snapshot.val() as CreateRequest;
-    functions.logger.log("Processing create request", {msg: original});
-    const gameName = original.gameName as GameName;
-    const gameRoom = engines[gameName].init(original.user);
+    const msg = snapshot.val() as CreateRequest;
+    functions.logger.log("Processing create request", {msg: msg});
+    const gameName = msg.gameName as GameName;
+    const gameRoom = engines[gameName].init(msg);
     const t = new Date().getTime();
     const shortcode: string = await createShortcode(context.params.id);
     const roomWithQueueState = {
@@ -77,7 +76,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       _startPing: t,
       _createDate: t,
       _inQueue: true,
-      _creator: original.user,
+      _creator: msg.user,
       _initialized: true,
     } satisfies QueueRoom;
     return snapshot.ref.set(roomWithQueueState);
@@ -99,9 +98,10 @@ export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
     }
 });
 
-export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{code}/request")
+export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{code}/{k}")
   .onCreate(async (snapshot, context) => {
-    functions.logger.log("Processing join request");
+    functions.logger.log("Processing join request", {val: snapshot.val()});
+    const isPlayer = snapshot.val().isPlayer;
     let roomId;
     try {
       roomId = await getRoomFromShortcode(context.params.code);
@@ -122,18 +122,18 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
       await admin.database().ref(`/rooms/${roomId}/messages`).push({
         type: "NewPlayer",
         uid: context.params.uid,
+        isPlayer: isPlayer,
       });
-      return snapshot.ref.parent?.child("success").set({
+      return snapshot.ref.child("success").set({
         roomId,
         timestamp: new Date().getTime()
       });
       } else {
-        return snapshot.ref.parent?.child("error").set(`Room is not in a Lobby, state: ${state}`);
+        return snapshot.ref.child("error").set(`Room is not in a Lobby, state: ${state}`);
       }
       // TODO: Clean up old join requests.
-      // Because it's onCreate, if the user already used this code
-      // then they aren't going to get the room. However, for 
-      // re-joining it will be nice for them find success is already set.
+      // But since we create a new one each time, and adding a uid should be idempotent,
+      // it's just a sanitation problem not a functionality problem.
 });
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")

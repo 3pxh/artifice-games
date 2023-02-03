@@ -1,14 +1,7 @@
-// import * as admin from "firebase-admin";
-// import { Storage } from "@google-cloud/storage";
 import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
 import axios, { AxiosError } from "axios";
 import App from "./app";
-
-// const gcs = new Storage({
-//   keyFilename: "./threepixelheart-f5674-firebase-adminsdk-3rpk8-b07cebc42c.json"
-// });
-// logger.log("Got gcs", {gcs});
 
 export type Models =  "GPT3" | "StableDiffusion"
 export type GenerationRequest = {
@@ -100,11 +93,9 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
     throw new Error(`Response from stable diffusion not ok, response: ${JSON.stringify(response.data)}`)
   }
   const seed = response.headers["seed"];
-  const filename = `images/StableDiffusion/${r.room}/${prompt}_${seed}.png`;//new Date().getTime();
+  const filename = `images/StableDiffusion/${r.room}/${prompt}_${seed}.png`;
   const s = storage.bucket().file(filename).createWriteStream();
   await response.data.pipe(s);
-  // So we can create a signed url with GCS, but it might be better
-  // to call getDownloadURL() on the client?
 
   return {
     _context: {

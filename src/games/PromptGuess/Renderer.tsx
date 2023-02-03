@@ -19,6 +19,8 @@ export function RenderPromptGuess(props: {
   room: RoomData,
   gameState: PromptGuessRoom["gameState"],
   players: PromptGuessRoom["players"],
+  isPlayer: boolean,
+  isInputOnly: boolean,
 }) {
   const { user } = useContext(AuthContext);
   const [roomState, setRoomState] = useState<PromptGuessState>("Lobby");
@@ -51,6 +53,9 @@ export function RenderPromptGuess(props: {
         type: type,
         value: value,
         uid: user.uid,
+        // TODO: we might have to use session id as identifier
+        // In the event that a player is logged in on a comp AND phone?
+        // The could always anon auth... but there are usability concerns
       }
       messageRoom(props.room.id, m);
     }
@@ -75,20 +80,23 @@ export function RenderPromptGuess(props: {
     throw new Error("Trying to render without a game engine!");
   } 
   
+  const renderState = props.isPlayer
+                        ? props.players[user.uid].state
+                        : props.gameState.state;
   
   if (hasSubmitted) {
     return <p>Waiting on other players</p>
-  } else if (props.players[user.uid].state === "Lobby") {
+  } else if (renderState === "Lobby") {
     return <>
       <p>While you wait, this game engine has a surprise!</p>
       <button onClick={() => {message("Start", "yum")}}>Make it go boom!</button>
     </>
-  } else if (props.players[user.uid].state === "Intro") {
+  } else if (renderState === "Intro") {
     return <engine.Intro introVideoUrl={props.room.introVideoUrl} />
-  } else if (props.players[user.uid].state === "Prompt") {
+  } else if (renderState === "Prompt") {
     return <engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
                           template={props.players[user.uid].template} />
-  } else if (props.players[user.uid].state === "Lie") {
+  } else if (renderState === "Lie") {
     if (props.gameState.currentGeneration && props.gameState.generations) {
       return <>
         <engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
@@ -98,7 +106,7 @@ export function RenderPromptGuess(props: {
     } else {
       return <p>Waiting on the AI...</p>
     }
-  } else if (props.players[user.uid].state === "Vote" && props.gameState.currentGeneration && props.gameState.generations) {
+  } else if (renderState === "Vote" && props.gameState.currentGeneration && props.gameState.generations) {
     if (props.gameState.currentGeneration === user.uid ) {
       return <>
         <p>What did people think you said?</p>
@@ -115,7 +123,7 @@ export function RenderPromptGuess(props: {
         <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
       </>
     }
-  } else if (props.players[user.uid].state === "Score" && props.gameState.currentGeneration && props.gameState.generations) {
+  } else if (renderState === "Score" && props.gameState.currentGeneration && props.gameState.generations) {
     return <>
       <engine.Scoreboard 
         scores={props.gameState.scores}
@@ -123,7 +131,7 @@ export function RenderPromptGuess(props: {
       <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]}
                         showPrompt={true} />
     </>
-  } else if (props.players[user.uid].state === "Finish") {
+  } else if (renderState === "Finish") {
     return <>
       <p>You're all winners!</p>
       <engine.Scoreboard 

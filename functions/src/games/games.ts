@@ -1,11 +1,16 @@
 import { PromptGuessRoom, PromptGuessMessage, PromptGuessGameName } from "./promptGuessBase";
 import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
 
+export type GameCreateData = {
+  user: string,
+  isPlayer: boolean,
+}
+
 type GameName = PromptGuessGameName; // | "dixit" | "codenames" | ...
 type Reducer<Room extends {gameState: any}, Message> = (gs: Room, m: Message) => Room["gameState"];
 type PromptGuessEngine = { 
   reducer: Reducer<PromptGuessRoom, PromptGuessMessage>, 
-  init: (uid: string) => PromptGuessRoom
+  init: (v: GameCreateData) => PromptGuessRoom
 }
 
 type GameEngine = PromptGuessEngine; // | AnotherEngine

@@ -1,15 +1,17 @@
 import { ref, set, push, onValue } from "@firebase/database";
 import { GameName } from "../functions/src/games/games";
+import { CreateRequest } from "../functions/src";
 import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
 import { RoomData } from "./Room";
 
-const createGame = (gameName: GameName): string => {
+const createGame = (gameName: GameName, isPlayer: boolean): string => {
   if (auth.currentUser && !auth.currentUser.isAnonymous) {
     const r = {
       user: auth.currentUser.uid,
       gameName: gameName,
-    }
+      isPlayer: isPlayer,
+    } as CreateRequest;
     const k = push(ref(db, "rooms/")).key;
     if (!k) {
       throw new Error("Cannot create a new room id");
@@ -25,10 +27,13 @@ const pingRoom = (roomId: string) => {
   set(ref(db, `rooms/${roomId}/startPing`), new Date().getTime());
 }
 
-const joinRoom = (shortcode: string, cb: (r: RoomData) => void) => {
+const joinRoom = (shortcode: string, isPlayer: boolean, cb: (r: RoomData) => void) => {
   if (auth.currentUser) {
-    set(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/request`), true);
-    const joinRef = ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/`);
+    const k = push(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}`)).key;
+    set(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`), {
+      isPlayer: isPlayer
+    });
+    const joinRef = ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`);
     const unsubscribe = onValue(joinRef, (v) => {
       const request = v.val();
       if (request.success) {

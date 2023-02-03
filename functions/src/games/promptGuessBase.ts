@@ -47,6 +47,7 @@ export type PromptGuessRoom = {
       state: PlayerState,
       template: Template,
       isReadyToContinue: boolean,
+      isPlayer: boolean,
     }
   }
   history: { // Where we're going to store generations along with all context.
@@ -118,6 +119,7 @@ export type PromptGuessMessage = {
   uid: UserID,
   value: UserID | string,
   template?: Template,
+  isPlayer?: boolean,
 }
 
 // TODO: type enforcement on room actions. We probably want public and private actions
@@ -126,12 +128,17 @@ export type PromptGuessMessage = {
 // type ActionType = Record<MessageType & InternalActions, (room: PromptGuessRoom, message: PromptGuessMessage) => void>;
 // const PromptGuesserActions:ActionType = {
 const PromptGuesserActions = {
+  ActivePlayerCount(room: PromptGuessRoom) {
+    return Object.entries(room.players).filter(([k,p]) => p.isPlayer).length;
+  },
+
   NewPlayer(room: PromptGuessRoom, message: PromptGuessMessage) {
     functions.logger.log("PromptGuesser:NewPlayer");
     room.players[message.uid] = {
       state: "Lobby",
       template: chooseOne(room.templates),
       isReadyToContinue: false,
+      isPlayer: message.isPlayer ?? true,
     }
   },
 
@@ -166,7 +173,7 @@ const PromptGuesserActions = {
     // How are we handling player presence? Do we want to check the nPlayers,
     // or perhaps iterate over room.players and check how many are present?
     // If using onDisconnect we might be able to notice disconnections.
-    if (Object.keys(room.gameState.generations).length === Object.keys(room.players).length) {
+    if (Object.keys(room.gameState.generations).length === PromptGuesserActions.ActivePlayerCount(room)) {
       const gens = Object.keys(room.gameState.generations);
       room.gameState.currentGeneration = chooseOne(gens);
       PromptGuesserActions.TransitionState(room, "Lie");
@@ -178,7 +185,7 @@ const PromptGuesserActions = {
     room.gameState.lies[message.uid] = message.value;
     // For all of these checks, we also need to be able to do it
     // based on the timer. Which means we will pull them out of here.
-    if (Object.keys(room.gameState.lies).length === Object.keys(room.players).length - 1) {
+    if (Object.keys(room.gameState.lies).length === PromptGuesserActions.ActivePlayerCount(room) - 1) {
       PromptGuesserActions.TransitionState(room, "Vote");
     }
   },
@@ -186,7 +193,7 @@ const PromptGuesserActions = {
   Vote(room: PromptGuessRoom, message: PromptGuessMessage) {
     room.gameState.votes = room.gameState.votes ?? {};
     room.gameState.votes[message.uid] = message.value;
-    if (Object.keys(room.gameState.votes).length === Object.keys(room.players).length - 1) {
+    if (Object.keys(room.gameState.votes).length === PromptGuesserActions.ActivePlayerCount(room) - 1) {
       PromptGuesserActions.Score(room, message);
       PromptGuesserActions.TransitionState(room, "Score");
     }

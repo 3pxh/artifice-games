@@ -12,7 +12,12 @@ import { PromptGuessRoom } from "../functions/src/games/promptGuessBase";
 
 // TODO: make the type of this depend on the game in question
 // Or rather, include the various room types
-export type RoomData = QueueRoom & PromptGuessRoom & {id: string};
+type RoomProps = {
+  id: string,
+  isPlayer: boolean,
+  isInputOnly: boolean,
+}
+export type RoomData = QueueRoom & PromptGuessRoom & RoomProps;
 
 export function Room(props: {room: RoomData}) {
   const [gameState, setGameState] = useState<PromptGuessRoom["gameState"] | null>(null);
@@ -51,7 +56,9 @@ export function Room(props: {room: RoomData}) {
       <RenderPromptGuess 
             room={props.room}
             gameState={gameState}
-            players={players} />
+            players={players}
+            isPlayer={props.room.isPlayer}
+            isInputOnly={props.room.isInputOnly} />
     </>
   } else {
     return <Header />

@@ -1,11 +1,12 @@
-import { PromptGuessRoom, PromptGuesser, initState, UserID } from "./promptGuessBase";
+import { PromptGuessRoom, PromptGuesser, initState } from "./promptGuessBase";
 import { chooseOne } from "../utils";
+import { GameCreateData } from "./games";
 
-const defaultPlayer:Omit<PromptGuessRoom["players"]["uid"], "template"> = {state: "Lobby", isReadyToContinue: false};
+const defaultPlayer:Omit<PromptGuessRoom["players"]["user"], "template" | "isPlayer"> = {state: "Lobby", isReadyToContinue: false};
 
 export const Farsketched = {
   reducer: PromptGuesser,
-  init: (uid: UserID): PromptGuessRoom => {
+  init: (u: GameCreateData): PromptGuessRoom => {
     const t = {template: "{1}", display: "What would you like to see?"};
     return {
       ...initState(),
@@ -14,9 +15,10 @@ export const Farsketched = {
       model: "StableDiffusion",
       templates: [t],
       players: {
-        [uid]: {
+        [u.user]: {
           ...defaultPlayer,
-          template: t
+          template: t,
+          isPlayer: u.isPlayer
         }
       }
     }
@@ -25,7 +27,7 @@ export const Farsketched = {
 
 export const Gisticle = {
   reducer: PromptGuesser,
-  init: (uid: string): PromptGuessRoom => {
+  init: (u: GameCreateData): PromptGuessRoom => {
     const templates = [
       {template: "List the top 5 best {1}, don't explain why", display: "List the top 5 best..."},
       {template: "List the top 5 most ridiculous ways to {1}, don't explain why", display: "List the top 5 most ridiculous ways to..."},
@@ -38,9 +40,10 @@ export const Gisticle = {
       model: "GPT3",
       templates: templates,
       players: {
-        [uid]: {
+        [u.user]: {
           ...defaultPlayer,
-          template: chooseOne(templates)
+          template: chooseOne(templates),
+          isPlayer: u.isPlayer,
         }
       }
     }
@@ -49,7 +52,7 @@ export const Gisticle = {
 
 export const Tresmojis = {
   reducer: PromptGuesser,
-  init: (uid: string): PromptGuessRoom => {
+  init: (u: GameCreateData): PromptGuessRoom => {
     const templates = [
       {template: "List 3 emojis to describe {1} (don't explain why)\n\n", display: "[Memory] List 3 emojis to describe..."},
       {template: "List 3 emojis to describe {1} (don't explain why)\n\n", display: "[Abstract Noun] List 3 emojis to describe..."},
@@ -63,9 +66,10 @@ export const Tresmojis = {
       model: "GPT3",
       templates: templates,
       players: {
-        [uid]: {
+        [u.user]: {
           ...defaultPlayer,
-          template: chooseOne(templates)
+          template: chooseOne(templates),
+          isPlayer: u.isPlayer,
         }
       }
     }
