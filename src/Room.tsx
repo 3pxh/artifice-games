@@ -2,9 +2,9 @@ import { get, ref, onValue, DataSnapshot } from "@firebase/database";
 import { db } from "./firebaseClient";
 import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
-import { GameName } from "../functions/src/games/games";
-import { QueueRoom } from "../functions/src/index";
+import { QueueRoom, QueueData } from "../functions/src/index";
 import { AuthContext } from "./AuthProvider";
+import { pingRoom } from "./actions";
 // TODO: figure out how we want to handle distinct rendering engines and game state objects
 // This goes along with more modular gameState types below
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
@@ -22,6 +22,8 @@ export type RoomData = QueueRoom & PromptGuessRoom & RoomProps;
 export function Room(props: {room: RoomData}) {
   const [gameState, setGameState] = useState<PromptGuessRoom["gameState"] | null>(null);
   const [players, setPlayers] = useState<PromptGuessRoom["players"] | null>(null);
+  const [isWaiting, setIsWaiting] = useState<boolean>(true);
+  const [startTime, setStartTime] = useState<number>(0);
 
   const updateGameState = (snapshot: DataSnapshot) => {
     setGameState(snapshot.val());
@@ -37,6 +39,25 @@ export function Room(props: {room: RoomData}) {
     onValue(stateRef, updateGameState);
     const playerRef = ref(db, `rooms/${props.room.id}/players`);
     onValue(playerRef, updatePlayerState);
+    // TODO: When we add async rooms, how do we handle queuing?
+    // In case the component has been rerendered.
+    if (isWaiting) {
+      const id = window.setInterval(() => {
+        pingRoom(props.room.id);
+      }, 5000);
+      const roomRef = ref(db, `rooms/${props.room.id}/_queue`);
+      onValue(roomRef, (snapshot: DataSnapshot) => {
+        const v = snapshot.val() as QueueData;
+        if (!v.inQueue) {
+          window.clearInterval(id);
+          setIsWaiting(false);
+        } else {
+          setStartTime(v.startTime);
+        }
+      });
+    }
+    // TODO: should we return a cleanup function that clears the interval?
+    // The interval might continue going if we unmount?
   }, [props.room.id]);
 
   const authContext = useContext(AuthContext);
@@ -50,7 +71,34 @@ export function Room(props: {room: RoomData}) {
     )
   }
 
-  if (gameState && players && authContext.user && players[authContext.user.uid]) {
+  const WaitTime = () => {
+    const [currentTime, setCurrentTime] = useState<number>(new Date().getTime());
+
+    useEffect(() => {
+      const i = window.setInterval(() => {
+        console.log(startTime);
+        setCurrentTime(new Date().getTime());
+      }, 1000);
+      return () => { window.clearInterval(i); }
+    })
+    const waitTimeS = Math.floor((startTime - currentTime)/1000);
+    // TODO: format with a padded 0, e.g. 0:06
+    const formattedWaitTime = `${Math.floor(waitTimeS/60)}:${waitTimeS % 60}`;
+    if (startTime > 0 && waitTimeS > 0) {
+      return <p>You are in the queue, the game should start in {formattedWaitTime}</p>
+    } else if (startTime > 0 && waitTimeS <= 0) {
+      return <p>Starting game...</p>
+    } else {
+      return <p>Calculating queue...</p>
+    }
+  }
+
+  if (isWaiting) {
+    return <>
+      <Header />
+      <WaitTime />
+    </>
+  } else if (gameState && players && authContext.user && players[authContext.user.uid]) {
     return <>
       <Header />
       <RenderPromptGuess 

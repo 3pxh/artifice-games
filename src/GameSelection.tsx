@@ -1,8 +1,8 @@
 import { h, Fragment } from "preact";
-import { useEffect, useState, useContext } from "preact/hooks";
+import { useState, useContext } from "preact/hooks";
 import { GameName } from "../functions/src/games/games";
 import { AuthContext } from "./AuthProvider"
-import { createGame, pingRoom, joinRoom, getRoom } from "./actions";
+import { createGame, joinRoom, getRoom } from "./actions";
 import { Room, RoomData } from "./Room";
 import SubmittableInput from "./components/SubmittableInput";
 
@@ -18,9 +18,6 @@ export default function GameSelection() {
       throw new Error(`Failed to create room for game: ${gameName}`);
     } else {
       console.log("Created room", id);
-      // TODO: set up regular pings if the room is _inQueue
-      // Should probably be done in Room.tsx though!
-      pingRoom(id); 
       getRoom(id, setRoom);
     }
   }
@@ -28,7 +25,6 @@ export default function GameSelection() {
   const setPlayerType = (isPlayer: boolean, isInputOnly: boolean) => {
     setIsPlayer(isPlayer);
     setIsInputOnly(isInputOnly);
-    console.log("Player", isPlayer, isInputOnly);
   }
 
   const handleJoinRoom = (roomCode: string) => {

@@ -53,17 +53,40 @@ const getRoomFromShortcode = async (shortcode: string): Promise<string> => {
   }
 }
 
+const QUEUE_DURATION = 15 * 1000; // Fifteen seconds
+const QUEUE_MAX_WAIT = 3600 * 1000; // One hour
+export type QueueData = {
+  inQueue: boolean,
+  startTime: number,  
+}
 export type QueueRoom = {
   _shortcode: string,
   _startPing: number,
   _createDate: number,
-  _inQueue: boolean,
+  _queue: QueueData,
   _creator: string,
   _initialized: boolean,
 }
 
+const roomStartTime = async (r: QueueRoom) => {
+  const spot = await getSpotInLine(r);
+  return (spot + 1) * QUEUE_DURATION + new Date().getTime();
+}
+
+const getSpotInLine = async (r: QueueRoom) => {
+  // N.B. this returns 0 if we've waited the maximum time.
+  const t = r._createDate;
+  const queuedRooms = await admin.database().ref("/rooms").orderByChild("_queue/inQueue").equalTo(true).get();
+  const rooms = Object.entries(queuedRooms.val() ?? {}) as [string, QueueRoom][];
+  const cutoff = new Date().getTime() - QUEUE_MAX_WAIT;
+  // N.B. this is necessarily 0 if we've waited the maximum time.
+  return rooms.filter(([k, r]) => r._createDate < t && r._createDate > cutoff).length;
+}
+
 export const roomCreated = functions.database.ref("/rooms/{id}")
   .onCreate(async (snapshot, context) => {
+    // TODO: Disallow creating many rooms at once.
+    // Could be done via DB permissions.
     const msg = snapshot.val() as CreateRequest;
     functions.logger.log("Processing create request", {msg: msg});
     const gameName = msg.gameName as GameName;
@@ -75,26 +98,29 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       _shortcode: shortcode,
       _startPing: t,
       _createDate: t,
-      _inQueue: true,
+      _queue: {
+        inQueue: true,
+        startTime: 0, 
+      },
       _creator: msg.user,
       _initialized: true,
     } satisfies QueueRoom;
+    const start = await roomStartTime(roomWithQueueState);
+    roomWithQueueState._queue.startTime = start;
     return snapshot.ref.set(roomWithQueueState);
 });
 
 export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
-  .onUpdate((snapshot, context) => {
+  .onUpdate(async (snapshot, context) => {
     functions.logger.log("Processing ping", snapshot.after.val());
-    const now = new Date().getTime();
-    if (snapshot.after.val() < now) {
-      // TODO:
-      // Determine if there is a queue and how long it is?
-      // If there isn't, or the user is paid, jump the queue.
-      // To start the game, initialize the game state.
-      return admin.database().ref(`/rooms/${context.params.id}/_inQueue`).set(false);
-    } else {
-      // Someone's trying to skip the queue!
-      return;
+    const thisRoom = (await snapshot.before.ref.parent?.get())?.val() as QueueRoom;
+    // TODO: Account for abandoned rooms to speed up the queue.
+    // This should work for now, but if 1000 people queue up, and then a bunch leave,
+    // we probably want to notice they aren't pinging.
+    // i.e. we could do a similar "roomStartTime" calculation
+    // filtering out rooms not pinged in the past 2 minutes
+    if (thisRoom._queue.startTime < new Date().getTime()) {
+      return admin.database().ref(`/rooms/${context.params.id}/_queue/inQueue`).set(false);
     }
 });
 
@@ -141,6 +167,8 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
     // TODO: define write rules on the room --
     // if it's inQueue, then users can't write messages!
     // (They can only touch startPing)
+
+    // TODO: If the room is currently queued, don't handle messages.
 
     // TODO: this should be a transaction on the gameState, not the room.
     // Players may be frequently changing their states under room/{id}/players
