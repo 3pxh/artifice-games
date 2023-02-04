@@ -8,6 +8,9 @@
   */
   "rules": {
     ".read": true,
-    ".write": true
+    ".write": true,
+    "rooms": {
+      ".indexOn": "_queue/inQueue"
+    }
   }
 }

@@ -24,6 +24,7 @@ const createGame = (gameName: GameName, isPlayer: boolean): string => {
 }
 
 const pingRoom = (roomId: string) => {
+  console.log("ping room", new Date().getTime())
   set(ref(db, `rooms/${roomId}/startPing`), new Date().getTime());
 }
 
