@@ -1,26 +1,16 @@
 import { ref, set, push, onValue } from "@firebase/database";
-import { GameName } from "../functions/src/games/games";
 import { CreateRequest } from "../functions/src";
 import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
 import { RoomData } from "./Room";
 
-const createGame = (gameName: GameName, isPlayer: boolean): string => {
-  if (auth.currentUser && !auth.currentUser.isAnonymous) {
-    const r = {
-      user: auth.currentUser.uid,
-      gameName: gameName,
-      isPlayer: isPlayer,
-    } as CreateRequest;
-    const k = push(ref(db, "rooms/")).key;
-    if (!k) {
-      throw new Error("Cannot create a new room id");
-    }
-    set(ref(db, `rooms/${k}`), r);
-    return k;
-  } else {
-    throw new Error("Cannot create a game as an anonymous user");
+const createGame = (opts: CreateRequest): string => {
+  const k = push(ref(db, "rooms/")).key;
+  if (!k) {
+    throw new Error("Cannot create a new room id");
   }
+  set(ref(db, `rooms/${k}`), opts);
+  return k;
 }
 
 const pingRoom = (roomId: string) => {

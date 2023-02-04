@@ -4,11 +4,11 @@ import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
 import { QueueRoom, QueueData } from "../functions/src/index";
 import { AuthContext } from "./AuthProvider";
-import { pingRoom } from "./actions";
+import { messageRoom, pingRoom } from "./actions";
 // TODO: figure out how we want to handle distinct rendering engines and game state objects
 // This goes along with more modular gameState types below
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
-import { PromptGuessRoom } from "../functions/src/games/promptGuessBase";
+import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 
 // TODO: make the type of this depend on the game in question
 // Or rather, include the various room types
@@ -93,6 +93,36 @@ export function Room(props: {room: RoomData}) {
     }
   }
 
+  const GameTimer = (props: {timer?: Omit<PromptGuessTimer, "stateDurations">, roomId: string, uid: string}) => {
+    const [timeRemaining, setTimeRemaining] = useState<number>(new Date().getTime());
+    useEffect(() => {
+        const i = window.setInterval(() => {
+          if (props.timer) {
+            const t = props.timer.started + props.timer.duration - new Date().getTime();
+            setTimeRemaining(Math.floor(t/1000));
+            if (t < 0) {
+              window.clearInterval(i);
+              const m:PromptGuessMessage = {
+                type: "OutOfTime",
+                uid: props.uid,
+                value: "ping",
+              };
+              messageRoom(props.roomId, m);
+            }
+          }
+        }, 1000);
+        return () => { window.clearInterval(i); }
+    }, [props.timer]);
+
+    if (props.timer && props.timer.duration > 0 && timeRemaining < 3600*24) {
+      return <div class="Room-Timer">
+        {timeRemaining > 0 ? `Time remaining: ${timeRemaining} seconds` : "Out of time!"}
+      </div>
+    } else {
+      return <></>
+    }
+  }
+
   if (isWaiting) {
     return <>
       <Header />
@@ -101,6 +131,7 @@ export function Room(props: {room: RoomData}) {
   } else if (gameState && players && authContext.user && players[authContext.user.uid]) {
     return <>
       <Header />
+      <GameTimer timer={gameState.timer} roomId={props.room.id} uid={authContext.user.uid} />
       <RenderPromptGuess 
             room={props.room}
             gameState={gameState}

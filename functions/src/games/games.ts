@@ -4,6 +4,7 @@ import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
 export type GameCreateData = {
   user: string,
   isPlayer: boolean,
+  timer: "off" | "slow" | "fast",
 }
 
 type GameName = PromptGuessGameName; // | "dixit" | "codenames" | ...

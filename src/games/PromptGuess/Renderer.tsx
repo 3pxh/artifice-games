@@ -62,12 +62,12 @@ export function RenderPromptGuess(props: {
   }
 
   const shuffledOptions = (gs: PromptGuessRoom["gameState"]): {uid: string, prompt: string}[] => {
-    if (!gs.currentGeneration) {
+    if (!gs.currentGeneration || !gs.generations) {
       throw new Error("Trying to construct lies, but don't have a generation!");
     }
     const gen = gs.currentGeneration;
     const truth: [string, string] = [gs.generations[gen].uid, gs.generations[gen].prompt];
-    const s = shuffle(Object.entries(gs.lies).concat([truth])).map(([uid, prompt]) => {
+    const s = shuffle(Object.entries(gs.lies ?? {}).concat([truth])).map(([uid, prompt]) => {
       return {
         uid: uid,
         prompt: prompt

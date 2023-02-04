@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import { chooseOne } from "../utils";
 import { Models, GenerationResponse } from "../generate";
+import { GameCreateData } from "./games";
 
 export type Template = {template: string, display: string};
 export type UserID = string; 
@@ -14,7 +15,7 @@ export type PromptGeneration = GenerationResponse & {
   fulfilled: boolean,
   error?: string,
 }
-type PromptGuessTimer = {
+export type PromptGuessTimer = {
   started: number,
   duration: number,
   stateDurations: Record<PromptGuessState, number>,
@@ -32,15 +33,16 @@ export type PromptGuessRoom = {
     round: number,
     maxRound: number,
     currentGeneration: UserID | null,
-    lies: { [k: UserID]: string },
-    votes: { [k: UserID]: UserID },
+    // Lies/votes/gens are optional because the timer may expire.
+    lies?: { [k: UserID]: string },
+    votes?: { [k: UserID]: UserID },
+    generations?: { [k: UserID]: PromptGeneration },
     scores: {
       [k: UserID]: {
         current: number,
         previous: number,
       },
     },
-    generations: { [k: UserID]: PromptGeneration },
   },
   players: { // Because we need to be able to set individual player data!
     [uid: UserID]: {
@@ -59,30 +61,9 @@ export type PromptGuessRoom = {
   }
 }
 
-// TODO: define roomOpts -- e.g. how fast is the timer, is it a shared display, etc.
-// We can even specify alternative models for the games. E.g. DALLE for Farsketched.
-export const initState = (roomOpts?: any): PromptGuessRoom => {
-  let timer:{timer: PromptGuessTimer} | null = null;
-  if (roomOpts && roomOpts.timer) {
-    timer = {timer: { // This nesting is so we can spread it.
-      started: 0,
-      duration: 0,
-      stateDurations: {
-        "Lobby": Number.MAX_VALUE, // Needs all states for typing :/
-        "Intro": 132 * 1000, //Farsketched video is 128 seconds.
-        // TODO: parametrize these by timer options, player count, etc.
-        // Move timer initialization into its own function.
-        // We may want to override it per game as well.
-        "Prompt": 40 * 1000,
-        "Lie": 30 * 1000,
-        "Vote": 30 * 1000,
-        "Score": 30 * 1000,
-        "Finish": Number.MAX_VALUE
-      },
-    }};
-  }
+// In roomOpts we can even specify alternative models for the games. E.g. DALLE for Farsketched.
+export const initState = (roomOpts?: GameCreateData): PromptGuessRoom => {
   return {
-    ...(timer || {}),
     gameName: "farsketched", // This feels a bit wrong.
     templates: [{template: "{1}", display: "Write something"}],
     model: "StableDiffusion",
@@ -205,13 +186,14 @@ const PromptGuesserActions = {
       gameState.scores[scorePlayer].previous = gameState.scores[scorePlayer].current;
     });
     Object.keys(gameState.scores).forEach(scorePlayer => {
-      Object.keys(gameState.votes).forEach(votePlayer => {
-        if (gameState.votes[votePlayer] === scorePlayer && 
+      const v = gameState.votes ?? {};
+      Object.keys(v).forEach(votePlayer => {
+        if (v[votePlayer] === scorePlayer && 
             gameState.currentGeneration === scorePlayer) {
           // You wrote the truth and someone guessed it
           gameState.scores[scorePlayer].current += 1000;
           gameState.scores[votePlayer].current += 1000;
-        } else if (gameState.votes[votePlayer] === scorePlayer && 
+        } else if (v[votePlayer] === scorePlayer && 
                    gameState.currentGeneration !== scorePlayer) {
           // You wrote a lie and someone guessed it
           gameState.scores[scorePlayer].current += 500;
@@ -222,15 +204,15 @@ const PromptGuesserActions = {
 
   ContinueAfterScoring(room: PromptGuessRoom) {
     const gameState = room.gameState;
-    if (gameState.currentGeneration) {
+    if (gameState.currentGeneration && gameState.generations) {
       // It's really annoying Firebase won't hold empty objects.
       // Perhaps we should use a "safeSet" function for all object properties.
       room.history = room.history || {};
       room.history[new Date().getTime()] = {
         // TODO: do we have to deep copy these?
         generation: gameState.generations[gameState.currentGeneration],
-        lies: gameState.lies,
-        votes: gameState.votes,
+        lies: gameState.lies ?? {},
+        votes: gameState.votes ?? {},
       };
       gameState.lies = {};
       gameState.votes = {};
@@ -241,6 +223,9 @@ const PromptGuesserActions = {
         PromptGuesserActions.TransitionState(room, "Lie");
       } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
         room.gameState.round += 1;
+        Object.keys(room.players).forEach(k => {
+          room.players[k].template = chooseOne(room.templates);
+        });
         PromptGuesserActions.TransitionState(room, "Prompt");
       } else if (gens.length === 0 && room.gameState.round === room.gameState.maxRound) {
         PromptGuesserActions.TransitionState(room, "Finish");
@@ -277,14 +262,17 @@ const PromptGuesserActions = {
   // is to function properly with the timer. We could enforce this by having
   // some private / protected methods. TODO: protect these state changes.
   TransitionState(room: PromptGuessRoom, newState: PromptGuessState) {
-    Object.keys(room.players).forEach(p => {
-      room.players[p].state = newState;
-      room.players[p].isReadyToContinue = false;
-    });
-    room.gameState.state = newState;
-    if (room.gameState.timer && newState !== "Finish") {
-      room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
-      room.gameState.timer.started = new Date().getTime();
+    const outOfTimeAndNoOneSubmittedPrompts = !room.gameState.generations && newState === "Lie";
+    if (!outOfTimeAndNoOneSubmittedPrompts) {
+      Object.keys(room.players).forEach(p => {
+        room.players[p].state = newState;
+        room.players[p].isReadyToContinue = false;
+      });
+      room.gameState.state = newState;
+      if (room.gameState.timer && newState !== "Finish") {
+        room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
+        room.gameState.timer.started = new Date().getTime();
+      }
     }
   }
 }

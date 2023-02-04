@@ -13,12 +13,21 @@ export default function GameSelection() {
   const [isInputOnly, setIsInputOnly] = useState<boolean>(false);
 
   const handleCreateGame = (gameName: GameName) => {
-    const id = createGame(gameName, isPlayer);
-    if (!id) {
-      throw new Error(`Failed to create room for game: ${gameName}`);
+    if (user && !user.isAnonymous) {
+      const id = createGame({
+        gameName, 
+        isPlayer,
+        user: user.uid,
+        timer: "fast",
+      });
+      if (!id) {
+        throw new Error(`Failed to create room for game: ${gameName}`);
+      } else {
+        console.log("Created room", id);
+        getRoom(id, setRoom);
+      }
     } else {
-      console.log("Created room", id);
-      getRoom(id, setRoom);
+      throw new Error("Cannot create a game as an anonymous user");
     }
   }
 
