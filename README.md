@@ -16,7 +16,8 @@ In the toplevel directory, run `firebase init`.
 * <small>File functions/src/index.ts already exists. Overwrite? <span style="color:green">No</span><br/></small>
 * <small>File functions/.gitignore already exists. Overwrite? <span style="color:green">No</span><br/></small>
 * <small>Do you want to install dependencies with npm now? <span style="color:green">Yes</span><br/></small>
-
+* <small>What file should be used for Storage Rules? (storage.rules) <span style="color:green">[enter]</span><br/></small>
+* <small>File storage.rules already exists. Overwrite? <span style="color:green">No</span><br/></small>
 
 # Developing
 
