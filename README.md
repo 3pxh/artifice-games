@@ -6,7 +6,7 @@ Get the firebase CLI. Run `firebase login`. Make sure that you have access to th
 
 In the toplevel directory, run `firebase init`.
 
-* <small>Select the <span style="color:green">realtime database</span> and <span style="color:green">functions</span>.<br/></small>
+* <small>Select the <span style="color:green">realtime database</span>, <span style="color:green">functions</span>, and <span style="color:green">cloud storage</span>.<br/></small>
 * <small>When asked if it's an existing project, select the <span style="color:green">threepixelheart</span> project.<br/></small>
 * <small>File database.rules.json already exists. Do you want to overwrite it with the Realtime Database Security Rules for threepixelheart-f5674-default-rtdb from the Firebase console? <span style="color:green">No</span><br/></small>
 * <small>What language would you like to use to write Cloud Functions? <span style="color:green">TypeScript</span><br/></small>
@@ -24,7 +24,7 @@ To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebui
 
 To run firebase locally it helps to open up two terminals and cd functions in both. In one: `npm run emulate` and in the other: `npm run build:watch`. This allows hot reloading of the cloud functions as you work on them (whereas npm run emulate will only compile once).
 
-That should run all the emulators (realtime databse and functions) and show them with a nice UI. Default port 4000.
+That should run all the emulators (realtime databse, functions, and cloud storage) and show them with a nice UI. Default port 4000.
 
 Local dev won't hit the production database, just the local emulated db. If in the future we need certain data in the db at boot then we'll add an initializer and check it in (and use --import-data)
 
