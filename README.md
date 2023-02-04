@@ -17,6 +17,7 @@ In the toplevel directory, run `firebase init`.
 * <small>File functions/.gitignore already exists. Overwrite? <span style="color:green">No</span><br/></small>
 * <small>Do you want to install dependencies with npm now? <span style="color:green">Yes</span><br/></small>
 
+
 # Developing
 
 To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebuilds and re-serves stuff automatically. Default port 3000.

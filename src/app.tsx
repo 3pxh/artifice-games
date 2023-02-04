@@ -1,58 +1,30 @@
 import { h, Fragment } from "preact";
-import { useState } from "preact/hooks";
-import { AuthContext, useAuth } from "./AuthProvider"
-import { Auth } from "./Auth";
-import { createGame, pingRoom } from "./actions";
-import { GameNames } from "./gameTypes";
-import { Game } from "./Game";
+import { useEffect } from "preact/hooks";
+import { useAuth, AuthContext } from "./AuthProvider";
+import Auth from "./Auth";
+import TopNav from "./TopNav";
+import GameSelection from "./GameSelection";
 
-export function App() {
+export default function App() {
   const { user, login, logout } = useAuth();
-  const [roomId, setRoomId] = useState<string | null>(null);
 
-  const handleCreateGame = (gameName: GameNames) => {
-    const id = createGame(gameName);
-    if (!id) {
-      console.error("Failed to create room.");
-    } else {
-      // Join the room!
-      console.log("Created room", id);
-      setRoomId(id);
-      pingRoom(id);
-    }
-  }
-
-  return (
-    <>
-    <AuthContext.Provider value={{
+  return <>
+  <AuthContext.Provider value={{
       user,
       login,
       logout
     }}>
-      <Auth />
-      {!roomId && user && user.email // Not anon
-      ? <>
-        <div>
-          Create a game. 
-          <button onClick={() => {handleCreateGame("farsketched")}}>Farsketched</button>
-          <button onClick={() => {handleCreateGame("gisticle")}}>Gisticle</button>
-          <button onClick={() => {handleCreateGame("tresmojis")}}>Tresmojis</button>
-        </div>
-      </>
-      : <></>}
-
-      {user 
-      ? <>
-        <div>
-          Room code: <input  /> <button>Join</button>
-        </div>
-      </>
-      : <></>}
-
-      {roomId 
-      ? <Game roomId={roomId} />
-      : <></>}
-    </AuthContext.Provider>
-    </>
-  )
+      {!user 
+      ? <Auth /> 
+      : <>
+        <TopNav /> 
+        {/* Do we _just_ want to render GameSelection here, and have it render Room?
+        Or would we like to put Room on App's state, and have a callback passed to GS?
+        We shouldn't be rerendering App. So the current structure seems right, but
+        the name "GameSelection" seems bad. TODO: Rename GameSelection.
+        */}
+        <GameSelection />
+      </>}
+  </AuthContext.Provider>
+  </>
 }

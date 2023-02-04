@@ -9,10 +9,10 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        console.log("Got a user!", user)
-        setUser(user);
+    auth.onAuthStateChanged(u => {
+      if (u && (!user || user.uid !== u.uid)) {
+        console.log("Got a user!", u)
+        setUser(u);
       }
       else {
         // User is signed out.

@@ -1,0 +1,31 @@
+import { PromptGuessRoom, PromptGuessMessage, PromptGuessGameName } from "./promptGuessBase";
+import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
+
+export type GameCreateData = {
+  user: string,
+  isPlayer: boolean,
+  timer: "off" | "slow" | "fast",
+}
+
+type GameName = PromptGuessGameName; // | "dixit" | "codenames" | ...
+type Reducer<Room extends {gameState: any}, Message> = (gs: Room, m: Message) => Room["gameState"];
+type PromptGuessEngine = { 
+  reducer: Reducer<PromptGuessRoom, PromptGuessMessage>, 
+  init: (v: GameCreateData) => PromptGuessRoom
+}
+
+type GameEngine = PromptGuessEngine; // | AnotherEngine
+const engines:Record<GameName, GameEngine> = {
+  "farsketched": Farsketched,
+  "gisticle": Gisticle,
+  "tresmojis": Tresmojis,
+}
+
+// TODO: this doesn't seem quite right as far as managing types...
+type MessageTypes = {
+  "farsketched": PromptGuessMessage,
+  "gisticle": PromptGuessMessage,
+  "tresmojis": PromptGuessMessage,
+}
+
+export { engines, GameName, MessageTypes }

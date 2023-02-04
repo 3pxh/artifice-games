@@ -2,7 +2,7 @@ import { h, Fragment } from 'preact'
 import { useContext, useState } from 'preact/hooks'
 import { AuthContext, AuthType } from './AuthProvider'
 
-export function Auth() {
+export default function Auth() {
   const authContext = useContext(AuthContext);
   const [isWaiting, setIsWaiting] = useState(false);
   const [email, setEmail] = useState('');

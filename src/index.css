@@ -9,21 +9,69 @@ html, body {
 	color: #444;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	--brand-color: #673ab8;
 }
 
 * {
 	box-sizing: border-box;
 }
 
+button { cursor: pointer; }
+
 #app {
-  height: 100%;
-  text-align: center;
+	align-items: center;
+	bottom: 0;
+	display: flex;
+	flex-direction: column;
+	left: 0;
+  position: absolute;
+	right: 0;
+	top: 0;
   background-color: #673ab8;
   color: #fff;
   font-size: 1.5em;
-  padding-top: 100px;
 }
 
 .link {
   color: #fff;
 }
+
+
+.TopNav {
+	background: white;
+	color: #673ab8;
+	display: flex;
+	flex-direction: row;
+	font-size: 12pt;
+	padding: 2px;
+	width: 100%;
+}
+
+.GameSelection-Join input {
+	text-transform: uppercase;
+}
+
+.Prompt-Hero {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	margin-top: 100px;
+}
+.Prompt-Hero input {
+	border: none;
+	border-radius: 30px;
+	font-size: 16pt;
+	margin: 20px;
+	max-width: 600px;
+	padding: 10px;
+	width: 100%;
+}
+.Prompt-Hero button {
+	background-color: white;
+	border: none;
+	border-radius: 30px;
+	box-shadow: none;
+	font-size: 16pt;
+	padding: 10px 20px;
+}
+
