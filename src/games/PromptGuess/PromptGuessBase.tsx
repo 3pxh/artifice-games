@@ -25,16 +25,19 @@ function Lie(props: {
     generation: PromptGeneration,
   }) {
   const authContext = useContext(AuthContext);
-  // TODO: include the generation too?
-  return <>
-  {authContext.user?.uid === props.generation.uid 
-    ? <p>You are responsible for this masterpiece. Well done.</p>
-    : <SubmittableInput
-      onSubmit={props.onSubmit}
-      label={props.generation.template.display}
-      buttonText="Lie!" />
+  if (!props.generation.fulfilled) {
+    // Generations are responsible for showing loading state.
+    return <></>
+  } else if (authContext.user?.uid === props.generation.uid) {
+    return <p>You are responsible for this masterpiece. Well done.</p>
+  } else {
+    return <div class="Prompt-Hero">
+      <SubmittableInput
+        onSubmit={props.onSubmit}
+        label="Fool others with some artifice:"
+        buttonText="Lie!" />
+    </div>
   }
-  </>
 };
 
 function LieChoices(props: {
@@ -42,18 +45,18 @@ function LieChoices(props: {
     options: {uid: string, prompt: string}[]
   }) {
   const authContext = useContext(AuthContext);
-  return <>
+  return <div class="PromptGuessBase-LieChoices">
     {props.options.map((option) => {
       return <>
       {authContext.user?.uid !== option.uid
-        ? <button key={option.uid} onClick={() => {
+        ? <button class="HasUserText" key={option.uid} onClick={() => {
             props.onSubmit(option.uid);
           }}>{option.prompt}</button>
-        : <button key={option.uid} disabled>{option.prompt}</button>
+        : <button class="HasUserText" key={option.uid} disabled>{option.prompt}</button>
       }
       </>
     })}
-  </>
+  </div>
 };
   
 function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, delay?: number}) {
@@ -68,14 +71,14 @@ function Scoreboard(props: {
     scores: PromptGuessRoom["gameState"]["scores"],
     onContinue?: () => void,
   }) {
-  return <>
+  return <div class="PromptGuessBase-Scoreboard">
     {Object.entries(props.scores).map(([k,v]) => {
       return <>
         <p>{k}: {v.current} {v.current !== v.previous ? `+${v.current-v.previous}` : ""}</p>
       </>
     })}
     {props.onContinue ? <button onClick={props.onContinue}>Continue</button> : ''}
-  </>
+  </div>
 }
 
 export {Intro, Prompt, Lie, LieChoices, Generation, Scoreboard}

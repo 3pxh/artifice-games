@@ -30,7 +30,8 @@ button { cursor: pointer; }
   background-color: #673ab8;
   color: #fff;
   font-size: 1.5em;
-	overflow: scroll;
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 .link {
@@ -48,6 +49,11 @@ button { cursor: pointer; }
 	width: 100%;
 }
 
+.GameContainer{
+	padding: 10px;
+	max-width: min(100%, 600px);
+}
+
 .GameSelection-Join input {
 	text-transform: uppercase;
 }
@@ -56,7 +62,6 @@ button { cursor: pointer; }
 	align-items: center;
 	display: flex;
 	flex-direction: column;
-	margin-top: 100px;
 }
 .Prompt-Hero input {
 	border: none;
@@ -76,3 +81,37 @@ button { cursor: pointer; }
 	padding: 10px 20px;
 }
 
+.HasUserText {
+	overflow-wrap: break-word;
+}
+
+.Generation-Image {
+	max-width: min(512px, 100%);
+}
+.Generation-Truth {
+	color: yellow;
+	font-weight: 600;
+}
+
+.PromptGuessBase-LieChoices {
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+}
+.PromptGuessBase-LieChoices > button {
+	font-size: 16pt;
+	padding: 10px;
+	margin-bottom: 5px;
+	max-width: 100%;
+}
+
+.PromptGuessBase-Scoreboard > button {
+	background-color: aquamarine;
+	border: none;
+	border-radius: 30px;
+	font-size: 16pt;
+	padding: 10px;
+}
+.PromptGuessBase-Scoreboard > button:hover {
+	background-color: aqua;
+}

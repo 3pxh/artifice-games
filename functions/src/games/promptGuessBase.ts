@@ -6,7 +6,7 @@ import { GameCreateData } from "./games";
 export type Template = {template: string, display: string};
 export type UserID = string; 
 export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
-export type PlayerState = PromptGuessState | "PromptDone" | "LieDone" | "VoteDone";
+export type PlayerState = PromptGuessState;
 export type PromptGeneration = GenerationResponse & {
   model: Models,
   uid: UserID,

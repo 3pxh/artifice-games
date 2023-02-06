@@ -2,6 +2,7 @@ import { get, ref, onValue, DataSnapshot } from "@firebase/database";
 import { db } from "./firebaseClient";
 import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
+import { useSignal, useComputed, Signal } from "@preact/signals";
 import { QueueRoom, QueueData } from "../functions/src/index";
 import { AuthContext } from "./AuthProvider";
 import { messageRoom, pingRoom } from "./actions";
@@ -20,17 +21,26 @@ type RoomProps = {
 export type RoomData = QueueRoom & PromptGuessRoom & RoomProps;
 
 export function Room(props: {room: RoomData}) {
-  const [gameState, setGameState] = useState<PromptGuessRoom["gameState"] | null>(null);
-  const [players, setPlayers] = useState<PromptGuessRoom["players"] | null>(null);
+  
+  // const [gameState, setGameState] = useState<PromptGuessRoom["gameState"] | null>(null);
+  // const [players, setPlayers] = useState<PromptGuessRoom["players"] | null>(null);
   const [isWaiting, setIsWaiting] = useState<boolean>(true);
   const [startTime, setStartTime] = useState<number>(0);
+  const gameState = useSignal<PromptGuessRoom["gameState"] | null>(null);
+  const players = useSignal<PromptGuessRoom["players"] | null>(null);
+  const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
+  const isLoaded = useComputed<boolean>(() => {
+    return gameState.value !== null && players.value !== null;
+  })
 
   const updateGameState = (snapshot: DataSnapshot) => {
-    setGameState(snapshot.val());
+    gameState.value = snapshot.val();
+    // setGameState(snapshot.val());
     console.log("setting state", snapshot.val())
   }
   const updatePlayerState = (snapshot: DataSnapshot) => {
-    setPlayers(snapshot.val());
+    players.value = snapshot.val();
+    // setPlayers(snapshot.val());
     console.log("setting players", snapshot.val())
   }
 
@@ -66,7 +76,6 @@ export function Room(props: {room: RoomData}) {
     return (
       <>
         <p>You are playing: {props.room.gameName} | Code: {props.room._shortcode}</p>
-        <p style="display:none;">Game state: {gameState?.state}</p>
       </>
     )
   }
@@ -93,12 +102,12 @@ export function Room(props: {room: RoomData}) {
     }
   }
 
-  const GameTimer = (props: {timer?: Omit<PromptGuessTimer, "stateDurations">, roomId: string, uid: string}) => {
+  const GameTimer = (props: {roomId: string, uid: string}) => {
     const [timeRemaining, setTimeRemaining] = useState<number>(new Date().getTime());
     useEffect(() => {
         const i = window.setInterval(() => {
-          if (props.timer) {
-            const t = props.timer.started + props.timer.duration - new Date().getTime();
+          if (timer.value) {
+            const t = timer.value.started + timer.value.duration - new Date().getTime();
             setTimeRemaining(Math.floor(t/1000));
             if (t < 0) {
               window.clearInterval(i);
@@ -112,9 +121,9 @@ export function Room(props: {room: RoomData}) {
           }
         }, 1000);
         return () => { window.clearInterval(i); }
-    }, [props.timer]);
+    });
 
-    if (props.timer && props.timer.duration > 0 && timeRemaining < 3600*24) {
+    if (timer.value && timer.value.duration > 0 && timeRemaining < 3600*24) {
       return <div class="Room-Timer">
         {timeRemaining > 0 ? `Time remaining: ${timeRemaining} seconds` : "Out of time!"}
       </div>
@@ -128,14 +137,21 @@ export function Room(props: {room: RoomData}) {
       <Header />
       <WaitTime />
     </>
-  } else if (gameState && players && authContext.user && players[authContext.user.uid]) {
+  } else if (isLoaded && authContext.user) { //&& gameState && players && players[authContext.user.uid]
     return <>
       <Header />
-      <GameTimer timer={gameState.timer} roomId={props.room.id} uid={authContext.user.uid} />
+      <GameTimer roomId={props.room.id} uid={authContext.user.uid} />
       <RenderPromptGuess 
             room={props.room}
-            gameState={gameState}
-            players={players}
+            // WARNING! We do these typecasts because the isLoaded is a computed null guard.
+            // Now there's a question: does all of this rerender when gameState changes, or
+            // is the memoized isLoaded fine?
+            // We DO NOT want to check if the values of these signals are null, because
+            // that would necessitate a rerender on every update. We want the signals
+            // passed down with minimal rerenders for things like retaining focus on
+            // input fields.
+            gameState={gameState as Signal<PromptGuessRoom["gameState"]>}
+            players={players as Signal<PromptGuessRoom["players"]>}
             isPlayer={props.room.isPlayer}
             isInputOnly={props.room.isInputOnly} />
     </>
