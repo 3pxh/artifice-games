@@ -23,7 +23,9 @@ export default function App() {
         We shouldn't be rerendering App. So the current structure seems right, but
         the name "GameSelection" seems bad. TODO: Rename GameSelection.
         */}
-        <GameSelection />
+        <div class="GameContainer">
+          <GameSelection />
+        </div>
       </>}
   </AuthContext.Provider>
   </>

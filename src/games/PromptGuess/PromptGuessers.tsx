@@ -27,12 +27,12 @@ export const Farsketched = {
         });
       }, isSafeToLoad ? 0 : 2000);
     }
-    useEffect(() => {console.log("render generation", props.generation.generation, image)})
+
     if (image) {
       return <>
         {/* TODO: styling! */}
-        {props.showPrompt ? props.generation.prompt : ""}
-        <img src={image} width="512" />
+        {props.showPrompt ? <p>The truth was: <span class="Generation-Truth">{props.generation.prompt}</span></p> : ""}
+        <img src={image} class="Generation-Image" />
       </>
     } else {
       return <>Loading...</>
@@ -40,17 +40,23 @@ export const Farsketched = {
   },
 }
 
-const RenderText = (props: {generation: PromptGeneration}) => {
+const RenderText = (props: {generation: PromptGeneration, showPrompt?: boolean}) => {
   if (props.generation.error) {
     throw new Error(`Attempting to render text generation containing an error: ${props.generation.error}`)
   } else if (!props.generation.generation) {
-    return <>
-      Loading text generation...
-    </>
+    return <>Waiting on the AI...</>
   } else {
-    return <span style="white-space:pre-wrap;">
-      {props.generation.generation}
-    </span>
+    return <>
+      {props.showPrompt 
+        ? <p>
+            {props.generation.template.display}{' '}
+            <span class="Generation-Truth">{props.generation.prompt}</span>
+          </p>
+        : ""}
+      <span style="white-space:pre-wrap;">
+        {props.generation.generation.trim()}
+      </span>
+    </>
   }
 }
 
@@ -59,9 +65,13 @@ export const Gisticle = {
   Generation(props: {generation: PromptGeneration, showPrompt?: boolean}) {
     return <>
       {/* TODO: styling! */}
-      <p>{props.generation.template.display}</p>
-      <p><RenderText generation={props.generation} /></p>
-      {props.showPrompt ? props.generation.prompt : ""}
+      <p>
+        {props.generation.template.display}{' '}
+        <span class="Generation-Truth HasUserText">
+          {props.showPrompt ? props.generation.prompt : ""}
+        </span>
+      </p>
+      <p class="HasUserText"><RenderText generation={props.generation} /></p>
     </>
   },
 }
