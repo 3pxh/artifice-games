@@ -9,13 +9,14 @@ import SubmittableInput from "./components/SubmittableInput";
 export default function GameSelection() {
   const { user } = useContext(AuthContext);
   const [room, setRoom] = useState<RoomData | null>(null);
-  const [isPlayer, setIsPlayer] = useState<boolean>(true);
-  const [isInputOnly, setIsInputOnly] = useState<boolean>(false);
+  type DisplayMode = "observe" | "input" | "full";
+  const [display, setDisplay] = useState<DisplayMode>("full");
   const [timerMode, setTimerMode] = useState<TimerOption>("off");
   const [selectedGame, setSelectedGame] = useState<GameName | "_join" | null>(null);
 
   const handleCreateGame = (gameName: GameName) => {
     if (user && !user.isAnonymous) {
+      const isPlayer = display !== "observe";
       const id = createGame({
         gameName, 
         isPlayer,
@@ -36,28 +37,26 @@ export default function GameSelection() {
   const handleJoinRoom = (roomCode: string) => {
     const code = roomCode.toUpperCase();
     console.log("Trying to join room", code);
-    joinRoom(code, isPlayer, setRoom);
+    joinRoom(code, display !== "observe", setRoom);
   }
 
   const DisplayOptions = () => {
-    const setPlayerType = (isPlayer: boolean, isInputOnly: boolean) => {
-      setIsPlayer(isPlayer);
-      setIsInputOnly(isInputOnly);
+    const setType = (t: DisplayMode) => {
+      setDisplay(t);
     }
+    const options:[DisplayMode, string][] = [
+      ["observe", "Observing only / shared screen"],
+      ["input", "Playing with a shared screen"],
+      ["full", "Playing without a shared screen"],
+    ];
     return <fieldset>
-      <p>Display:</p>
-      <div>
-        <input type="radio" id="shared" onChange={() => { setPlayerType(false, false); }} checked={!isPlayer} />
-        <label for="shared">This is a shared display</label>
+      <p>This display is for:</p>
+      {options.map(([d,desc]) => {
+        return <div key={d}>
+        <input type="radio" id={d} onChange={() => { setType(d); }} checked={d === display} />
+        <label for={d}>{desc}</label>
       </div>
-      <div>
-        <input type="radio" id="privateInput" onChange={() => { setPlayerType(true, true); }} checked={isPlayer && isInputOnly} />
-        <label for="privateInput">I'm playing on this display, and I see a shared display</label>
-      </div>
-      <div>
-        <input type="radio" id="privateFull" onChange={() => { setPlayerType(true, false); }} checked={isPlayer && !isInputOnly} />
-        <label for="privateFull">This is the only screen I can see</label>
-      </div>
+      })}
     </fieldset>
   }
   const TimerOptions = () => {
@@ -85,34 +84,32 @@ export default function GameSelection() {
   }
 
   // TODO: we should probably set Room on App, not inside GameSelection
-  if (!room) {
-    if (user.isAnonymous || selectedGame === "_join") {
-      return <Join />
-    } else if (selectedGame === null) {
-      return <>
-      <div>
-        <h1>Create a game</h1>
-        <button onClick={() => {setSelectedGame("farsketched")}}><h2>Farsketched</h2></button>
-        <button onClick={() => {setSelectedGame("gisticle")}}><h2>Gisticle</h2></button>
-        <button onClick={() => {setSelectedGame("tresmojis")}}><h2>Tresmojis</h2></button>
-        <h1>Or,</h1>
-        <button onClick={() => {setSelectedGame("_join")}}><h2>Join a game</h2></button>
-      </div>
-    </>
-    } else {
-      return <>
-        <h1><button onClick={() => {setSelectedGame(null)}}><h2>←</h2></button>Create game: {selectedGame}</h1>
-        <DisplayOptions />
-        <TimerOptions />
-        {/* Game / room options */}
-        <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>
-      </>
-    }
-  } else {
+  if (room) {
     return <Room room={{
       ...room,
-      isPlayer: isPlayer,
-      isInputOnly: isInputOnly,
+      isPlayer: display !== "observe",
+      isInputOnly: display === "input",
     }} />
+  } else if (user.isAnonymous || selectedGame === "_join") {
+    return <Join />
+  } else if (selectedGame === null) {
+    return <>
+    <div>
+      <h1>Create a game</h1>
+      <button onClick={() => {setSelectedGame("farsketched")}}><h2>Farsketched</h2></button>
+      <button onClick={() => {setSelectedGame("gisticle")}}><h2>Gisticle</h2></button>
+      <button onClick={() => {setSelectedGame("tresmojis")}}><h2>Tresmojis</h2></button>
+      <h1>Or,</h1>
+      <button onClick={() => {setSelectedGame("_join")}}><h2>Join a game</h2></button>
+    </div>
+  </>
+  } else {
+    return <>
+      <h1><button onClick={() => {setSelectedGame(null)}}><h2>←</h2></button>Create game: {selectedGame}</h1>
+      <DisplayOptions />
+      <TimerOptions />
+      {/* Game options, e.g. model type */}
+      <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>
+    </>
   }
 }
