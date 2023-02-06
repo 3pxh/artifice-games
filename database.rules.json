@@ -10,7 +10,7 @@
     ".read": true,
     ".write": true,
     "rooms": {
-      ".indexOn": "_queue/inQueue"
+      ".indexOn": "_queue/startTime"
     }
   }
 }

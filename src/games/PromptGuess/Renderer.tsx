@@ -83,7 +83,8 @@ export function RenderPromptGuess(props: {
   const renderState = props.isPlayer
                         ? props.players[user.uid].state
                         : props.gameState.state;
-  
+  const curGen = props.gameState.currentGeneration;
+  const gens = props.gameState.generations;
   if (hasSubmitted) {
     return <p>Waiting on other players</p>
   } else if (renderState === "Lobby") {
@@ -97,17 +98,17 @@ export function RenderPromptGuess(props: {
     return <engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
                           template={props.players[user.uid].template} />
   } else if (renderState === "Lie") {
-    if (props.gameState.currentGeneration && props.gameState.generations) {
+    if (curGen && gens && gens[curGen]) {
       return <>
         <engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
-                    generation={props.gameState.generations[props.gameState.currentGeneration]}/>
-        <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
+                    generation={gens[curGen]}/>
+        <engine.Generation generation={gens[curGen]} />
       </>
     } else {
       return <p>Waiting on the AI...</p>
     }
-  } else if (renderState === "Vote" && props.gameState.currentGeneration && props.gameState.generations) {
-    if (props.gameState.currentGeneration === user.uid ) {
+  } else if (renderState === "Vote" && curGen && gens && gens[curGen]) {
+    if (curGen === user.uid ) {
       return <>
         <p>What did people think you said?</p>
         <ul>
@@ -115,20 +116,20 @@ export function RenderPromptGuess(props: {
             return <li key={o.uid}>{o.prompt}</li>
           })}
         </ul>
-        <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
+        <engine.Generation generation={gens[curGen]} />
       </>
     } else {
       return <>
         <engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={shuffledOptions(props.gameState)} />
-        <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]} />
+        <engine.Generation generation={gens[curGen]} />
       </>
     }
-  } else if (renderState === "Score" && props.gameState.currentGeneration && props.gameState.generations) {
+  } else if (renderState === "Score" && curGen && gens && gens[curGen]) {
     return <>
       <engine.Scoreboard 
         scores={props.gameState.scores}
         onContinue={() => {message("ReadyToContinue", "")}} />
-      <engine.Generation generation={props.gameState.generations[props.gameState.currentGeneration]}
+      <engine.Generation generation={gens[curGen]}
                         showPrompt={true} />
     </>
   } else if (renderState === "Finish") {

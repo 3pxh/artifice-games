@@ -155,8 +155,6 @@ const PromptGuesserActions = {
     // or perhaps iterate over room.players and check how many are present?
     // If using onDisconnect we might be able to notice disconnections.
     if (Object.keys(room.gameState.generations).length === PromptGuesserActions.ActivePlayerCount(room)) {
-      const gens = Object.keys(room.gameState.generations);
-      room.gameState.currentGeneration = chooseOne(gens);
       PromptGuesserActions.TransitionState(room, "Lie");
     }
   },
@@ -175,12 +173,11 @@ const PromptGuesserActions = {
     room.gameState.votes = room.gameState.votes ?? {};
     room.gameState.votes[message.uid] = message.value;
     if (Object.keys(room.gameState.votes).length === PromptGuesserActions.ActivePlayerCount(room) - 1) {
-      PromptGuesserActions.Score(room, message);
       PromptGuesserActions.TransitionState(room, "Score");
     }
   },
 
-  Score(room: PromptGuessRoom, message: PromptGuessMessage) {
+  Score(room: PromptGuessRoom) {
     const gameState = room.gameState;
     Object.keys(gameState.scores).forEach(scorePlayer => {
       gameState.scores[scorePlayer].previous = gameState.scores[scorePlayer].current;
@@ -264,6 +261,12 @@ const PromptGuesserActions = {
   TransitionState(room: PromptGuessRoom, newState: PromptGuessState) {
     const outOfTimeAndNoOneSubmittedPrompts = !room.gameState.generations && newState === "Lie";
     if (!outOfTimeAndNoOneSubmittedPrompts) {
+      if (newState === "Lie" && room.gameState.generations) {
+        const gens = Object.keys(room.gameState.generations);
+        room.gameState.currentGeneration = chooseOne(gens);
+      } else if (newState === "Score") {
+        PromptGuesserActions.Score(room);
+      }
       Object.keys(room.players).forEach(p => {
         room.players[p].state = newState;
         room.players[p].isReadyToContinue = false;

@@ -54,7 +54,8 @@ const getRoomFromShortcode = async (shortcode: string): Promise<string> => {
 }
 
 const QUEUE_DURATION = 15 * 1000; // Fifteen seconds
-const QUEUE_MAX_WAIT = 3600 * 1000; // One hour
+const QUEUE_MAX_WAIT = 3600/2 * 1000; // Half hour
+const MAX_QUEUE_LENGTH = 150;
 export type QueueData = {
   inQueue: boolean,
   startTime: number,  
@@ -74,13 +75,21 @@ const roomStartTime = async (r: QueueRoom) => {
 }
 
 const getSpotInLine = async (r: QueueRoom) => {
-  // N.B. this returns 0 if we've waited the maximum time.
+  const now = new Date().getTime();
   const t = r._createDate;
-  const queuedRooms = await admin.database().ref("/rooms").orderByChild("_queue/inQueue").equalTo(true).get();
-  const rooms = Object.entries(queuedRooms.val() ?? {}) as [string, QueueRoom][];
-  const cutoff = new Date().getTime() - QUEUE_MAX_WAIT;
-  // N.B. this is necessarily 0 if we've waited the maximum time.
-  return rooms.filter(([k, r]) => r._createDate < t && r._createDate > cutoff).length;
+  if (now - t > QUEUE_MAX_WAIT) {
+    return 0;
+  } else {
+    const queuedRooms = await admin.database().ref("/rooms").orderByChild("_queue/startTime").limitToLast(MAX_QUEUE_LENGTH).get();
+    const rooms = Object.entries(queuedRooms.val() ?? {}) as [string, QueueRoom][];
+    const activeRoomsInLine = rooms.filter(([k, r2]) => {
+      return r2._queue.inQueue && // Hasn't been started
+        r2._createDate < t && // Made before this room
+        r2._queue.startTime > now; // Not abandoned.
+    });
+    functions.logger.log("Rooms in line", {n: activeRoomsInLine.length});
+    return activeRoomsInLine.length;
+  }
 }
 
 export const roomCreated = functions.database.ref("/rooms/{id}")

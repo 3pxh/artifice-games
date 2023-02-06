@@ -1,10 +1,11 @@
 import { PromptGuessRoom, PromptGuessMessage, PromptGuessGameName } from "./promptGuessBase";
 import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
 
+export type TimerOption = "off" | "slow" | "fast"
 export type GameCreateData = {
   user: string,
   isPlayer: boolean,
-  timer: "off" | "slow" | "fast",
+  timer: TimerOption,
 }
 
 type GameName = PromptGuessGameName; // | "dixit" | "codenames" | ...
