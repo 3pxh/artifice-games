@@ -21,9 +21,6 @@ type RoomProps = {
 export type RoomData = QueueRoom & PromptGuessRoom & RoomProps;
 
 export function Room(props: {room: RoomData}) {
-  
-  // const [gameState, setGameState] = useState<PromptGuessRoom["gameState"] | null>(null);
-  // const [players, setPlayers] = useState<PromptGuessRoom["players"] | null>(null);
   const [isWaiting, setIsWaiting] = useState<boolean>(true);
   const [startTime, setStartTime] = useState<number>(0);
   const gameState = useSignal<PromptGuessRoom["gameState"] | null>(null);
@@ -35,12 +32,10 @@ export function Room(props: {room: RoomData}) {
 
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
-    // setGameState(snapshot.val());
     console.log("setting state", snapshot.val())
   }
   const updatePlayerState = (snapshot: DataSnapshot) => {
     players.value = snapshot.val();
-    // setPlayers(snapshot.val());
     console.log("setting players", snapshot.val())
   }
 
@@ -144,12 +139,10 @@ export function Room(props: {room: RoomData}) {
       <RenderPromptGuess 
             room={props.room}
             // WARNING! We do these typecasts because the isLoaded is a computed null guard.
-            // Now there's a question: does all of this rerender when gameState changes, or
-            // is the memoized isLoaded fine?
-            // We DO NOT want to check if the values of these signals are null, because
+            // We DO NOT want to check the values of these signals directly, because
             // that would necessitate a rerender on every update. We want the signals
-            // passed down with minimal rerenders for things like retaining focus on
-            // input fields.
+            // passed down (not accessing their values) with minimal rerenders for things 
+            // like retaining focus on input fields.
             gameState={gameState as Signal<PromptGuessRoom["gameState"]>}
             players={players as Signal<PromptGuessRoom["players"]>}
             isPlayer={props.room.isPlayer}
