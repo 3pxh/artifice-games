@@ -13,6 +13,7 @@ export type CreateRequest = {
 
 type RoomState = {
   gameState: {state: string}
+  players: {[uid: string]: any}
 }
 
 type ShortcodeData = {
@@ -148,10 +149,11 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     }
     const room = (await admin.database().ref(`/rooms/${roomId}`).get()).val() as RoomState;
     const state = room.gameState.state;
+    const players = Object.keys(room.players);
     // TODO: move this off of gameState and into room.hasStarted, and room.allowObservers
     // gameState should only ever be accessed by a game runner, and its schema should be
     // allowed to change only there.
-    if (state === "Lobby") {
+    if (state === "Lobby" || players.find(p => p === context.params.uid)) {
       // TODO: also check if the game allows observers.
       // TODO: add relevant records for access control
       await admin.database().ref(`/rooms/${roomId}/messages`).push({
@@ -163,12 +165,12 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
         roomId,
         timestamp: new Date().getTime()
       });
-      } else {
-        return snapshot.ref.child("error").set(`Room is not in a Lobby, state: ${state}`);
-      }
-      // TODO: Clean up old join requests.
-      // But since we create a new one each time, and adding a uid should be idempotent,
-      // it's just a sanitation problem not a functionality problem.
+    } else {
+      return snapshot.ref.child("error").set(`Room is not in a Lobby, state: ${state}`);
+    }
+    // TODO: Clean up old join requests.
+    // But since we create a new one each time, and adding a uid should be idempotent,
+    // it's just a sanitation problem not a functionality problem.
 });
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
