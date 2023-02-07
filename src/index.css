@@ -115,3 +115,10 @@ button { cursor: pointer; }
 .PromptGuessBase-Scoreboard > button:hover {
 	background-color: aqua;
 }
+
+.Avatar {
+	border-radius: 50%;
+}
+.Avatar.Selected {
+	opacity: .5;
+}

@@ -1,15 +1,17 @@
-import { get, ref, onValue, DataSnapshot } from "@firebase/database";
+import { ref, onValue, DataSnapshot } from "@firebase/database";
 import { db } from "./firebaseClient";
 import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
 import { useSignal, useComputed, Signal } from "@preact/signals";
 import { QueueRoom, QueueData } from "../functions/src/index";
 import { AuthContext } from "./AuthProvider";
-import { messageRoom, pingRoom } from "./actions";
+import { messageRoom, pingRoom, updatePlayer } from "./actions";
 // TODO: figure out how we want to handle distinct rendering engines and game state objects
 // This goes along with more modular gameState types below
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
+import SlowBroadcastInput from "./components/SlowBroadcastInput";
+import AvatarPicker from "./components/AvatarPicker";
 
 // TODO: make the type of this depend on the game in question
 // Or rather, include the various room types
@@ -28,7 +30,10 @@ export function Room(props: {room: RoomData}) {
   const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
   const isLoaded = useComputed<boolean>(() => {
     return gameState.value !== null && players.value !== null;
-  })
+  });
+  const isLobby = useComputed<boolean>(() => {
+    return gameState.value?.state === "Lobby";
+  });
 
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
@@ -91,7 +96,7 @@ export function Room(props: {room: RoomData}) {
     if (startTime > 0 && waitTimeS > 0) {
       return <p>You are in the queue, the game should start in {formattedWaitTime}</p>
     } else if (startTime > 0 && waitTimeS <= 0) {
-      return <p>Starting game...</p>
+      return <p>Initializing game...</p>
     } else {
       return <p>Calculating queue...</p>
     }
@@ -131,11 +136,31 @@ export function Room(props: {room: RoomData}) {
     return <>
       <Header />
       <WaitTime />
+      Name: <SlowBroadcastInput broadcast={(v: string) => {
+        const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
+        updatePlayer(props.room.id, m);
+      }} />
     </>
   } else if (isLoaded && authContext.user) { //&& gameState && players && players[authContext.user.uid]
     return <>
       <Header />
       <GameTimer roomId={props.room.id} uid={authContext.user.uid} />
+      {isLobby.value
+      ? <>
+      {/* TODO: this doesn't reflect their name on load if they set it before */}
+        Name: <SlowBroadcastInput broadcast={(v: string) => {
+          const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
+          updatePlayer(props.room.id, m);
+        }} />
+        <AvatarPicker 
+          players={players as Signal<PromptGuessRoom["players"]>}
+          onSelect={(v: string) => {
+            const m:Partial<PromptGuessRoom["players"]["uid"]> = {"avatar": v}
+            updatePlayer(props.room.id, m);
+          }} />
+      </>
+      : <></>
+      }
       <RenderPromptGuess 
             room={props.room}
             // WARNING! We do these typecasts because the isLoaded is a computed null guard.

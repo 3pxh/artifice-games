@@ -1,4 +1,4 @@
-import { ref, set, push, onValue } from "@firebase/database";
+import { ref, set, update, push, onValue } from "@firebase/database";
 import { CreateRequest } from "../functions/src";
 import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
@@ -62,4 +62,12 @@ const messageRoom = (roomId: string, m: any) => {
   set(ref(db, `rooms/${roomId}/messages/${k}`), m);
 }
 
-export { createGame, pingRoom, joinRoom, getRoom, messageRoom }
+const updatePlayer = (roomId: string, m: any) => {
+  if (auth.currentUser) {
+    update(ref(db, `rooms/${roomId}/players/${auth.currentUser.uid}`), m);
+  } else {
+    throw new Error("Must be authenticated to update player object");
+  }
+}
+
+export { createGame, pingRoom, joinRoom, getRoom, messageRoom, updatePlayer }

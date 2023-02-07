@@ -50,6 +50,8 @@ export type PromptGuessRoom = {
       template: Template,
       isReadyToContinue: boolean,
       isPlayer: boolean,
+      handle?: string,
+      avatar?: string,
     }
   }
   history: { // Where we're going to store generations along with all context.
