@@ -30,3 +30,11 @@ That should run all the emulators (realtime databse, functions, and cloud storag
 Local dev won't hit the production database, just the local emulated db. If in the future we need certain data in the db at boot then we'll add an initializer and check it in (and use --import-data)
 
 If you like, add the preact devtools extension (preferably on a browser on which has no credentials/logins, as I haven't vetted what actually ships in the extension) https://preactjs.github.io/preact-devtools/
+
+# Dev errors
+
+If firebase emulators don't shut down properly, they can leave processes running which occupy the port. You'll notice because when you run `npm run emulate` you'll get an error like `Error: Could not start Storage Emulator, port taken.`. Track to find which port, for example `storage: Port 9199 is not open on localhost (127.0.0.1,::1), could not start Storage Emulator.`. Then find the process occupying the port, e.g. `lsof -i tcp:9199`,
+COMMAND   PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
+node    30594 hoqqanen   53u  IPv4 0xefe9db0c4f5f83a7      0t0  TCP localhost:9199 (LISTEN)
+
+and kill it by referencing the PID column, e.g. `kill 30594` or `kill -9 30594` if it's not listening.
