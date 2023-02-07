@@ -83,7 +83,7 @@ const getSpotInLine = async (r: QueueRoom) => {
     const queuedRooms = await admin.database().ref("/rooms").orderByChild("_queue/startTime").limitToLast(MAX_QUEUE_LENGTH).get();
     const rooms = Object.entries(queuedRooms.val() ?? {}) as [string, QueueRoom][];
     const activeRoomsInLine = rooms.filter(([k, r2]) => {
-      return r2._queue.inQueue && // Hasn't been started
+      return r2._queue && r2._queue.inQueue && // Hasn't been started
         r2._createDate < t && // Made before this room
         r2._queue.startTime > now; // Not abandoned.
     });
