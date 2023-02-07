@@ -132,26 +132,33 @@ export function Room(props: {room: RoomData}) {
     }
   }
 
+  const PlayerHandleInput = () => {
+    return <>
+      <label for="PlayerName">Name: </label>
+      <SlowBroadcastInput 
+        broadcast={(v: string) => {
+          const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
+          updatePlayer(props.room.id, m);
+        }}
+        input={<input id="PlayerName" />} 
+      />
+    </>
+  }
+
   if (isWaiting) {
     return <>
       <Header />
       <WaitTime />
-      Name: <SlowBroadcastInput broadcast={(v: string) => {
-        const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
-        updatePlayer(props.room.id, m);
-      }} />
+      <PlayerHandleInput />
     </>
-  } else if (isLoaded && authContext.user) { //&& gameState && players && players[authContext.user.uid]
+  } else if (isLoaded && authContext.user) {
     return <>
       <Header />
       <GameTimer roomId={props.room.id} uid={authContext.user.uid} />
       {isLobby.value
       ? <>
       {/* TODO: this doesn't reflect their name on load if they set it before */}
-        Name: <SlowBroadcastInput broadcast={(v: string) => {
-          const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
-          updatePlayer(props.room.id, m);
-        }} />
+        <PlayerHandleInput />
         <AvatarPicker 
           players={players as Signal<PromptGuessRoom["players"]>}
           onSelect={(v: string) => {
@@ -168,6 +175,9 @@ export function Room(props: {room: RoomData}) {
             // that would necessitate a rerender on every update. We want the signals
             // passed down (not accessing their values) with minimal rerenders for things 
             // like retaining focus on input fields.
+            // TODO: vite's hot reloading can somehow result in players being undefined in local dev
+            // if we are in the middle of a game and editing components. But perhaps it would be
+            // better to develop on components in isolation with mock data anyway.
             gameState={gameState as Signal<PromptGuessRoom["gameState"]>}
             players={players as Signal<PromptGuessRoom["players"]>}
             isPlayer={props.room.isPlayer}

@@ -1,5 +1,6 @@
 import { h, Fragment } from "preact";
 import { useState, useContext } from "preact/hooks";
+import { signal } from "@preact/signals";
 import { GameName, TimerOption } from "../functions/src/games/games";
 import { AuthContext } from "./AuthProvider"
 import { createGame, joinRoom, getRoom } from "./actions";
@@ -10,18 +11,18 @@ export default function GameSelection() {
   const { user } = useContext(AuthContext);
   const [room, setRoom] = useState<RoomData | null>(null);
   type DisplayMode = "observe" | "input" | "full";
-  const [display, setDisplay] = useState<DisplayMode>("full");
-  const [timerMode, setTimerMode] = useState<TimerOption>("off");
+  const displayMode = signal<DisplayMode>("full");
+  const timerMode = signal<TimerOption>("off");
   const [selectedGame, setSelectedGame] = useState<GameName | "_join" | null>(null);
 
   const handleCreateGame = (gameName: GameName) => {
     if (user && !user.isAnonymous) {
-      const isPlayer = display !== "observe";
+      const isPlayer = displayMode.value !== "observe";
       const id = createGame({
         gameName, 
         isPlayer,
         user: user.uid,
-        timer: timerMode,
+        timer: timerMode.value,
       });
       if (!id) {
         throw new Error(`Failed to create room for game: ${gameName}`);
@@ -37,39 +38,53 @@ export default function GameSelection() {
   const handleJoinRoom = (roomCode: string) => {
     const code = roomCode.toUpperCase();
     console.log("Trying to join room", code);
-    joinRoom(code, display !== "observe", setRoom);
+    joinRoom(code, displayMode.value !== "observe", setRoom);
   }
 
   const DisplayOptions = () => {
-    const setType = (t: DisplayMode) => {
-      setDisplay(t);
-    }
-    const options:[DisplayMode, string][] = [
-      ["observe", "Observing only / shared screen"],
-      ["input", "Playing with a shared screen"],
-      ["full", "Playing without a shared screen"],
+    const options:{value: DisplayMode, label: string}[] = [
+      {value: "full", label: "Playing without a shared screen"},
+      {value: "input", label: "Playing with a shared screen"},
+      {value: "observe", label: "Observing only / shared screen"},
     ];
-    return <fieldset>
-      <p>This display is for:</p>
-      {options.map(([d,desc]) => {
-        return <div key={d}>
-        <input type="radio" id={d} onChange={() => { setType(d); }} checked={d === display} />
-        <label for={d}>{desc}</label>
-      </div>
-      })}
-    </fieldset>
+    return <Options<DisplayMode> 
+      id="DisplayOptions"
+      label="This display is for:"
+      options={options} 
+      onSet={(v: DisplayMode) => { displayMode.value = v; }} />
   }
   const TimerOptions = () => {
-    const options:TimerOption[] = ["off", "slow", "fast"];
-    return <fieldset>
-      <p>Timer:</p>
-      {options.map(mode => {
-        return <div key={mode}>
-          <input type="radio" id={mode} onChange={() => { setTimerMode(mode); }} checked={timerMode === mode} />
-          <label for={mode}>{mode}</label>
+    const options = (["off", "slow", "fast"] as TimerOption[]).map(v => {
+      return {label: v as string, value: v};
+    });
+    return <Options<TimerOption> 
+        id="TimerOptions"
+        label="Timer:"
+        options={options} 
+        onSet={(v: TimerOption) => { timerMode.value = v; }} />
+  }
+
+  const Options = <O extends string,>(props: {
+    id: string,
+    label: string,
+    options: {label: string, value: O}[],
+    onSet: (value: O) => void,
+  }) => {
+    const [value, setValue] = useState(props.options[0].value);
+    return <>
+      <label for={props.id}>{props.label}</label>
+      <fieldset id={props.id}>
+        {props.options.map(o => {
+          return <div key={o.value}>
+          <input type="radio" 
+            id={o.value} 
+            onChange={() => { setValue(o.value); props.onSet(o.value); }} 
+            checked={o.value === value} />
+          <label for={o.value}>{o.label}</label>
         </div>
-      })}
-    </fieldset>
+        })}
+      </fieldset>
+    </>
   }
 
   const Join = () => {
@@ -87,8 +102,8 @@ export default function GameSelection() {
   if (room) {
     return <Room room={{
       ...room,
-      isPlayer: display !== "observe",
-      isInputOnly: display === "input",
+      isPlayer: displayMode.value !== "observe",
+      isInputOnly: displayMode.value === "input",
     }} />
   } else if (user.isAnonymous || selectedGame === "_join") {
     return <Join />
