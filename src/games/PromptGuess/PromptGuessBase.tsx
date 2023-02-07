@@ -3,6 +3,7 @@ import { useContext } from "preact/hooks";
 import { AuthContext } from "../../AuthProvider";
 import { PromptGeneration, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
 import SubmittableInput from "../../components/SubmittableInput";
+import SingleUseButton from "../../components/SingleUseButton";
 
 function Intro(props: {introVideoUrl?: string}) {
   return <p>Play intro video: {props.introVideoUrl ?? "video not found for this game"}</p>
@@ -69,15 +70,23 @@ function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, 
 // TODO: pass all of the vote data, players, render avatars, yadda yadda.
 function Scoreboard(props: {
     scores: PromptGuessRoom["gameState"]["scores"],
+    // players: PromptGuessRoom["players"],
+    // votes:
+    // generationAuthor: 
     onContinue?: () => void,
   }) {
   return <div class="PromptGuessBase-Scoreboard">
     {Object.entries(props.scores).map(([k,v]) => {
       return <>
-        <p>{k}: {v.current} {v.current !== v.previous ? `+${v.current-v.previous}` : ""}</p>
+        <p key={k}>{k}: {v.current} {v.current !== v.previous ? `+${v.current-v.previous}` : ""}</p>
       </>
     })}
-    {props.onContinue ? <button onClick={props.onContinue}>Continue</button> : ''}
+    {props.onContinue 
+      ? <SingleUseButton 
+          buttonText="Continue" 
+          onClick={props.onContinue} 
+          postSubmitContent={<>Waiting on others to continue...</>} />
+      : ''}
   </div>
 }
 
