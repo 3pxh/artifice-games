@@ -26,6 +26,4 @@ export default class App {
         return this._intance || (this._intance = new this());
     }
 
-    start() {
-    }
 }

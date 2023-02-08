@@ -151,12 +151,10 @@ const runners:Record<Models, Generator>  = {
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {
   if (runners[r.model]) {
-    try {
-      const g = await runners[r.model](r);
-      return g;
-    } catch(e) {
-      throw e;
-    }
+    // TODO: what if this errors? Who is handling it, how?
+    // We had a try/catch here before but the linter said it was useless.
+    const g = await runners[r.model](r);
+    return g;
   } else {
     throw new Error(`No generator defined for model: ${r.model}`);
   }
