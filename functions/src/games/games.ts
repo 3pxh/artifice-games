@@ -3,7 +3,7 @@ import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
 
 export type TimerOption = "off" | "slow" | "fast"
 export type GameCreateData = {
-  user: string,
+  _creator: string,
   isPlayer: boolean,
   timer: TimerOption,
 }

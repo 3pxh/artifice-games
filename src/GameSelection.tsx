@@ -15,13 +15,13 @@ export default function GameSelection() {
   const timerMode = signal<TimerOption>("off");
   const [selectedGame, setSelectedGame] = useState<GameName | "_join" | null>(null);
 
-  const handleCreateGame = (gameName: GameName) => {
+  const handleCreateGame = async (gameName: GameName) => {
     if (user && !user.isAnonymous) {
       const isPlayer = displayMode.value !== "observe";
-      const id = createGame({
+      const id = await createGame({
         gameName, 
         isPlayer,
-        user: user.uid,
+        _creator: user.uid,
         timer: timerMode.value,
       });
       if (!id) {

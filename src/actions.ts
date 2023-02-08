@@ -1,27 +1,29 @@
 import { ref, set, update, push, onValue } from "@firebase/database";
 import { CreateRequest } from "../functions/src";
+import { PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
 import { RoomData } from "./Room";
 
-const createGame = (opts: CreateRequest): string => {
+const createGame = async (opts: CreateRequest): Promise<string> => {
   const k = push(ref(db, "rooms/")).key;
   if (!k) {
     throw new Error("Cannot create a new room id");
   }
-  set(ref(db, `rooms/${k}`), opts);
+  await set(ref(db, `rooms/${k}`), opts);
   return k;
 }
 
 const pingRoom = (roomId: string) => {
   console.log("ping room", new Date().getTime())
-  set(ref(db, `rooms/${roomId}/startPing`), new Date().getTime());
+  set(ref(db, `rooms/${roomId}/_startPing`), new Date().getTime());
 }
 
-const joinRoom = (shortcode: string, isPlayer: boolean, cb: (r: RoomData) => void) => {
+const joinRoom = async (shortcode: string, isPlayer: boolean, cb: (r: RoomData) => void) => {
   if (auth.currentUser) {
     const k = push(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}`)).key;
-    set(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`), {
+    // We need to wait until the data is set before reading for access control to work.
+    await set(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`), {
       isPlayer: isPlayer
     });
     const joinRef = ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`);
@@ -57,9 +59,16 @@ const getRoom = (id: string, cb: (r: RoomData) => void) => {
   });
 }
 
-const messageRoom = (roomId: string, m: any) => {
-  const k = push(ref(db, `rooms/${roomId}/messages`)).key;
-  set(ref(db, `rooms/${roomId}/messages/${k}`), m);
+const messageRoom = (roomId: string, m: Omit<PromptGuessMessage, "uid">) => {
+  if (auth.currentUser) {
+    const k = push(ref(db, `rooms/${roomId}/messages`)).key;
+    set(ref(db, `rooms/${roomId}/messages/${k}`), {
+      ...m,
+      uid: auth.currentUser.uid
+    });  
+  } else {
+    throw new Error("Must be authenticated to message room")
+  }
 }
 
 const updatePlayer = (roomId: string, m: any) => {

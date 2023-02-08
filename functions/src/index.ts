@@ -112,7 +112,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
         inQueue: true,
         startTime: 0, 
       },
-      _creator: msg.user,
+      _creator: msg._creator, // Used for administration in database.rules
       _initialized: true,
     } satisfies QueueRoom;
     const start = await roomStartTime(roomWithQueueState);
@@ -120,7 +120,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
     return snapshot.ref.set(roomWithQueueState);
 });
 
-export const roomPingedToStart = functions.database.ref("/rooms/{id}/startPing")
+export const roomPingedToStart = functions.database.ref("/rooms/{id}/_startPing")
   .onUpdate(async (snapshot, context) => {
     functions.logger.log("Processing ping", snapshot.after.val());
     const thisRoom = (await snapshot.before.ref.parent?.get())?.val() as QueueRoom;
@@ -161,6 +161,8 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
         uid: context.params.uid,
         isPlayer: isPlayer,
       });
+      // The user's player key must exist when they try to access the room.
+      await admin.database().ref(`/rooms/${roomId}/players/${context.params.uid}/_init`).set(true);
       return snapshot.ref.child("success").set({
         roomId,
         timestamp: new Date().getTime()

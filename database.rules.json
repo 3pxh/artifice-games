@@ -1,16 +1,33 @@
+/*
+TODO: of everything in the codebase, these should have test coverage.
+*/
 {
-  /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. 
-  
-  TODO: Lock this down! Full access is just for testing and getting started.
-
-  Rules to add:
-  rooms/${id}/messages/${message} is only writable if its uid === auth.uid
-  */
   "rules": {
-    ".read": true,
-    ".write": true,
     "rooms": {
-      ".indexOn": "_queue/startTime"
+      ".indexOn": "_queue/startTime",
+      "$roomId": {
+        ".write": "auth !== null && !data.exists() && newData.child('_creator').val() === auth.uid",
+        ".read": "auth !== null && (data.child('_creator').val() === auth.uid || data.child('players').child(auth.uid).exists())",
+        "_startPing": {
+          ".write": "auth !== null && data.parent().child('players').child(auth.uid).exists()"
+        },
+        "players": {
+          "$playerId": {
+            ".write": "$playerId === auth.uid"
+          }
+        },
+        "messages": {
+          "$k": {
+            ".write": "auth !== null && !data.exists() && data.parent().parent().child('players').child(auth.uid).exists() && newData.child('uid').val() === auth.uid"
+          }
+        }
+      }
+    },
+    "joinRequests": {
+      "$playerId": {
+        ".read": "auth !== null && $playerId === auth.uid",
+        ".write": "auth !== null && $playerId === auth.uid"
+      }
     }
   }
 }

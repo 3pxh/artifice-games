@@ -23,6 +23,8 @@ In the toplevel directory, run `firebase init`.
 
 To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebuilds and re-serves stuff automatically. Default port 3000.
 
+Make sure you have all the emulators with `firebase init emulators` and check off `functions`, `database`, `storage`, and `auth`. (Auth is now required in order to account for the database access control rules!)
+
 To run firebase locally it helps to open up two terminals and cd functions in both. In one: `npm run emulate` and in the other: `npm run build:watch`. This allows hot reloading of the cloud functions as you work on them (whereas npm run emulate will only compile once).
 
 That should run all the emulators (realtime databse, functions, and cloud storage) and show them with a nice UI. Default port 4000.

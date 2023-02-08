@@ -1,6 +1,6 @@
 import { createContext } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
-import { User, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail, signInAnonymously } from "@firebase/auth";
+import { User, isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail, signInAnonymously, createUserWithEmailAndPassword } from "@firebase/auth";
 import { auth } from './firebaseClient';
 
 export enum AuthType { "EmailLink", "Anonymous" }
@@ -42,14 +42,18 @@ export const useAuth = () => {
       url: location.hostname === "localhost" ? "http://localhost:3000" : "https://artifice.games",
       handleCodeInApp: true,
     };
-    sendSignInLinkToEmail(auth, email, actionCodeSettings)
-      .then(() => {
-        window.localStorage.setItem('emailForSignIn', email);
-        console.log("firebase auth link sent to email");
-      })
-      .catch((error) => {
-        console.error("Email link auth error", {error})
-      });
+    // TODO: This is gonna break if the user exists.
+    // Really need to change it out.
+    createUserWithEmailAndPassword(auth, email, crypto.randomUUID()).then(() => {
+      sendSignInLinkToEmail(auth, email, actionCodeSettings)
+        .then(() => {
+          window.localStorage.setItem('emailForSignIn', email);
+          console.log("firebase auth link sent to email");
+        })
+        .catch((error) => {
+          console.error("Email link auth error", {error})
+        });
+    });
   }
 
   const anonAuth = () => {

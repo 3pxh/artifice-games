@@ -40,7 +40,7 @@ export const Farsketched = {
       model: "StableDiffusion",
       templates: [t],
       players: {
-        [u.user]: {
+        [u._creator]: {
           ...defaultPlayer,
           template: t,
           isPlayer: u.isPlayer
@@ -68,7 +68,7 @@ export const Gisticle = {
       model: "GPT3",
       templates: templates,
       players: {
-        [u.user]: {
+        [u._creator]: {
           ...defaultPlayer,
           template: chooseOne(templates),
           isPlayer: u.isPlayer,
@@ -97,7 +97,7 @@ export const Tresmojis = {
       model: "GPT3",
       templates: templates,
       players: {
-        [u.user]: {
+        [u._creator]: {
           ...defaultPlayer,
           template: chooseOne(templates),
           isPlayer: u.isPlayer,

@@ -49,14 +49,11 @@ export function RenderPromptGuess(props: {
   }
 
   const message = (type: PromptGuessMessage["type"], value: string) => {
-    if (user) {
-      const m:PromptGuessMessage = {
-        type: type,
-        value: value,
-        uid: user.uid,
-      }
-      messageRoom(props.room.id, m);
+    const m:Omit<PromptGuessMessage, "uid"> = {
+      type: type,
+      value: value,
     }
+    messageRoom(props.room.id, m);
   }
 
   // TODO: This works fine but it does recompute more than it should.
