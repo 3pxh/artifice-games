@@ -11,21 +11,30 @@ export const Farsketched = {
   ...PromptGuessBase,
   Generation(props: {generation: PromptGeneration, showPrompt?: boolean}) {
     const [image, setImage] = useState("");
+    const [genUrl, setGenUrl] = useState("");
+
+    useEffect(() => {
+      if (props.generation.generation) {
+        if (genUrl !== props.generation.generation) {
+          setGenUrl(props.generation.generation);
+          setImage(""); // Clear stale image while we try to load the new one.
+        }
+        // This interval retry is because the image can be passed to the generation
+        // before it's actually available on storage.
+        const getImage = () => {
+          getDownloadURL(ref(storage, props.generation.generation)).then((url) => {
+            setImage(url);
+          }, (e) => {
+            console.error("Tried to get an image before it was avaialble.");
+            window.setTimeout(() => { getImage(); }, 1000);
+          })
+        }
+        getImage();
+      }
+    })
+
     if (props.generation.error) {
       throw new Error(`Attempting to render Farsketched generation containing an error: ${props.generation.error}`)
-    }
-    if (props.generation.generation) {
-      // This interval retry is because the image can be passed to the generation
-      // before it's actually available on storage.
-      const getImage = () => {
-        getDownloadURL(ref(storage, props.generation.generation)).then((url) => {
-          setImage(url);
-        }, (e) => {
-          console.error("Tried to get an image before it was avaialble.");
-          window.setTimeout(() => { getImage(); }, 1000);
-        })
-      }
-      getImage();
     }
 
     if (image) {
