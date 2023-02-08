@@ -15,17 +15,17 @@ export const Farsketched = {
       throw new Error(`Attempting to render Farsketched generation containing an error: ${props.generation.error}`)
     }
     if (props.generation.generation) {
-      // So I tried constructing a url by hand, easy enough with this link format:
-      // https://firebasestorage.googleapis.com/v0/b/threepixelheart-f5674.appspot.com/o/images%2myfile.png?alt=media
-      // http://127.0.0.1:9199/v0/b/threepixelheart-f5674.appspot.com/o/images%2Fmyfile.png?alt=media
-      // But it loads too quickly and gives a broken image! 
-      // So getDownloadURL is (slow but) fine and we need this timeout if it was just made.
-      const isSafeToLoad = (props.generation.timeFulfilled ?? 0) < new Date().getTime() - 3000;
-      window.setTimeout(() => {
+      // This interval retry is because the image can be passed to the generation
+      // before it's actually available on storage.
+      const getImage = () => {
         getDownloadURL(ref(storage, props.generation.generation)).then((url) => {
           setImage(url);
-        });
-      }, isSafeToLoad ? 0 : 2000);
+        }, (e) => {
+          console.error("Tried to get an image before it was avaialble.");
+          window.setTimeout(() => { getImage(); }, 1000);
+        })
+      }
+      getImage();
     }
 
     if (image) {
