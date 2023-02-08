@@ -108,6 +108,9 @@ fieldset {
 	margin-bottom: 5px;
 	max-width: 100%;
 }
+.PromptGuessBase-LieChoices > button.Picked {
+	color:rgb(122, 255, 110);
+}
 
 .PromptGuessBase-Scoreboard > button {
 	background-color: aquamarine;
@@ -125,4 +128,43 @@ fieldset {
 }
 .Avatar.Selected {
 	opacity: .5;
+}
+
+.PromptGuessBase-Score {
+	align-items: center;
+	border-bottom: 1px solid rgba(255,255,255,.1);
+	display: flex;
+	flex-direction: row;
+	padding: 5px 0;
+	position: relative;
+}
+.PromptGuessBase-Score.Truth::after {
+	color: rgb(122, 255, 110);
+	content: "Truth!";
+	font-size: 10pt;
+	font-weight: 600;
+	left: -15px;
+	position: absolute;
+	top: 0px;
+	transform: rotate(-45deg);
+}
+.PromptGuessBase-Score.Lie {
+	opacity: .5;
+}
+.PromptGuessBase-ScoreCreator {
+	margin-right: 10px;
+}
+.PromptGuessBase-ScorePrompt {
+	flex-grow: 1;
+	margin-right: 10px;
+}
+.PromptGuessBase-LeaderboardScore {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+	margin: 5px 0;
+	padding: 5px 0;
+}
+.PromptGuessBase-LeaderboardScore > img {
+	margin-right: 5px;
 }

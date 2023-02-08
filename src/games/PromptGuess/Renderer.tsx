@@ -1,8 +1,7 @@
 import { h, Fragment } from "preact";
 import { useContext } from "preact/hooks";
-import { computed, Signal, ReadonlySignal } from "@preact/signals";
+import { computed, useComputed, Signal, ReadonlySignal } from "@preact/signals";
 import { PromptGuessMessage, PromptGuessRoom, PromptGuessState } from "../../../functions/src/games/promptGuessBase"
-import { shuffle } from "../../../functions/src/utils";
 import { AuthContext } from "../../AuthProvider"
 import { GameName } from "../../../functions/src/games/games";
 import * as PromptGuessBase from "./PromptGuessBase";
@@ -60,20 +59,23 @@ export function RenderPromptGuess(props: {
     }
   }
 
-  const shuffledOptions = (gs: PromptGuessRoom["gameState"]): {uid: string, prompt: string}[] => {
+  // TODO: This works fine but it does recompute more than it should.
+  const voteOptions = useComputed(() => {
+    const gs = props.gameState.value;
     if (!gs.currentGeneration || !gs.generations) {
       throw new Error("Trying to construct lies, but don't have a generation!");
     }
     const gen = gs.currentGeneration;
     const truth: [string, string] = [gs.generations[gen].uid, gs.generations[gen].prompt];
-    const s = shuffle(Object.entries(gs.lies ?? {}).concat([truth])).map(([uid, prompt]) => {
+    // Sort to make Object.entries stable.
+    const s = Object.entries(gs.lies ?? {}).concat([truth]).sort(([u1, _], [u2, __]) => u1 < u2 ? 1 : -1).map(([uid, prompt]) => {
       return {
         uid: uid,
         prompt: prompt
       }
     });
     return s;
-  }
+  })
   
   
   if (renderState.value === "Lobby") {
@@ -96,12 +98,12 @@ export function RenderPromptGuess(props: {
     } else {
       return <p>Receiving prompts...</p>
     }
-  } else if (renderState.value === "Vote" && currentGeneration.value && props.gameState.value.lies) {
+  } else if (renderState.value === "Vote" && currentGeneration.value) {
     if (genAuthor.value === user.uid ) {
       return <>
         <p>What did people think you said?</p>
         <ul>
-          {shuffledOptions(props.gameState.value).map(o => {
+          {voteOptions.value.map(o => {
             return <li class="HasUserText" key={o.uid}>{o.prompt}</li>
           })}
         </ul>
@@ -110,13 +112,15 @@ export function RenderPromptGuess(props: {
     } else {
       return <>
         <engine.Generation generation={currentGeneration.value} />
-        <engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={shuffledOptions(props.gameState.value)} />
+        <engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={voteOptions} />
       </>
     }
   } else if (renderState.value === "Score" && currentGeneration.value) {
     return <>
       <engine.Scoreboard 
-        scores={props.gameState.value.scores}
+        options={voteOptions}
+        gameState={props.gameState}
+        players={props.players}
         onContinue={() => {message("ReadyToContinue", "")}} />
       <engine.Generation generation={currentGeneration.value}
                         showPrompt={true} />
@@ -125,7 +129,9 @@ export function RenderPromptGuess(props: {
     return <>
       <p>You're all winners!</p>
       <engine.Scoreboard 
-          scores={props.gameState.value.scores} />
+        options={voteOptions}
+        gameState={props.gameState}
+        players={props.players} />
     </>
   } else {
     return <p>Congrats, you hit an unrecognized game state!</p>

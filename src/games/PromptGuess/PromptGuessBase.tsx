@@ -1,5 +1,7 @@
 import { h, Fragment } from "preact";
-import { useContext } from "preact/hooks";
+import { useContext, useState } from "preact/hooks";
+import { Signal, useComputed } from "@preact/signals";
+import { shuffle, seed32bit, objectMap } from "../../../functions/src/utils";
 import { AuthContext } from "../../AuthProvider";
 import { PromptGeneration, PromptGuessRoom } from "../../../functions/src/games/promptGuessBase"
 import SubmittableInput from "../../components/SubmittableInput";
@@ -42,20 +44,26 @@ function Lie(props: {
 };
 
 function LieChoices(props: {
-    onSubmit: (uid: string) => void,
-    options: {uid: string, prompt: string}[]
-  }) {
+  onSubmit: (uid: string) => void,
+  options: Signal<{uid: string, prompt: string}[]>
+}) {
+  // We need a stable shuffle or anytime this rerenders it moves them.
+  const [seed, _] = useState(seed32bit());
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [vote, setVote] = useState("");
+  
+
   const authContext = useContext(AuthContext);
   return <div class="PromptGuessBase-LieChoices">
-    {props.options.map((option) => {
-      return <>
-      {authContext.user?.uid !== option.uid
-        ? <button class="HasUserText" key={option.uid} onClick={() => {
-            props.onSubmit(option.uid);
-          }}>{option.prompt}</button>
-        : <button class="HasUserText" key={option.uid} disabled>{option.prompt}</button>
-      }
-      </>
+    {shuffle(props.options.value, seed).map((option) => {
+      return <button 
+        class={"HasUserText " + (vote === option.uid ? "Picked" : "")}
+        key={option.uid} 
+        onClick={() => {
+          setHasSubmitted(true);
+          setVote(option.uid);
+          props.onSubmit(option.uid);
+        }} disabled={hasSubmitted || authContext.user?.uid === option.uid}>{option.prompt}</button>
     })}
   </div>
 };
@@ -67,27 +75,54 @@ function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, 
   </>
 };
 
-// TODO: pass all of the vote data, players, render avatars, yadda yadda.
 function Scoreboard(props: {
-    scores: PromptGuessRoom["gameState"]["scores"],
-    // players: PromptGuessRoom["players"],
-    // votes:
-    // generationAuthor: 
-    onContinue?: () => void,
-  }) {
-  return <div class="PromptGuessBase-Scoreboard">
-    {Object.entries(props.scores).map(([k,v]) => {
-      return <>
-        <p key={k}>{k}: {v.current} {v.current !== v.previous ? `+${v.current-v.previous}` : ""}</p>
-      </>
-    })}
-    {props.onContinue 
-      ? <SingleUseButton 
-          buttonText="Continue" 
-          onClick={props.onContinue} 
-          postSubmitContent={<>Waiting on others to continue...</>} />
-      : ''}
-  </div>
+  gameState: Signal<PromptGuessRoom["gameState"]>,
+  players: Signal<PromptGuessRoom["players"]>,
+  options: Signal<{uid: string, prompt: string}[]>,
+  onContinue?: () => void,
+}) {
+  const playerData = useComputed(() => {
+    const scores = props.gameState.value.scores;
+    return objectMap<PromptGuessRoom["players"]["uid"], {avatar?: string, handle?: string} & PromptGuessRoom["gameState"]["scores"]["uid"]>(
+      props.players.value, 
+      (p, uid) => {return {avatar: p.avatar, handle: p.handle, ...scores[uid]}})
+  });
+  const votes = useComputed(() => props.gameState.value.votes);
+  const creator = useComputed(() => props.gameState.value.currentGeneration);
+  
+  if (!votes.value) {
+    return <>Trying to render scoreboard without votes.</>
+  } else {
+    return <div class="PromptGuessBase-Scoreboard">
+      {props.options.value.map(o => {
+        const isTruth = o.uid === creator.value;
+        return <div class={"PromptGuessBase-Score " + (isTruth ? "Truth" : "Lie")}>
+          <img src={playerData.value[o.uid].avatar} class="Avatar PromptGuessBase-ScoreCreator" width="48" height="48" />
+          <div class="PromptGuessBase-ScorePrompt">{o.prompt}</div>
+          {Object.entries(votes.value!).map(([voter, vote]) => {
+            if (vote === o.uid) {
+              return <img src={playerData.value[voter].avatar} class="Avatar" width="32" height="32" />
+            }
+          })}
+        </div>
+      })}
+      {/* This is more of a leaderboard, and we might want to show it persistently. */}
+      {Object.entries(playerData.value).sort(([_, p1], [__, p2]) => p2.current - p1.current).map(([k,v]) => {
+        return <div key={k} class="PromptGuessBase-LeaderboardScore">
+          <img src={v.avatar} class="Avatar" width="32" />
+          {v.handle}:{" "}
+          {v.current}{" "}
+          {v.current !== v.previous ? <small style="margin-left:10px;">{`(+${v.current-v.previous})`}</small> : ""}
+        </div>
+      })}
+      {props.onContinue 
+        ? <SingleUseButton 
+            buttonText="Continue" 
+            onClick={props.onContinue} 
+            postSubmitContent={<>Waiting on others to continue...</>} />
+        : ''}
+    </div>
+  }
 }
 
 export {Intro, Prompt, Lie, LieChoices, Generation, Scoreboard}
