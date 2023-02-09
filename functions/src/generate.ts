@@ -1,6 +1,6 @@
-import { getStorage } from "firebase-admin/storage";
 import { logger } from "firebase-functions";
 import axios, { AxiosError } from "axios";
+import * as AWS from "aws-sdk";
 import App from "./app";
 
 export type Models =  "GPT3" | "StableDiffusion"
@@ -19,7 +19,11 @@ export type GenerationResponse = {
 }
 
 App.instance;
-const storage = getStorage();
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_KEY
+});
+const BUCKET_NAME = "artifice-1";
 
 async function runStableDiffusion(r: GenerationRequest, tryCount = 0): GenerationPromise {
   logger.log("Running Stable Diffusion");
@@ -93,16 +97,20 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
     throw new Error(`Response from stable diffusion not ok, response: ${JSON.stringify(response.data)}`)
   }
   const seed = response.headers["seed"];
-  const filename = `images/StableDiffusion/${r.room}/${prompt}_${seed}.png`;
-  const s = storage.bucket().file(filename).createWriteStream();
-  await response.data.pipe(s);
-
+  // Don't include the prompt in the filename or people can peek!
+  const filename = `images/StableDiffusion/${r.room}/${seed}.png`;
+  const params = {
+    Bucket: BUCKET_NAME,
+    Key: filename,
+    Body: response.data
+  };
+  const res = await s3.upload(params).promise();
   return {
     _context: {
       seed: seed, 
       // TODO: include full model parameters?
     },
-    generation: filename,
+    generation: res.Location,
     timeFulfilled: new Date().getTime(),
   }
 }

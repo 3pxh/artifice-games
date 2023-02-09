@@ -16,6 +16,7 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+    "aws-sdk": "^2.1311.0",
     "axios": "^1.2.6",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^4.2.0"

@@ -207,7 +207,7 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
 // We trigger this after the game state mutations because they're done 
 // in a transaction and we don't want to accidentally retry API requests.
 export const generationRequest = functions
-  .runWith({ secrets: ["OPENAI_API_KEY", "STABILITY_API_KEY"] })
+  .runWith({ secrets: ["OPENAI_API_KEY", "STABILITY_API_KEY", "AWS_ACCESS_KEY", "AWS_SECRET_KEY"] })
   .database.ref("/rooms/{roomId}/gameState/generations/{uid}")
   .onCreate(async (snapshot, context) => {
     // TODO: check that the owner of the room is in good standing
