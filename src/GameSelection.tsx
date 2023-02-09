@@ -14,9 +14,19 @@ export default function GameSelection() {
   const displayMode = signal<DisplayMode>("full");
   const timerMode = signal<TimerOption>("off");
   const [selectedGame, setSelectedGame] = useState<GameName | "_join" | null>(null);
+  // TODO: Create a loading boundary component which takes an optional prop and
+  // a component which needs that prop, renders loading indicator while the prop
+  // is null, otherwise renders the component with the prop.
+  const [loadingRoom, setLoadingRoom] = useState(false);
+
+  const loadRoom = (r: RoomData) => {
+    setRoom(r);
+    setLoadingRoom(false);
+  }
 
   const handleCreateGame = async (gameName: GameName) => {
     if (user && !user.isAnonymous) {
+      setLoadingRoom(true);
       const isPlayer = displayMode.value !== "observe";
       const id = await createGame({
         gameName, 
@@ -28,7 +38,7 @@ export default function GameSelection() {
         throw new Error(`Failed to create room for game: ${gameName}`);
       } else {
         console.log("Created room", id);
-        getRoom(id, setRoom);
+        getRoom(id, loadRoom);
       }
     } else {
       throw new Error("Cannot create a game as an anonymous user");
@@ -36,9 +46,10 @@ export default function GameSelection() {
   }
 
   const handleJoinRoom = (roomCode: string) => {
+    setLoadingRoom(true);
     const code = roomCode.toUpperCase();
     console.log("Trying to join room", code);
-    joinRoom(code, displayMode.value !== "observe", setRoom);
+    joinRoom(code, displayMode.value !== "observe", loadRoom);
   }
 
   const DisplayOptions = () => {
@@ -105,6 +116,8 @@ export default function GameSelection() {
       isPlayer: displayMode.value !== "observe",
       isInputOnly: displayMode.value === "input",
     }} />
+  } else if (loadingRoom) {
+    return <p>Loading room data...</p>
   } else if (user.isAnonymous || selectedGame === "_join") {
     return <Join />
   } else if (selectedGame === null) {
