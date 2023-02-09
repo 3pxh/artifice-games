@@ -10,6 +10,10 @@ export default function SubmittableInput(props: {
   const [input, setInput] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
+  const submit = () => {
+    setHasSubmitted(true); props.onSubmit(input);
+  }
+
   if (hasSubmitted) {
     return <>
       {props.postSubmitMessage ?? ""}
@@ -17,8 +21,11 @@ export default function SubmittableInput(props: {
   } else {
     return <>
       {props.label}
-      <input key={props.label} onChange={(e) => { setInput(e.currentTarget.value) }} />
-      <button onClick={() => { setHasSubmitted(true); props.onSubmit(input); }}>{props.buttonText}</button>
+      <input 
+        key={props.label} 
+        onInput={(e) => { setInput(e.currentTarget.value) }}
+        onKeyDown={(e) => { console.log(e.key); if (e.key === "Enter") { submit(); } }}/>
+      <button onClick={submit}>{props.buttonText}</button>
     </>
   }
 }

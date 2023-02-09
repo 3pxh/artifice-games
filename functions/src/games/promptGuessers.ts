@@ -26,6 +26,9 @@ const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale 
   }
 }
 
+// TODO: Define all of these as purely data. 
+// https://app.asana.com/0/1203750744883349/1203924722663829
+// And make a constructor that can load them in.
 export const Farsketched = {
   reducer: PromptGuesser,
   init: (u: GameCreateData): PromptGuessRoom => {

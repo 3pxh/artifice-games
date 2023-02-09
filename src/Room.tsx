@@ -12,6 +12,7 @@ import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
+import PlayerStatuses from "./components/PlayerStatuses";
 
 // TODO: make the type of this depend on the game in question
 // Or rather, include the various room types
@@ -182,6 +183,7 @@ export function Room(props: {room: RoomData}) {
             players={players as Signal<PromptGuessRoom["players"]>}
             isPlayer={props.room.isPlayer}
             isInputOnly={props.room.isInputOnly} />
+      <PlayerStatuses players={players as Signal<PromptGuessRoom["players"]>} />
     </>
   } else {
     return <Header />

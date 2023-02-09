@@ -218,7 +218,6 @@ const PromptGuesserActions = {
       delete gameState.generations[gameState.currentGeneration];
       const gens = Object.keys(gameState.generations);
       if (gens.length > 0) {
-        gameState.currentGeneration = chooseOne(gens);
         PromptGuesserActions.TransitionState(room, "Lie");
       } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
         room.gameState.round += 1;
@@ -264,6 +263,7 @@ const PromptGuesserActions = {
     const outOfTimeAndNoOneSubmittedPrompts = !room.gameState.generations && newState === "Lie";
     if (!outOfTimeAndNoOneSubmittedPrompts) {
       if (newState === "Lie" && room.gameState.generations) {
+        // We should filter out errored generations. But when?
         const gens = Object.keys(room.gameState.generations);
         room.gameState.currentGeneration = chooseOne(gens);
       } else if (newState === "Score") {

@@ -7,7 +7,7 @@ import { GameName } from "../../../functions/src/games/games";
 import * as PromptGuessBase from "./PromptGuessBase";
 import { Farsketched, Gisticle, Tresmojis } from "./PromptGuessers";
 
-import { messageRoom } from "../../actions";
+import { messageRoom, updatePlayer } from "../../actions";
 import { RoomData } from "../../Room";
 
 const GameMap = new Map<GameName, typeof PromptGuessBase>();
@@ -28,7 +28,7 @@ export function RenderPromptGuess(props: {
   }
   
   const renderState:ReadonlySignal<PromptGuessState> = computed(() => {
-    return props.isPlayer 
+    return (props.isPlayer && props.players.value)
       ? props.players.value[user.uid].state
       : props.gameState.value.state
   });
@@ -45,6 +45,7 @@ export function RenderPromptGuess(props: {
   } 
 
   const submit = (type: PromptGuessMessage["type"], value: string) => {
+    updatePlayer(props.room.id, { isReadyToContinue: true });
     message(type, value);
   }
 

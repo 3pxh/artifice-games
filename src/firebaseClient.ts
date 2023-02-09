@@ -18,16 +18,13 @@ export const db = getDatabase(firebase);
 export const storage = getStorage();
 export const auth = getAuth();
 
-if (location.hostname === "localhost") {
-  // TODO: when vite hot reloads components we get
-  // FIREBASE FATAL ERROR: Cannot call useEmulator() after instance has already been initialized. 
-  try {
-    connectDatabaseEmulator(db, "localhost", 9000);
-    connectStorageEmulator(storage, "localhost", 9199);
-    connectAuthEmulator(auth, "http://localhost:9099");
-  } catch (e) {
-    console.info("Error connecting emulators, was it from a vite reload?", e)
-  }
+// We check the auth.emulatorConfig because Vite's hot reload will
+// try to connect the emulators out from under us, causing an error.
+if (location.hostname === "localhost" && auth.emulatorConfig?.host !== "localhost") {
+  console.log("START EMU!****")
+  connectDatabaseEmulator(db, "localhost", 9000);
+  connectStorageEmulator(storage, "localhost", 9199);
+  connectAuthEmulator(auth, "http://localhost:9099");
 } 
 
 setPersistence(auth, browserLocalPersistence)

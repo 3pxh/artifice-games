@@ -14,11 +14,15 @@ export const Farsketched = {
       throw new Error(`Attempting to render Farsketched generation containing an error: ${props.generation.error}`)
     }
 
-    return <>
+    if (props.generation.generation) {
+      return <>
       {/* TODO: styling! */}
       {props.showPrompt ? <p>The truth was: <span class="Generation-Truth">{props.generation.prompt}</span></p> : ""}
       <img key={props.generation.generation} src={props.generation.generation} class="Generation-Image" />
     </>
+    } else {
+      return <>Waiting on the painting robot...</>
+    }
   },
 }
 

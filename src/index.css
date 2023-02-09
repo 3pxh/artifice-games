@@ -129,6 +129,31 @@ fieldset {
 .Avatar.Selected {
 	opacity: .5;
 }
+.Avatar.Waiting {
+	opacity: 1;
+}
+.Avatar.Playing {
+	opacity: .5;
+}
+
+.PlayerStatuses {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+.PlayerStatuses-Item {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	margin: 5px 10px;
+}
+.PlayerStatus-Handle {
+	font-size: 9pt;
+	max-width: 90px;
+	text-overflow: ellipsis;
+	overflow-x: hidden;
+	white-space: nowrap;
+}
 
 .PromptGuessBase-Score {
 	align-items: center;
