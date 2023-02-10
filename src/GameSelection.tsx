@@ -101,7 +101,7 @@ export default function GameSelection() {
   const Join = () => {
     return <div class="GameSelection-Join">
       <DisplayOptions />
-      <SubmittableInput label="Room code" onSubmit={handleJoinRoom} buttonText="Join" />
+      <SubmittableInput label="Room code:" onSubmit={handleJoinRoom} buttonText="Join" />
     </div>
   }
 
@@ -118,17 +118,17 @@ export default function GameSelection() {
     }} />
   } else if (loadingRoom) {
     return <p>Loading room data...</p>
-  } else if (user.isAnonymous || selectedGame === "_join") {
+  } else if (user.isAnonymous || !user.emailVerified || selectedGame === "_join") {
     return <Join />
   } else if (selectedGame === null) {
     return <>
-    <div>
+    <div class="GameSelection-GameList">
       <h1>Create a game</h1>
-      <button onClick={() => {setSelectedGame("farsketched")}}><h2>Farsketched</h2></button>
-      <button onClick={() => {setSelectedGame("gisticle")}}><h2>Gisticle</h2></button>
-      <button onClick={() => {setSelectedGame("tresmojis")}}><h2>Tresmojis</h2></button>
+      <button onClick={() => {setSelectedGame("farsketched")}}>Farsketched</button>
+      <button onClick={() => {setSelectedGame("gisticle")}}>Gisticle</button>
+      <button onClick={() => {setSelectedGame("tresmojis")}}>Tresmojis</button>
       <h1>Or,</h1>
-      <button onClick={() => {setSelectedGame("_join")}}><h2>Join a game</h2></button>
+      <button onClick={() => {setSelectedGame("_join")}}>Join a game</button>
     </div>
   </>
   } else {

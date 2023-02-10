@@ -6,16 +6,15 @@ import TopNav from "./TopNav";
 import GameSelection from "./GameSelection";
 
 export default function App() {
-  const { user, login, logout } = useAuth();
+  const auth = useAuth();
 
   return <>
-  <AuthContext.Provider value={{
-      user,
-      login,
-      logout
-    }}>
-      {!user 
-      ? <Auth /> 
+  <AuthContext.Provider value={auth}>
+      {auth.requiresAction() 
+      ? <>
+        <h1>🎨 Artifice 🤖 Games 🕹️</h1>
+        <Auth />
+      </>
       : <>
         <TopNav /> 
         {/* Do we _just_ want to render GameSelection here, and have it render Room?

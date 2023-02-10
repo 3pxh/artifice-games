@@ -43,6 +43,29 @@ fieldset {
   color: #fff;
 }
 
+.Auth {
+	display: flex;
+	flex-direction: column;
+}
+.Auth > h2 {
+	align-self: center;
+}
+.Auth > input {
+	border-radius: 26px;
+	font-size: 16pt;
+	padding: 10px;
+	margin: 5px 0;
+}
+.Auth > button {
+	background-color: aquamarine;
+	border: none;
+	border-radius: 30px;
+	font-size: 16pt;
+	padding: 10px;
+}
+.Auth > button:hover {
+	background-color: aqua;
+}
 
 .TopNav {
 	background: white;
@@ -59,8 +82,37 @@ fieldset {
 	max-width: min(100%, 600px);
 }
 
-.GameSelection-Join input {
+/* Seriously need to make a single consistent Button class */
+.GameSelection-GameList > button {
+	background-color: aquamarine;
+	border: none;
+	font-size: 16pt;
+	padding: 10px;
+	margin: 10px;
+}
+.GameSelection-GameList > button:hover {
+	background-color: aqua;
+}
+.GameSelection-Join > input {
+	--font-size: 16pt;
+	border-radius: 26px;
+	font-size: var(--font-size);
+	padding: 10px;
+	margin: 10px;
+	text-align: center;
 	text-transform: uppercase;
+	width: calc(4 * var(--font-size) + 10px);
+}
+.GameSelection-Join > button {
+	background-color: aquamarine;
+	border: none;
+	border-radius: 30px;
+	font-size: 16pt;
+	min-width: 80px;
+	padding: 10px;
+}
+.GameSelection-Join > button:hover {
+	background-color: aqua;
 }
 
 .Prompt-Hero {

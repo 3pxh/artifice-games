@@ -1,6 +1,6 @@
 import { h, Fragment } from 'preact'
-import { useContext, useState } from 'preact/hooks'
-import { AuthContext, AuthType } from './AuthProvider'
+import { useContext } from 'preact/hooks'
+import { AuthContext } from './AuthProvider'
 
 export default function TopNav() {
   const authContext = useContext(AuthContext);

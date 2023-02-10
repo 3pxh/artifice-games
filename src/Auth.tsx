@@ -1,44 +1,82 @@
-import { h, Fragment } from 'preact'
-import { useContext, useState } from 'preact/hooks'
-import { AuthContext, AuthType } from './AuthProvider'
+import { h, Fragment } from "preact";
+import { useContext, useState } from "preact/hooks";
+import { AuthContext, AuthType } from "./AuthProvider";
+import SubmittableInput from "./components/SubmittableInput";
 
+enum LoginState {"Anon", "Email", "Choosing"};
+// TODO: refactor this and AuthProvider so it's simpler.
+// At time of writing, this component is rendered iff
+// auth.requiresAction() returns true, and should provide
+// flows to resolve any issues.
 export default function Auth() {
   const authContext = useContext(AuthContext);
-  const [isWaiting, setIsWaiting] = useState(false);
-  const [email, setEmail] = useState('');
+  const [loginState, setLoginState] = useState<LoginState>(LoginState.Choosing);
   
-  const emailAuth = () => {
+  const emailAuth = (email: string) => {
     if (email) { 
-      setIsWaiting(true);
+      setLoginState(LoginState.Email);
       authContext.login(AuthType.EmailLink, email);
     }
   }
 
   const anonAuth = () => {
-    setIsWaiting(true);
+    setLoginState(LoginState.Anon);
     authContext.login(AuthType.Anonymous);
   }
 
-  return (
-    <>
-    {authContext.user 
-        ? <>
-          <p>Welcome, {authContext.user.email || "anonymous"}</p>
-          <button onClick={authContext.logout}>Log out</button>
+  const EmailVerification = (props: {email: string}) => {
+    const [isAwaitingVerification, setIsAwaitingVerification] = useState(false);
+    
+    if (isAwaitingVerification) {
+      return <>Check {props.email} for account verification</>
+    } else if (authContext.user && 
+      !authContext.user.isAnonymous && 
+      !authContext.user.emailVerified) {
+        return <>
+          Check {props.email} for a verification email.
+          <button onClick={() => {
+            setIsAwaitingVerification(true);
+            authContext.verify();
+          }}>Re-send link</button>
+          <button onClick={() => {
+            authContext.logout();
+            setLoginState(LoginState.Choosing);
+          }}>Use a different email</button>
         </>
-        : isWaiting 
-          ? "Waiting..." 
-          : <>
-            <input type="text" onInput={(e) => { setEmail(e.currentTarget.value); }} />
-            <button onClick={emailAuth}>
-              Log in with email
-            </button> 
-            or 
-            <button onClick={anonAuth}>
-              Log in anonymously
-            </button>
-          </>
+    } else {
+      return <></>
     }
+  }
+
+  if (!authContext.user) {
+    if (loginState === LoginState.Choosing) {
+      return <div class="Auth">
+        <SubmittableInput
+          label="Email:"
+          buttonText="Log in/sign up with email"
+          onSubmit={emailAuth}
+          />
+        <h2>or</h2>
+        <button onClick={anonAuth}>
+          Log in anonymously
+        </button>
+      </div>
+    } else if (loginState === LoginState.Anon) {
+      return <>Logging in...</>
+    } else if (loginState === LoginState.Email) {
+      return <>Check your email for a link</>
+    } else {
+      return <>Unrecognized login state</>
+    }
+  } else if (authContext.user.isAnonymous) {
+    return <>Logged in anonymously!</>
+  } else if (!authContext.user.emailVerified) {
+    return <>
+      <EmailVerification email={authContext.user.email ?? ""} />
     </>
-  )
+  } else {
+    return <>
+      Check {window.localStorage.getItem("emailForSignIn")} for a login link.
+    </>
+  }
 }
