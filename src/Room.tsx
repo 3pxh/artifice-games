@@ -38,11 +38,9 @@ export function Room(props: {room: RoomData}) {
 
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
-    console.log("setting state", snapshot.val())
   }
   const updatePlayerState = (snapshot: DataSnapshot) => {
     players.value = snapshot.val();
-    console.log("setting players", snapshot.val())
   }
 
   useEffect(() => {
@@ -95,7 +93,7 @@ export function Room(props: {room: RoomData}) {
     // TODO: format with a padded 0, e.g. 0:06
     const formattedWaitTime = `${Math.floor(waitTimeS/60)}:${waitTimeS % 60}`;
     if (startTime > 0 && waitTimeS > 0) {
-      return <p>You are in the queue, the game should start in {formattedWaitTime}</p>
+      return <p>You are #{1+Math.floor(waitTimeS/15)} in the queue, the room will appear in {formattedWaitTime}</p>
     } else if (startTime > 0 && waitTimeS <= 0) {
       return <p>Initializing game...</p>
     } else {
@@ -150,12 +148,12 @@ export function Room(props: {room: RoomData}) {
     return <>
       <Header />
       <WaitTime />
-      <PlayerHandleInput />
+      {/* <PlayerHandleInput /> */}
     </>
   } else if (isLoaded && authContext.user) {
     return <>
       <Header />
-      <GameTimer roomId={props.room.id} uid={authContext.user.uid} />
+      <GameTimer key={"timer"} roomId={props.room.id} uid={authContext.user.uid} />
       {isLobby.value
       ? <>
       {/* TODO: this doesn't reflect their name on load if they set it before */}
@@ -169,21 +167,22 @@ export function Room(props: {room: RoomData}) {
       </>
       : <></>
       }
+      <PlayerStatuses key={"status"} players={players as Signal<PromptGuessRoom["players"]>} />
       <RenderPromptGuess 
-            room={props.room}
-            // WARNING! We do these typecasts because the isLoaded is a computed null guard.
-            // We DO NOT want to check the values of these signals directly, because
-            // that would necessitate a rerender on every update. We want the signals
-            // passed down (not accessing their values) with minimal rerenders for things 
-            // like retaining focus on input fields.
-            // TODO: vite's hot reloading can somehow result in players being undefined in local dev
-            // if we are in the middle of a game and editing components. But perhaps it would be
-            // better to develop on components in isolation with mock data anyway.
-            gameState={gameState as Signal<PromptGuessRoom["gameState"]>}
-            players={players as Signal<PromptGuessRoom["players"]>}
-            isPlayer={props.room.isPlayer}
-            isInputOnly={props.room.isInputOnly} />
-      <PlayerStatuses players={players as Signal<PromptGuessRoom["players"]>} />
+        key={"game"}
+        room={props.room}
+        // WARNING! We do these typecasts because the isLoaded is a computed null guard.
+        // We DO NOT want to check the values of these signals directly, because
+        // that would necessitate a rerender on every update. We want the signals
+        // passed down (not accessing their values) with minimal rerenders for things 
+        // like retaining focus on input fields.
+        // TODO: vite's hot reloading can somehow result in players being undefined in local dev
+        // if we are in the middle of a game and editing components. But perhaps it would be
+        // better to develop on components in isolation with mock data anyway.
+        gameState={gameState as Signal<PromptGuessRoom["gameState"]>}
+        players={players as Signal<PromptGuessRoom["players"]>}
+        isPlayer={props.room.isPlayer}
+        isInputOnly={props.room.isInputOnly} />
     </>
   } else {
     return <Header />

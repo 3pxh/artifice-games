@@ -24,7 +24,7 @@ export default function SubmittableInput(props: {
       <input 
         key={props.label} 
         onInput={(e) => { setInput(e.currentTarget.value) }}
-        onKeyDown={(e) => { console.log(e.key); if (e.key === "Enter") { submit(); } }}/>
+        onKeyDown={(e) => { if (e.key === "Enter") { submit(); } }}/>
       <button onClick={submit}>{props.buttonText}</button>
     </>
   }

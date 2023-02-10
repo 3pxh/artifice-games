@@ -10,6 +10,7 @@ html, body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	--brand-color: #673ab8;
+	--border-color: yellow;
 }
 
 * {
@@ -89,12 +90,19 @@ fieldset {
 	overflow-wrap: break-word;
 }
 
-.Generation-Image {
+.PromptGuessGeneration-Image {
 	max-width: min(512px, 100%);
 }
-.Generation-Truth {
+.PromptGuessGeneration-Truth {
 	color: yellow;
 	font-weight: 600;
+}
+.PromptGuessGeneration-Text {
+	display: flex;
+	justify-content: center;
+	margin: 20px 0;
+	white-space:pre-wrap;
+	width: min(512px, 100%);
 }
 
 .PromptGuessBase-LieChoices {
@@ -112,14 +120,14 @@ fieldset {
 	color:rgb(122, 255, 110);
 }
 
-.PromptGuessBase-Scoreboard > button {
+.PromptGuessLobby > button, .PromptGuessBase-Scoreboard > button {
 	background-color: aquamarine;
 	border: none;
 	border-radius: 30px;
 	font-size: 16pt;
 	padding: 10px;
 }
-.PromptGuessBase-Scoreboard > button:hover {
+.PromptGuessLobby > button:hover, .PromptGuessBase-Scoreboard > button:hover {
 	background-color: aqua;
 }
 
@@ -130,22 +138,22 @@ fieldset {
 	opacity: .5;
 }
 .Avatar.Waiting {
-	opacity: 1;
-}
-.Avatar.Playing {
-	opacity: .5;
+	border: 3px solid rgb(122, 255, 110);
 }
 
 .PlayerStatuses {
+	border-bottom: 1px solid var(--border-color);
+	border-top: 1px solid var(--border-color);
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
+	margin: 10px 0;
 }
 .PlayerStatuses-Item {
 	align-items: center;
 	display: flex;
 	flex-direction: column;
-	margin: 5px 10px;
+	margin: 5px 5px;
 }
 .PlayerStatus-Handle {
 	font-size: 9pt;
@@ -157,7 +165,7 @@ fieldset {
 
 .PromptGuessBase-Score {
 	align-items: center;
-	border-bottom: 1px solid rgba(255,255,255,.1);
+	border-bottom: 1px dashed var(--border-color);
 	display: flex;
 	flex-direction: row;
 	padding: 5px 0;
@@ -173,7 +181,7 @@ fieldset {
 	top: 0px;
 	transform: rotate(-45deg);
 }
-.PromptGuessBase-Score.Lie {
+.PromptGuessBase-Score.Lie > * {
 	opacity: .5;
 }
 .PromptGuessBase-ScoreCreator {
@@ -183,12 +191,18 @@ fieldset {
 	flex-grow: 1;
 	margin-right: 10px;
 }
+.PromptGuessBase-Leaderboard {
+	margin-bottom: 20px;
+}
 .PromptGuessBase-LeaderboardScore {
 	align-items: center;
 	display: flex;
 	flex-direction: row;
 	margin: 5px 0;
 	padding: 5px 0;
+}
+.PromptGuessBase-LeaderboardRank {
+	margin-right: 10px;
 }
 .PromptGuessBase-LeaderboardScore > img {
 	margin-right: 5px;

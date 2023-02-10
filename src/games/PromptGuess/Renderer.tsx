@@ -9,6 +9,7 @@ import { Farsketched, Gisticle, Tresmojis } from "./PromptGuessers";
 
 import { messageRoom, updatePlayer } from "../../actions";
 import { RoomData } from "../../Room";
+import SingleUseButton from "../../components/SingleUseButton";
 
 const GameMap = new Map<GameName, typeof PromptGuessBase>();
 GameMap.set("farsketched", Farsketched);
@@ -77,10 +78,12 @@ export function RenderPromptGuess(props: {
   
   
   if (renderState.value === "Lobby") {
-    return <>
-      <p>While you wait, this game engine has a surprise!</p>
-      <button onClick={() => {message("Start", "yum")}}>Make it go boom!</button>
-    </>
+    return <div class="PromptGuessLobby">
+      <SingleUseButton 
+        buttonText="Everybody's here!" 
+        onClick={() => {message("Start", "gogogo!")}}
+        postSubmitContent={<>Go go go!</>} />
+    </div>
   } else if (renderState.value === "Intro") {
     return <engine.Intro introVideoUrl={props.room.introVideoUrl} />
   } else if (renderState.value === "Prompt") {

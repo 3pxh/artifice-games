@@ -19,7 +19,8 @@ function Prompt(props: {
     <SubmittableInput 
       onSubmit={props.onSubmit} 
       label={props.template.display} 
-      buttonText="Make it!" />
+      buttonText="Make it!" 
+      postSubmitMessage="Waiting on other players..." />
   </div>
 };
   
@@ -38,7 +39,8 @@ function Lie(props: {
       <SubmittableInput
         onSubmit={props.onSubmit}
         label="Fool others with some artifice:"
-        buttonText="Lie!" />
+        buttonText="Lie!"
+        postSubmitMessage="Waiting on other players..." />
     </div>
   }
 };
@@ -107,17 +109,21 @@ function Scoreboard(props: {
         </div>
       })}
       {/* This is more of a leaderboard, and we might want to show it persistently. */}
-      {Object.entries(playerData.value).sort(([_, p1], [__, p2]) => p2.current - p1.current).map(([k,v]) => {
-        return <div key={k} class="PromptGuessBase-LeaderboardScore">
-          <img src={v.avatar} class="Avatar" width="32" />
-          {v.handle}:{" "}
-          {v.current}{" "}
-          {v.current !== v.previous ? <small style="margin-left:10px;">{`(+${v.current-v.previous})`}</small> : ""}
-        </div>
-      })}
+      <div class="PromptGuessBase-Leaderboard">
+        <p>Leaderboard:</p>
+        {Object.entries(playerData.value).sort(([_, p1], [__, p2]) => p2.current - p1.current).map(([k,v], i) => {
+          return <div key={k} class="PromptGuessBase-LeaderboardScore">
+            <span class="PromptGuessBase-LeaderboardRank">{i+1}.</span>
+            <img src={v.avatar} class="Avatar" width="32" />
+            {v.handle}:{" "}
+            {v.current}{" "}
+            {v.current !== v.previous ? <small style="margin-left:10px;">{`(+${v.current-v.previous})`}</small> : ""}
+          </div>
+        })}
+      </div>
       {props.onContinue 
         ? <SingleUseButton 
-            buttonText="Continue" 
+            buttonText="Ready to continue!" 
             onClick={props.onContinue} 
             postSubmitContent={<>Waiting on others to continue...</>} />
         : ''}

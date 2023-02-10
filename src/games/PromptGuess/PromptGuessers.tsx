@@ -1,8 +1,4 @@
-import { h, Fragment } from "preact";
-import { useEffect, useState } from "preact/hooks";
-import { ref, getDownloadURL } from "@firebase/storage";
-import { storage } from "../../firebaseClient";
-
+import { h, Fragment, JSX, cloneElement } from "preact";
 import { PromptGeneration } from "../../../functions/src/games/promptGuessBase";
 import * as PromptGuessBase from "./PromptGuessBase";
 
@@ -17,8 +13,8 @@ export const Farsketched = {
     if (props.generation.generation) {
       return <>
       {/* TODO: styling! */}
-      {props.showPrompt ? <p>The truth was: <span class="Generation-Truth">{props.generation.prompt}</span></p> : ""}
-      <img key={props.generation.generation} src={props.generation.generation} class="Generation-Image" />
+      {props.showPrompt ? <p>The truth was: <span class="PromptGuessGeneration-Truth">{props.generation.prompt}</span></p> : ""}
+      <img key={props.generation.generation} src={props.generation.generation} class="PromptGuessGeneration-Image" />
     </>
     } else {
       return <>Waiting on the painting robot...</>
@@ -26,21 +22,23 @@ export const Farsketched = {
   },
 }
 
-const RenderText = (props: {generation: PromptGeneration, showPrompt?: boolean}) => {
+const RenderText = (props: {
+  generation: PromptGeneration, 
+  showPrompt?: boolean,
+  textElement: JSX.Element,
+}) => {
   if (props.generation.error) {
     throw new Error(`Attempting to render text generation containing an error: ${props.generation.error}`)
   } else if (!props.generation.generation) {
     return <>Waiting on the AI...</>
   } else {
     return <>
-      {props.showPrompt 
-        ? <p>
-            {props.generation.template.display}{' '}
-            <span class="Generation-Truth">{props.generation.prompt}</span>
-          </p>
-        : ""}
-      <span style="white-space:pre-wrap;">
-        {props.generation.generation.trim()}
+      <p>
+        {props.generation.template.display}{' '}
+        {props.showPrompt  ? <span class="PromptGuessGeneration-Truth HasUserText">{props.generation.prompt}</span> : "?"}
+      </p>
+      <span class="PromptGuessGeneration-Text HasUserText">
+        {cloneElement(props.textElement, {}, [props.generation.generation.trim()])}
       </span>
     </>
   }
@@ -51,13 +49,10 @@ export const Gisticle = {
   Generation(props: {generation: PromptGeneration, showPrompt?: boolean}) {
     return <>
       {/* TODO: styling! */}
-      <p>
-        {props.generation.template.display}{' '}
-        <span class="Generation-Truth HasUserText">
-          {props.showPrompt ? props.generation.prompt : ""}
-        </span>
-      </p>
-      <p class="HasUserText"><RenderText generation={props.generation} /></p>
+      <RenderText 
+        showPrompt={props.showPrompt}
+        generation={props.generation}
+        textElement={<span></span>} />
     </>
   },
 }
@@ -67,8 +62,10 @@ export const Tresmojis = {
   Generation(props: {generation: PromptGeneration, showPrompt?: boolean}) {
     return <>
       {/* TODO: styling! */}
-      <p><RenderText generation={props.generation} /></p>
-      {props.showPrompt ? props.generation.prompt : ""}
+      <RenderText 
+        showPrompt={props.showPrompt}
+        generation={props.generation} 
+        textElement={<span style="font-size:48pt;"></span>} />
     </>
   },
 }
