@@ -6,7 +6,7 @@ Get the firebase CLI. Run `firebase login`. Make sure that you have access to th
 
 In the toplevel directory, run `firebase init`.
 
-* <small>Select the <span style="color:green">realtime database</span>, <span style="color:green">functions</span>, and <span style="color:green">cloud storage</span>.<br/></small>
+* <small>Select the <span style="color:green">realtime database</span>, <span style="color:green">firestore</span>, <span style="color:green">functions</span>, <span style="color:green">cloud storage</span>.<br/></small>
 * <small>When asked if it's an existing project, select the <span style="color:green">threepixelheart</span> project.<br/></small>
 * <small>File database.rules.json already exists. Do you want to overwrite it with the Realtime Database Security Rules for threepixelheart-f5674-default-rtdb from the Firebase console? <span style="color:green">No</span><br/></small>
 * <small>What language would you like to use to write Cloud Functions? <span style="color:green">TypeScript</span><br/></small>
@@ -19,11 +19,18 @@ In the toplevel directory, run `firebase init`.
 * <small>What file should be used for Storage Rules? (storage.rules) <span style="color:green">[enter]</span><br/></small>
 * <small>File storage.rules already exists. Overwrite? <span style="color:green">No</span><br/></small>
 
+# Install the billing extension
+
+In the event that you need to work on billing, `firebase ext:install --local stripe/firestore-stripe-payments`. This requires keys from Stripe.
+Additionally we want to test in local env with stripe, [https://dashboard.stripe.com/test/webhooks/create?endpoint_location=local]
+
+Have to create products to have them sync in firestore :/ (it'd be nice if we could import once from Stripe)
+
 # Developing
 
 To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebuilds and re-serves stuff automatically. Default port 3000.
 
-Make sure you have all the emulators with `firebase init emulators` and check off `functions`, `database`, `storage`, and `auth`. (Auth is now required in order to account for the database access control rules!)
+Make sure you have all the emulators with `firebase init emulators` and check off `functions`, `firestore`, `database`, `storage`, and `auth`. Auth is  required in order to account for the database access control rules. Firestore may soon be required for stripe billing data emulation.
 
 To run firebase locally it helps to open up two terminals and cd functions in both. In one: `npm run emulate` and in the other: `npm run build:watch`. This allows hot reloading of the cloud functions as you work on them (whereas npm run emulate will only compile once).
 
