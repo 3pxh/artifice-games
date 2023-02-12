@@ -43,7 +43,10 @@ export const useAuth = () => {
       url: location.hostname === "localhost" ? "http://localhost:3000" : "https://artifice.games",
       handleCodeInApp: true,
     };
+
+    // "save the user's email in case the user completes the email sign in on same device": https://firebase.google.com/docs/auth/web/email-link-auth
     window.localStorage.setItem("emailForSignIn", email);
+    
     createUserWithEmailAndPassword(auth, email, crypto.randomUUID())
       .then((c) => {
         sendEmailVerification(c.user);
