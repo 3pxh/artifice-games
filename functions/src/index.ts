@@ -3,13 +3,18 @@ import * as admin from "firebase-admin";
 import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
-import { engines, GameName, MessageTypes, GameCreateData } from "./games/games";
+import { engines, MessageTypes, GameCreateData, EngineName, GameDefinition } from "./games/games";
 
 App.instance;
 
 export type CreateRequest = {
-  gameName: GameName,
+  gameId: string, // Found in games/{gameId}
 } & GameCreateData;
+
+type GameData = {
+  engine: EngineName,
+  name: string,
+}
 
 type RoomState = {
   gameState: {state: string}
@@ -98,9 +103,18 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
     // TODO: Disallow creating many rooms at once.
     // Could be done via DB permissions.
     const msg = snapshot.val() as CreateRequest;
-    functions.logger.log("Processing create request", {msg: msg});
-    const gameName = msg.gameName as GameName;
-    const gameRoom = engines[gameName].init(msg);
+    functions.logger.log("Processing create request", {msg});
+    // The database can store data that doesn't match types. How do we check it?
+    const gameData = (await admin.database().ref(`/games/${msg.gameId}`).get()).val();
+    if (!gameData) {
+      functions.logger.error("roomCreated: Game not found", {msg});
+      return snapshot.ref.set({
+        error: `Game with id ${msg.gameId} not found!`
+      });
+    }
+    functions.logger.log("Got game record", {gameData});
+    const engineName:EngineName = (gameData as GameData).engine; // Or get from msg!
+    const gameRoom = engines[engineName].init(msg, gameData as GameDefinition);
     const t = new Date().getTime();
     const shortcode: string = await createShortcode(context.params.id);
     const roomWithQueueState = {
@@ -189,9 +203,9 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
     return snapshot.ref.parent!.parent!.transaction((room) => {
       if (room) {
         functions.logger.log("Processing message", {msg: snapshot.val(), room: room, params: context.params});
-        const gameName = room.gameName as GameName;
-        const message = snapshot.val() as MessageTypes[typeof gameName]; // Not sure abt this
-        const reducer = engines[gameName].reducer;
+        const engineName = room.definition.engine as EngineName;
+        const message = snapshot.val() as MessageTypes[typeof engineName]; // Not sure abt this
+        const reducer = engines[engineName].reducer;
         // We need to run this computation in the transaction, or else two
         // transitions could be computed simultaneously, and one oroomverwrite the other.
         // The only exception is the actual AI generation.

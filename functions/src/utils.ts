@@ -2,6 +2,10 @@ export const chooseOne = <T,>(A: T[]) => {
   return A[Math.floor(Math.random() * A.length)];
 }
 
+export const chooseOneInObject = <T,>(A: {[k: string]: T}) => {
+  return chooseOne(Object.entries(A))[1];
+}
+
 export const shuffle = <T>(A: T[], seed?: number) => {
   const rand = seed ? mulberry32(seed) : Math.random;
   return A.map(value => ({ value, sort: rand() }))

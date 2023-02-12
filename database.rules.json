@@ -3,6 +3,9 @@ TODO: of everything in the codebase, these should have test coverage.
 */
 {
   "rules": {
+    "games": {
+      ".read": "true"
+    },
     "rooms": {
       ".indexOn": "_queue/startTime",
       "$roomId": {

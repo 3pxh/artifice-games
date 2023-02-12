@@ -74,7 +74,7 @@ export function Room(props: {room: RoomData}) {
   const Header = () => {
     return (
       <>
-        <p>You are playing: {props.room.gameName} | Code: {props.room._shortcode}</p>
+        <p>You are playing: {props.room.definition.name} | Code: {props.room._shortcode}</p>
       </>
     )
   }
@@ -93,7 +93,7 @@ export function Room(props: {room: RoomData}) {
     // TODO: format with a padded 0, e.g. 0:06
     const formattedWaitTime = `${Math.floor(waitTimeS/60)}:${waitTimeS % 60}`;
     if (startTime > 0 && waitTimeS > 0) {
-      return <p>You are #{1+Math.floor(waitTimeS/15)} in the queue, the room will appear in {formattedWaitTime}</p>
+      return <p>This room is #{1+Math.floor(waitTimeS/15)} in the queue, it will appear in {formattedWaitTime}</p>
     } else if (startTime > 0 && waitTimeS <= 0) {
       return <p>Initializing game...</p>
     } else {

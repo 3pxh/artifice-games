@@ -4,10 +4,14 @@ import * as AWS from "aws-sdk";
 import App from "./app";
 
 export type Models =  "GPT3" | "StableDiffusion"
+export type ModelDef = {
+  name: Models,
+  // Other settings?
+}
 export type GenerationRequest = {
   room: string,
   uid: string,
-  model: Models,
+  model: ModelDef,
   template: {template: string},
   prompt: string,
 }
@@ -158,10 +162,10 @@ const runners:Record<Models, Generator>  = {
 }
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {
-  if (runners[r.model]) {
+  if (runners[r.model.name]) {
     // TODO: what if this errors? Who is handling it, how?
     // We had a try/catch here before but the linter said it was useless.
-    const g = await runners[r.model](r);
+    const g = await runners[r.model.name](r);
     return g;
   } else {
     throw new Error(`No generator defined for model: ${r.model}`);

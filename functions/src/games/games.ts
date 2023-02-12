@@ -1,32 +1,28 @@
-import { PromptGuessRoom, PromptGuessMessage, PromptGuessGameName } from "./promptGuessBase";
-import { Farsketched, Gisticle, Tresmojis } from "./promptGuessers";
+import * as PG from "./promptGuessBase";
 
-export type TimerOption = "off" | "slow" | "fast"
+export type TimerOption = "off" | "slow" | "fast";
+export type EngineName = PG.GameDefinition["engine"]; // | ...
+export type GameDefinition = PG.GameDefinition; // | ...
 export type GameCreateData = {
   _creator: string,
   isPlayer: boolean,
   timer: TimerOption,
 }
 
-type GameName = PromptGuessGameName; // | "dixit" | "codenames" | ...
 type Reducer<Room extends {gameState: any}, Message> = (gs: Room, m: Message) => Room["gameState"];
-type PromptGuessEngine = { 
-  reducer: Reducer<PromptGuessRoom, PromptGuessMessage>, 
-  init: (v: GameCreateData) => PromptGuessRoom
+
+type Engine<GameDef, Room extends {gameState: any}, Message> = {
+  reducer: Reducer<Room, Message>, 
+  init: (v: GameCreateData, d: GameDef) => Room
 }
+type PromptGuessEngine = Engine<PG.GameDefinition, PG.PromptGuessRoom, PG.PromptGuessMessage>
 
 type GameEngine = PromptGuessEngine; // | AnotherEngine
-const engines:Record<GameName, GameEngine> = {
-  "farsketched": Farsketched,
-  "gisticle": Gisticle,
-  "tresmojis": Tresmojis,
+export const engines:Record<EngineName, GameEngine> = {
+  "PromptGuess": PG.engine,
 }
 
 // TODO: this doesn't seem quite right as far as managing types...
-type MessageTypes = {
-  "farsketched": PromptGuessMessage,
-  "gisticle": PromptGuessMessage,
-  "tresmojis": PromptGuessMessage,
+export type MessageTypes = {
+  "PromptGuess": PG.PromptGuessMessage,
 }
-
-export { engines, GameName, MessageTypes }

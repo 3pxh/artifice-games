@@ -3,18 +3,11 @@ import { useContext } from "preact/hooks";
 import { computed, useComputed, Signal, ReadonlySignal } from "@preact/signals";
 import { PromptGuessMessage, PromptGuessRoom, PromptGuessState } from "../../../functions/src/games/promptGuessBase"
 import { AuthContext } from "../../AuthProvider"
-import { GameName } from "../../../functions/src/games/games";
-import * as PromptGuessBase from "./PromptGuessBase";
-import { Farsketched, Gisticle, Tresmojis } from "./PromptGuessers";
+import * as Engine from "./PromptGuessBase";
 
 import { messageRoom, updatePlayer } from "../../actions";
 import { RoomData } from "../../Room";
 import SingleUseButton from "../../components/SingleUseButton";
-
-const GameMap = new Map<GameName, typeof PromptGuessBase>();
-GameMap.set("farsketched", Farsketched);
-GameMap.set("gisticle", Gisticle);
-GameMap.set("tresmojis", Tresmojis);
 
 export function RenderPromptGuess(props: {
   room: RoomData,
@@ -39,12 +32,6 @@ export function RenderPromptGuess(props: {
   // Don't want to rerender the prompt input when players changes.
   const myTemplate = computed(() => props.players.value[user.uid].template);
   
-
-  const engine = GameMap.get(props.room.gameName as GameName);
-  if (!engine) {
-    throw new Error("Trying to render without a game engine!");
-  } 
-
   const submit = (type: PromptGuessMessage["type"], value: string) => {
     updatePlayer(props.room.id, { isReadyToContinue: true });
     message(type, value);
@@ -85,15 +72,15 @@ export function RenderPromptGuess(props: {
         postSubmitContent={<>Go go go!</>} />
     </div>
   } else if (renderState.value === "Intro") {
-    return <engine.Intro introVideoUrl={props.room.introVideoUrl} />
+    return <Engine.Intro introVideoUrl={props.room.definition.introVideo.url} />
   } else if (renderState.value === "Prompt") {
-    return <engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
+    return <Engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
                           template={myTemplate.value} />
   } else if (renderState.value === "Lie") {
     if (currentGeneration.value) {
       return <>
-        <engine.Generation generation={currentGeneration.value} />
-        <engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
+        <Engine.Generation generation={currentGeneration.value} />
+        <Engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
                     generation={currentGeneration.value}/>
       </>
     } else {
@@ -108,28 +95,28 @@ export function RenderPromptGuess(props: {
             return <li class="HasUserText" key={o.uid}>{o.prompt}</li>
           })}
         </ul>
-        <engine.Generation generation={currentGeneration.value} />
+        <Engine.Generation generation={currentGeneration.value} />
       </>
     } else {
       return <>
-        <engine.Generation generation={currentGeneration.value} />
-        <engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={voteOptions} />
+        <Engine.Generation generation={currentGeneration.value} />
+        <Engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={voteOptions} />
       </>
     }
   } else if (renderState.value === "Score" && currentGeneration.value) {
     return <>
-      <engine.Scoreboard 
+      <Engine.Scoreboard 
         options={voteOptions}
         gameState={props.gameState}
         players={props.players}
         onContinue={() => {message("ReadyToContinue", "")}} />
-      <engine.Generation generation={currentGeneration.value}
+      <Engine.Generation generation={currentGeneration.value}
                         showPrompt={true} />
     </>
   } else if (renderState.value === "Finish") {
     return <>
       <p>You're all winners!</p>
-      <engine.Scoreboard 
+      <Engine.Scoreboard 
         options={voteOptions}
         gameState={props.gameState}
         players={props.players} />
