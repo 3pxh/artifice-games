@@ -168,6 +168,6 @@ export async function generate(r: GenerationRequest): Promise<GenerationResponse
     const g = await runners[r.model.name](r);
     return g;
   } else {
-    throw new Error(`No generator defined for model: ${r.model}`);
+    throw new Error(`No generator defined for model: ${r.model.name}`);
   }
 }
