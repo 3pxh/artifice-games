@@ -3,7 +3,7 @@ import * as admin from "firebase-admin";
 import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
-import { engines, MessageTypes, GameCreateData, EngineName, GameDefinition } from "./games/games";
+import { engines, MessageTypes, GameCreateData, EngineName } from "./games/games";
 
 App.instance;
 
@@ -114,7 +114,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
     }
     functions.logger.log("Got game record", {gameData});
     const engineName:EngineName = (gameData as GameData).engine; // Or get from msg!
-    const gameRoom = engines[engineName].init(msg, gameData as GameDefinition);
+    const gameRoom = engines[engineName].init(msg, gameData as any); // TODO: typechecking on multiple games
     const t = new Date().getTime();
     const shortcode: string = await createShortcode(context.params.id);
     const roomWithQueueState = {
@@ -209,7 +209,7 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
         // We need to run this computation in the transaction, or else two
         // transitions could be computed simultaneously, and one oroomverwrite the other.
         // The only exception is the actual AI generation.
-        const gs = reducer(room, message);
+        const gs = reducer(room, message as any); // TODO: typechecking broken here.
         room.gameState = gs;
         // TODO: schedule deletion for the future, for now leave it as a log.
         room.messages[context.params.key].read = true;
