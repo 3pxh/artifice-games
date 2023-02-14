@@ -1,14 +1,26 @@
 import * as functions from "firebase-functions";
-import { chooseOne } from "../utils";
-import { Models, GenerationResponse } from "../generate";
+import { chooseOne, chooseOneInObject } from "../utils";
+import { ModelDef, GenerationResponse } from "../generate";
 import { GameCreateData } from "./games";
 
 export type Template = {template: string, display: string};
+export type GameDefinition = {
+  engine: "PromptGuess", // Unnecessary, for clarity in reading only
+  name: string,
+  templates: { // Can't store an array in the db
+    [k: string]: Template
+  },
+  model: ModelDef,
+  introVideo: {
+    url: string,
+    durationSeconds: number,
+  },
+}
 export type UserID = string; 
 export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
 export type PlayerState = PromptGuessState;
 export type PromptGeneration = GenerationResponse & {
-  model: Models,
+  model: ModelDef,
   uid: UserID,
   prompt: string,
   template: Template,
@@ -22,10 +34,7 @@ export type PromptGuessTimer = {
 }
 export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis"
 export type PromptGuessRoom = {
-  gameName: PromptGuessGameName,
-  introVideoUrl?: string,
-  templates: Template[],
-  model: "StableDiffusion" | "GPT3",
+  definition: GameDefinition,
   stateTransitions: Record<PromptGuessState, PromptGuessState>,
   gameState: {
     timer?: PromptGuessTimer,
@@ -63,12 +72,33 @@ export type PromptGuessRoom = {
   }
 }
 
+const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale = 1) => {
+  if (timer !== "off") {
+    const scale = (timer === "slow" ? 2000 : 1000) * gameScale;
+    return {timer: { // This nesting is so we can spread it.
+      started: 0,
+      duration: 0,
+      stateDurations: {
+        "Lobby": Number.MAX_VALUE, // Needs all states for typing :/
+        // TODO: refactor and make this easy to change out.
+        "Intro": videoDurS * 1000, //Farsketched video is 128 seconds.
+        "Prompt": 40 * scale,
+        "Lie": 30 * scale,
+        "Vote": 30 * scale,
+        "Score": 30 * scale,
+        "Finish": Number.MAX_VALUE
+      },
+    }};
+  } else {
+    return {};
+  }
+}
+
 // In roomOpts we can even specify alternative models for the games. E.g. DALLE for Farsketched.
-export const initState = (roomOpts?: GameCreateData): PromptGuessRoom => {
+const init = (roomOpts: GameCreateData, def: GameDefinition): PromptGuessRoom => {
+  const timer = makeTimer(roomOpts.timer, def.introVideo.durationSeconds);
   return {
-    gameName: "farsketched", // This feels a bit wrong.
-    templates: [{template: "{1}", display: "Write something"}],
-    model: "StableDiffusion",
+    definition: def,
     stateTransitions: {
       "Lobby": "Intro",
       "Intro": "Prompt",
@@ -79,6 +109,7 @@ export const initState = (roomOpts?: GameCreateData): PromptGuessRoom => {
       "Finish": "Finish",
     },
     gameState: {
+      ...timer,
       state: "Lobby",
       round: 0,
       maxRound: 3,
@@ -91,6 +122,12 @@ export const initState = (roomOpts?: GameCreateData): PromptGuessRoom => {
     },
     players: {
       // This is initialized with the owner in each game's init()
+      [roomOpts._creator]: {
+        state: "Lobby", 
+        isPlayer: roomOpts.isPlayer,
+        template: chooseOneInObject(def.templates),
+        isReadyToContinue: false,
+      }
     },
     history: {},
   }
@@ -119,7 +156,7 @@ const PromptGuesserActions = {
     functions.logger.log("PromptGuesser:NewPlayer");
     room.players[message.uid] = {
       state: "Lobby",
-      template: chooseOne(room.templates),
+      template: chooseOneInObject(room.definition.templates),
       isReadyToContinue: false,
       isPlayer: message.isPlayer ?? true,
     }
@@ -129,7 +166,7 @@ const PromptGuesserActions = {
     functions.logger.log("PromptGuesser:Start");
     room.gameState.scores = {};
     Object.keys(room.players).forEach(k => {
-      room.players[k].template = chooseOne(room.templates);
+      room.players[k].template = chooseOneInObject(room.definition.templates);
       room.gameState.scores[k] = {
         current: 0,
         previous: 0
@@ -149,7 +186,7 @@ const PromptGuesserActions = {
       uid: message.uid,
       prompt: message.value,
       template: room.players[message.uid]?.template || {template: "{1}", display: ""},
-      model: room.model,
+      model: room.definition.model,
       generation: "",
       fulfilled: false,
     };
@@ -222,7 +259,7 @@ const PromptGuesserActions = {
       } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
         room.gameState.round += 1;
         Object.keys(room.players).forEach(k => {
-          room.players[k].template = chooseOne(room.templates);
+          room.players[k].template = chooseOneInObject(room.definition.templates);
         });
         PromptGuesserActions.TransitionState(room, "Prompt");
       } else if (gens.length === 0 && room.gameState.round === room.gameState.maxRound) {
@@ -282,7 +319,7 @@ const PromptGuesserActions = {
   }
 }
 
-export function PromptGuesser(room: PromptGuessRoom, message: PromptGuessMessage): any {
+function reducer(room: PromptGuessRoom, message: PromptGuessMessage): any {
   functions.logger.log("Prompt Guesser, reducing", {msg: message, gameState: room.gameState});
   const gameState = room.gameState;
   if (message.type === "NewPlayer" && gameState.state === "Lobby") {
@@ -299,3 +336,5 @@ export function PromptGuesser(room: PromptGuessRoom, message: PromptGuessMessage
   }
   return gameState
 }
+
+export const engine = {reducer, init};

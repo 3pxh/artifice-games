@@ -69,12 +69,49 @@ function LieChoices(props: {
     })}
   </div>
 };
-  
-function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, delay?: number}) {
-  return <>
-    Unimplemented Generation renderer for {props.generation.model}.
-    {props.showPrompt ? props.generation.prompt : ""}
+
+function ImageGeneration(props: {generation: PromptGeneration, showPrompt?: boolean}) {
+  if (props.generation.generation) {
+    return <>
+    {/* TODO: styling! */}
+    {props.showPrompt ? <p>The truth was: <span class="PromptGuessGeneration-Truth">{props.generation.prompt}</span></p> : ""}
+    <img key={props.generation.generation} src={props.generation.generation} class="PromptGuessGeneration-Image" />
   </>
+  } else {
+    return <>Waiting on the painting robot...</>
+  }
+}
+function TextGeneration(props: {
+  generation: PromptGeneration, 
+  showPrompt?: boolean,
+}) {
+  if (!props.generation.generation) {
+    return <>Waiting on the AI...</>
+  } else {
+    const text = props.generation.generation.trim();
+    // Currently just for tresmojis.
+    const fontStyle = text.length < 10 ? "font-size: 48pt;" : "";
+    return <>
+      <p>
+        {props.generation.template.display}{' '}
+        {props.showPrompt  ? <span class="PromptGuessGeneration-Truth HasUserText">{props.generation.prompt}</span> : "?"}
+      </p>
+      <span class="PromptGuessGeneration-Text HasUserText" style={fontStyle}>
+        {text}
+      </span>
+    </>
+  }
+}
+  
+// generation.model can be used to infer the type.
+function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, delay?: number}) {
+  if (props.generation.model.name === "StableDiffusion") {
+    return <ImageGeneration generation={props.generation} showPrompt={props.showPrompt} />
+  } else if (props.generation.model.name === "GPT3") {
+    return <TextGeneration generation={props.generation} showPrompt={props.showPrompt} />
+  } else {
+    return <>Renderer not implemented for that model type.</>
+  }
 };
 
 function Scoreboard(props: {

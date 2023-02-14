@@ -1,7 +1,9 @@
 import { h, Fragment } from "preact";
-import { useState, useContext } from "preact/hooks";
+import { useState, useContext, useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
-import { GameName, TimerOption } from "../functions/src/games/games";
+import { get, ref } from "@firebase/database";
+import { GameDefinition, TimerOption } from "../functions/src/games/games";
+import { db } from "./firebaseClient";
 import { AuthContext } from "./AuthProvider"
 import { createGame, joinRoom, getRoom } from "./actions";
 import { Room, RoomData } from "./Room";
@@ -13,29 +15,36 @@ export default function GameSelection() {
   type DisplayMode = "observe" | "input" | "full";
   const displayMode = signal<DisplayMode>("full");
   const timerMode = signal<TimerOption>("off");
-  const [selectedGame, setSelectedGame] = useState<GameName | "_join" | null>(null);
+  const [selectedGame, setSelectedGame] = useState<string | "_join" | null>(null);
   // TODO: Create a loading boundary component which takes an optional prop and
   // a component which needs that prop, renders loading indicator while the prop
   // is null, otherwise renders the component with the prop.
   const [loadingRoom, setLoadingRoom] = useState(false);
+  const [gameList, setGameList] = useState<{[id: string]: GameDefinition}>({})
+
+  useEffect(() => {
+    get(ref(db, "games")).then(v => {
+      setGameList(v.val());
+    });
+  }, []);
 
   const loadRoom = (r: RoomData) => {
     setRoom(r);
     setLoadingRoom(false);
   }
 
-  const handleCreateGame = async (gameName: GameName) => {
+  const handleCreateGame = async (gameId: string) => {
     if (user && !user.isAnonymous) {
       setLoadingRoom(true);
       const isPlayer = displayMode.value !== "observe";
       const id = await createGame({
-        gameName, 
+        gameId, 
         isPlayer,
         _creator: user.uid,
         timer: timerMode.value,
       });
       if (!id) {
-        throw new Error(`Failed to create room for game: ${gameName}`);
+        throw new Error(`Failed to create room for game: ${gameId}`);
       } else {
         console.log("Created room", id);
         getRoom(id, loadRoom);
@@ -124,16 +133,16 @@ export default function GameSelection() {
     return <>
     <div class="GameSelection-GameList">
       <h1>Create a game</h1>
-      <button onClick={() => {setSelectedGame("farsketched")}}>Farsketched</button>
-      <button onClick={() => {setSelectedGame("gisticle")}}>Gisticle</button>
-      <button onClick={() => {setSelectedGame("tresmojis")}}>Tresmojis</button>
+      {Object.entries(gameList).map(([k, v]) => {
+        return <button onClick={() => {setSelectedGame(k)}}>{v.name}</button>
+      })}
       <h1>Or,</h1>
       <button onClick={() => {setSelectedGame("_join")}}>Join a game</button>
     </div>
   </>
   } else {
     return <>
-      <h1><button onClick={() => {setSelectedGame(null)}}><h2>←</h2></button>Create game: {selectedGame}</h1>
+      <h1><button onClick={() => {setSelectedGame(null)}}><h2>←</h2></button>Create game: {gameList[selectedGame].name}</h1>
       <DisplayOptions />
       <TimerOptions />
       {/* Game options, e.g. model type */}
