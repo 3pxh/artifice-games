@@ -59,14 +59,9 @@ export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
 {"games": {
   "judge_best_answer": {
     "engine": "AIJudge",
-    "name": "AI 🧑‍⚖️ Judge ",
-    "categories": {
-      "0": "belief",
-      "1": "phrase",
-      "2": "made-up scene",
-      "3": "historical event"
-    },
-    "questionPreface": "Select the best answer to the question.",
+    "name": "AI 🧑‍⚖️🏆🤖 Judge ",
+    "categories": {},
+    "questionPreface": "Select the best answer to the question.\n\nWhich one",
     "model": {
       "name": "GPT3",
       "stopSequences": {"0": ")"},
@@ -76,5 +71,5 @@ export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
       "url": "",
       "durationSeconds": 0
     }
-  }
+  },
 }}

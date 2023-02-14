@@ -1,0 +1,19 @@
+.TextOptions {
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+}
+.TextOptions > button {
+  background-color: white;
+  border: none;
+	font-size: 16pt;
+	padding: 10px;
+	margin-bottom: 5px;
+	max-width: 100%;
+}
+.TextOptions > button.Picked {
+	color:rgb(122, 255, 110);
+}
+.TextOptions > button.NotPicked {
+	text-decoration: line-through;
+}

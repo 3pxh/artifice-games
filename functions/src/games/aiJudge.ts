@@ -4,13 +4,13 @@ import { ModelDef, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
 export type GameDefinition = {
-  engine: "AIJudge", // Unnecessary, for clarity in reading only
+  engine: "AIJudge",
   name: string,
   questionPreface: string,
   categories: {
     [k: string]: string
   },
-  model: ModelDef, // TODO: ensure stopSequence: ")"
+  model: ModelDef,
   introVideo: {
     url: string,
     durationSeconds: number,
@@ -20,9 +20,9 @@ type UserID = string;
 export type State = "Lobby" | "Intro" | "Answer" | "Question" | "Vote" | "Score" | "Finish";
 const STATE_TRANSITIONS:Record<State, State> = {
   "Lobby": "Intro",
-  "Intro": "Answer",
-  "Answer": "Question",
-  "Question": "Vote",
+  "Intro": "Question",
+  "Question": "Answer",
+  "Answer": "Vote",
   "Vote": "Score",
   "Score": "Vote",
   "Finish": "Finish",
@@ -53,7 +53,7 @@ export type Room = {
     round: number,
     maxRound: number,
     category: string,
-    currentGeneration: UserID | null,
+    currentQuestion: UserID | null,
     answers?: { [k: UserID]: string },
     questions?: { [k: UserID]: string },
     votes?: { [k: UserID]: UserID },
@@ -111,10 +111,10 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
     gameState: {
       ...timer,
       state: "Lobby",
-      round: 0,
+      round: 1,
       category: chooseOneInObject(def.categories),
       maxRound: 3,
-      currentGeneration: null,
+      currentQuestion: null,
       generations: {}, 
       answers: {},
       questions: {},
@@ -140,9 +140,17 @@ export type Message = {
 }
 const LETTERS = "ABCDEFGHIJKLMNOP";
 
+export function GetAIChoice(g: Generation) {
+  const choice = g.generation.toUpperCase().trim().charAt(0);
+  if (LETTERS.indexOf(choice) !== undefined) {
+    return choice;
+  } else {
+    return undefined;
+  }
+}
 
 const Actions = {
-  ActivePlayerCount(room: Room) {
+  activePlayerCount(room: Room) {
     return Object.entries(room.players).filter(([k,p]) => p.isPlayer).length;
   },
 
@@ -164,78 +172,85 @@ const Actions = {
         previous: 0
       }
     });
-    Actions.TransitionState(room, "Answer");
+    Actions.TransitionState(room, "Question");
+  },
+
+  Question(room: Room, message: Message) {
+    room.gameState.questions = room.gameState.questions ?? {};
+    room.gameState.questions[message.uid] = message.value;
+    if (Object.keys(room.gameState.questions).length === Actions.activePlayerCount(room)) {
+      Actions.TransitionState(room, "Answer");
+    }
+  },
+
+  generate(room: Room) {
+    const gs = room.gameState;
+    if (gs.answers && gs.questions && gs.currentQuestion) {
+      // TODO: enforce max players. This breaks above 16 (LETTERS.length)
+      // and is probably not playable >8 (idk how well GPT picks among so many).
+      const options:string[] = [];
+      const answers:Generation["answers"] = {};
+      // For each q, shuffle answers in case there's bias in GPT for 
+      // either A, B, C, etc.
+      shuffle(Object.entries(gs.answers)).forEach(([u, value], i) => {
+        const letter = LETTERS.charAt(i);
+        answers[u] = { letter, value };
+        options.push(`${letter}) ${value}`);
+      })
+      const pref = room.definition.questionPreface;
+      // const cat = gs.category;
+      const q = gs.questions[gs.currentQuestion];
+      const opts = options.join('\n');
+      const prompt = `${pref}${q}?\n${opts}\n\nAnswer:`;
+
+      gs.generations = { // This is only plural because of how generationRequest watches the db 
+        [gs.currentQuestion]: {
+          _context: {},
+          uid: gs.currentQuestion,
+          category: room.gameState.category!,
+          question: q,
+          answers: answers,
+          prompt: prompt,
+          // TODO: generate() should not be parsing templates!!
+          // That should happen in promptGuessBase
+          template: {template: "{1}"},
+          model: room.definition.model,
+          generation: "",
+          fulfilled: false,
+        }
+      };
+    }
   },
 
   Answer(room: Room, message: Message) {
     room.gameState.answers = room.gameState.answers ?? {};
     room.gameState.answers[message.uid] = message.value;
-    if (Object.keys(room.gameState.answers).length === Actions.ActivePlayerCount(room)) {
-      Actions.TransitionState(room, "Question");
-    }
-  },
-
-  Question(room: Room, message: Message) {
-    if (!room.gameState.answers) {
-      throw new Error("Trying to submit question without any answers");
-    }
-    room.gameState.questions = room.gameState.questions ?? {};
-    room.gameState.questions[message.uid] = message.value;
-    room.gameState.generations = room.gameState.generations ?? {};
-    // TODO: enforce max players. This breaks above 16 (LETTERS.length)
-    // and is probably not playable >8 (idk how well GPT picks among so many).
-    const options:string[] = [];
-    const answers:Generation["answers"] = {};
-    // For each q, shuffle answers in case there's bias in GPT for 
-    // either A, B, C, etc.
-    shuffle(Object.entries(room.gameState.answers)).forEach(([u, value], i) => {
-      const letter = LETTERS.charAt(i);
-      answers[u] = { letter, value };
-      options.push(`${letter}) ${value}`);
-    })
-    const pref = room.definition.questionPreface;
-    const cat = room.gameState.category;
-    const q = message.value;
-    const opts = options.join('\n');
-    const prompt = `${pref}\n\nWhich ${cat} ${q}?\n${opts}\n\nAnswer:`;
-
-    room.gameState.generations[message.uid] = {
-      _context: {},
-      uid: message.uid,
-      category: room.gameState.category!,
-      question: message.value,
-      answers: answers,
-      prompt: prompt,
-      // TODO: generate() should not be parsing templates!!
-      // That should happen in promptGuessBase
-      template: {template: "{1}"},
-      model: room.definition.model,
-      generation: "",
-      fulfilled: false,
-    };
-    if (Object.keys(room.gameState.questions).length === Actions.ActivePlayerCount(room)) {
+    if (Object.keys(room.gameState.answers).length === Actions.activePlayerCount(room)) {
+      Actions.generate(room);
+      // The first few seconds of Vote we'll be waiting on the generation
       Actions.TransitionState(room, "Vote");
     }
   },
 
+
   Vote(room: Room, message: Message) {
     room.gameState.votes = room.gameState.votes ?? {};
     room.gameState.votes[message.uid] = message.value;
-    if (Object.keys(room.gameState.votes).length === Actions.ActivePlayerCount(room)) {
+    if (Object.keys(room.gameState.votes).length === Actions.activePlayerCount(room)) {
       Actions.TransitionState(room, "Score");
     }
   },
 
   Score(room: Room) {
     const gameState = room.gameState;
-    if (gameState.generations && gameState.currentGeneration && gameState.scores) {
+    if (gameState.generations && gameState.scores) {
       Object.keys(gameState.scores).forEach(scorePlayer => {
         gameState.scores![scorePlayer].previous = gameState.scores![scorePlayer].current;
       });
-      const gen = gameState.generations[gameState.currentGeneration];
-      const aiChoice = gen.generation.toUpperCase().trim().charAt(0);
+      const gen = gameState.generations[Object.keys(gameState.generations)[0]];
+      const aiChoice = GetAIChoice(gen);
       const pickedPlayer = Object.keys(gen.answers).find(u => gen.answers[u].letter === aiChoice);
-      if (LETTERS.indexOf(aiChoice) && pickedPlayer) { // Hooray
+      if (aiChoice && pickedPlayer) { // Hooray
         // You get points if the generation picked your option.
         gameState.scores[pickedPlayer].current += 1000;
         Object.entries(gameState.votes!).forEach(([u, v]) => {
@@ -243,13 +258,7 @@ const Actions = {
             // You get points for voting for the truth
             gameState.scores![u].current += 500;
           }
-        })
-        // If someone voted incorrectly, reward the question writer!
-        // TODO: figure out a score which makes for good incentives.
-        // const notAllRight = Object.entries(gameState.votes!).some(([_, v]) => v !== pickedPlayer);
-        // if (notAllRight) {
-        //   gameState.scores[gen.uid].current += 500;
-        // }
+        });
       } else { // The AI didn't pick a letter :(
         // What do we do?
       }
@@ -260,22 +269,23 @@ const Actions = {
 
   ContinueAfterScoring(room: Room) {
     const gameState = room.gameState;
-    if (gameState.currentGeneration && gameState.generations && gameState.questions) {
+    if (gameState.generations && gameState.questions && gameState.currentQuestion) {
       room.history = room.history || {};
       room.history[new Date().getTime()] = {
-        generation: gameState.generations[gameState.currentGeneration],
+        generation: gameState.generations[Object.keys(gameState.generations)[0]],
       };
       gameState.votes = {};
-      delete gameState.generations[gameState.currentGeneration];
-      const gens = Object.keys(gameState.generations);
-      if (gens.length > 0) {
-        Actions.TransitionState(room, "Vote");
-      } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
-        room.gameState.round += 1;
-        gameState.answers = {};
-        gameState.questions = {};
+      gameState.generations = {};
+      delete gameState.questions[gameState.currentQuestion]
+      const qs = Object.keys(gameState.questions);
+      gameState.answers = {};
+      if (qs.length > 0) {
         Actions.TransitionState(room, "Answer");
-      } else if (gens.length === 0 && room.gameState.round === room.gameState.maxRound) {
+      } else if (qs.length === 0 && room.gameState.round < room.gameState.maxRound) {
+        room.gameState.round += 1;
+        gameState.questions = {};
+        Actions.TransitionState(room, "Question");
+      } else if (qs.length === 0 && room.gameState.round === room.gameState.maxRound) {
         Actions.TransitionState(room, "Finish");
       }
     } else {
@@ -310,26 +320,22 @@ const Actions = {
   // is to function properly with the timer. We could enforce this by having
   // some private / protected methods. TODO: protect these state changes.
   TransitionState(room: Room, newState: State) {
-    const outOfTimeAndNoOneSubmittedPrompts = !room.gameState.generations && newState === "Score";
-    if (!outOfTimeAndNoOneSubmittedPrompts) {
-      if (newState === "Answer") {
-        room.gameState.category = chooseOneInObject(room.definition.categories);
-      } else if (newState === "Vote" && room.gameState.generations) {
-        // We should filter out errored generations. But when?
-        const gens = Object.keys(room.gameState.generations);
-        room.gameState.currentGeneration = chooseOne(gens);
-      } else if (newState === "Score" && room.gameState.generations) {
-        Actions.Score(room);
-      }
-      Object.keys(room.players).forEach(p => {
-        room.players[p].state = newState;
-        room.players[p].isReadyToContinue = false;
-      });
-      room.gameState.state = newState;
-      if (room.gameState.timer && newState !== "Finish") {
-        room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
-        room.gameState.timer.started = new Date().getTime();
-      }
+    if (newState === "Answer" && room.gameState.questions) {
+      // room.gameState.category = chooseOneInObject(room.definition.categories);
+      room.gameState.currentQuestion = chooseOne(Object.keys(room.gameState.questions));
+    } else if (newState === "Vote" && room.gameState.generations) {
+      // TODO: maybe we should have a "Generating" state? But how do we get out of it :/
+    } else if (newState === "Score" && room.gameState.generations) {
+      Actions.Score(room);
+    }
+    Object.keys(room.players).forEach(p => {
+      room.players[p].state = newState;
+      room.players[p].isReadyToContinue = false;
+    });
+    room.gameState.state = newState;
+    if (room.gameState.timer && newState !== "Finish") {
+      room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
+      room.gameState.timer.started = new Date().getTime();
     }
   }
 }
