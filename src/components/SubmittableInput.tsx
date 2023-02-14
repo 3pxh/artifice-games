@@ -6,6 +6,7 @@ export default function SubmittableInput(props: {
   buttonText: string,
   onSubmit: (v: string) => void,
   postSubmitMessage?: string,
+  placeholder?: string,
 }) {
   const [input, setInput] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -23,6 +24,7 @@ export default function SubmittableInput(props: {
       {props.label}
       <input 
         key={props.label} 
+        placeholder={props.placeholder ?? ""}
         onInput={(e) => { setInput(e.currentTarget.value) }}
         onKeyDown={(e) => { if (e.key === "Enter") { submit(); } }}/>
       <button onClick={submit}>{props.buttonText}</button>
