@@ -34,3 +34,20 @@ function mulberry32(a?: number) {
 export const seed32bit = () => {
   return Math.floor(Math.random()*2**32);
 }
+
+
+import { Generation } from "./games/aiJudge";
+export const JudgeUtils = {
+  LETTERS: "ABCDEFGHIJKLMNOP",
+  choiceUid(g: Generation) {
+    const choice = g.generation.toUpperCase().trim().charAt(0);
+    if (JudgeUtils.LETTERS.indexOf(choice) !== undefined) {
+      const uid = Object.keys(g.answers).find((k) => {
+        return g.answers[k].letter === choice;
+      });
+      return uid;
+    } else {
+      return undefined;
+    }
+  }
+}

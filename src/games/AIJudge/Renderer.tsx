@@ -2,6 +2,7 @@ import { h, Fragment } from "preact";
 import { useContext } from "preact/hooks";
 import { computed, Signal, ReadonlySignal } from "@preact/signals";
 import * as Judge from "../../../functions/src/games/aiJudge";
+import { JudgeUtils } from "../../../functions/src/utils";
 import { AuthContext } from "../../AuthProvider";
 import { messageRoom, updatePlayer } from "../../actions";
 import { TextOptions, ScoredTextOptions } from "../../components/TextOptions";
@@ -43,27 +44,9 @@ export function RenderAIJudge(props: {
       })
     }
   });
-  const LETTERS = "ABCDEFGHIJKLMNOP";
-  // Apparently importing this breaks the build.
-  // Perhaps that's for the best. Types will
-  // import just fine though.
-  function aiJudgeChoice(g: Judge.Generation) {
-    const choice = g.generation.toUpperCase().trim().charAt(0);
-    if (LETTERS.indexOf(choice) !== undefined) {
-      return choice;
-    } else {
-      return undefined;
-    }
-  }
   const aiChoiceUid = computed(() => {
     if (generation.value) {
-      const letter = aiJudgeChoice(generation.value);
-      const correct = Object.entries(generation.value.answers).find(([k, v]) => {
-        return v.letter === letter;
-      });
-      if (correct) {
-        return correct[0];
-      }
+      return JudgeUtils.choiceUid(generation.value) ?? "";
     }
     return "";
   });

@@ -59,8 +59,7 @@ export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
 {"games": {
   "judge_best_answer": {
     "engine": "AIJudge",
-    "name": "AI 🧪🤖✅ Quiz",
-    "categories": {},
+    "name": "🧪🤖✅ AI Quiz",
     "questionPreface": "Select the best answer to the question.\n\nWhich one",
     "model": {
       "name": "GPT3",

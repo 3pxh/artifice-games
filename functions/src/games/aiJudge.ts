@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { chooseOne, chooseOneInObject, shuffle } from "../utils";
+import { chooseOne, shuffle, JudgeUtils } from "../utils";
 import { ModelDef, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
@@ -7,9 +7,6 @@ export type GameDefinition = {
   engine: "AIJudge",
   name: string,
   questionPreface: string,
-  categories: {
-    [k: string]: string
-  },
   model: ModelDef,
   introVideo: {
     url: string,
@@ -31,7 +28,6 @@ export type Generation = Omit<GenerationRequest, "room"> &
   GenerationResponse & {
     model: ModelDef,
     uid: string,
-    category: string,
     question: string,
     answers: {
       [k: UserID]: {letter: string, value: string},
@@ -52,7 +48,6 @@ export type Room = {
     state: State,
     round: number,
     maxRound: number,
-    category: string,
     currentQuestion: UserID | null,
     answers?: { [k: UserID]: string },
     questions?: { [k: UserID]: string },
@@ -112,7 +107,6 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
       ...timer,
       state: "Lobby",
       round: 1,
-      category: chooseOneInObject(def.categories),
       maxRound: 3,
       currentQuestion: null,
       generations: {}, 
@@ -137,16 +131,6 @@ export type Message = {
   uid: UserID,
   value: string,
   isPlayer?: boolean,
-}
-const LETTERS = "ABCDEFGHIJKLMNOP";
-
-function aiJudgeChoice(g: Generation) {
-  const choice = g.generation.toUpperCase().trim().charAt(0);
-  if (LETTERS.indexOf(choice) !== undefined) {
-    return choice;
-  } else {
-    return undefined;
-  }
 }
 
 const Actions = {
@@ -193,12 +177,11 @@ const Actions = {
       // For each q, shuffle answers in case there's bias in GPT for 
       // either A, B, C, etc.
       shuffle(Object.entries(gs.answers)).forEach(([u, value], i) => {
-        const letter = LETTERS.charAt(i);
+        const letter = JudgeUtils.LETTERS.charAt(i);
         answers[u] = { letter, value };
         options.push(`${letter}) ${value}`);
       })
       const pref = room.definition.questionPreface;
-      // const cat = gs.category;
       const q = gs.questions[gs.currentQuestion];
       const opts = options.join('\n');
       const prompt = `${pref}${q}?\n${opts}\n\nAnswer:`;
@@ -207,7 +190,6 @@ const Actions = {
         [gs.currentQuestion]: {
           _context: {},
           uid: gs.currentQuestion,
-          category: room.gameState.category!,
           question: q,
           answers: answers,
           prompt: prompt,
@@ -248,9 +230,8 @@ const Actions = {
         gameState.scores![scorePlayer].previous = gameState.scores![scorePlayer].current;
       });
       const gen = gameState.generations[Object.keys(gameState.generations)[0]];
-      const aiChoice = aiJudgeChoice(gen);
-      const pickedPlayer = Object.keys(gen.answers).find(u => gen.answers[u].letter === aiChoice);
-      if (aiChoice && pickedPlayer) { // Hooray
+      const pickedPlayer = JudgeUtils.choiceUid(gen);
+      if (pickedPlayer) { // Hooray
         // You get points if the generation picked your option.
         gameState.scores[pickedPlayer].current += 1000;
         Object.entries(gameState.votes!).forEach(([u, v]) => {
@@ -321,10 +302,7 @@ const Actions = {
   // some private / protected methods. TODO: protect these state changes.
   TransitionState(room: Room, newState: State) {
     if (newState === "Answer" && room.gameState.questions) {
-      // room.gameState.category = chooseOneInObject(room.definition.categories);
       room.gameState.currentQuestion = chooseOne(Object.keys(room.gameState.questions));
-    } else if (newState === "Vote" && room.gameState.generations) {
-      // TODO: maybe we should have a "Generating" state? But how do we get out of it :/
     } else if (newState === "Score" && room.gameState.generations) {
       Actions.Score(room);
     }

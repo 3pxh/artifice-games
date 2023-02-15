@@ -44,13 +44,7 @@
   },
   "judge_best_answer": {
     "engine": "AIJudge",
-    "name": "AI 🧪🤖✅ Quiz",
-    "categories": {
-      "0": "belief",
-      "1": "phrase",
-      "2": "made-up scene",
-      "3": "historical event"
-    },
+    "name": "🧪🤖✅ AI Quiz",
     "questionPreface": "Select the best answer to the question.",
     "model": {
       "name": "GPT3",
