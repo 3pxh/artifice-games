@@ -1,0 +1,10 @@
+.SingleUseButton {
+  background-color: aquamarine;
+	border: none;
+	font-size: 16pt;
+	padding: 10px;
+}
+
+.SingleUseButton:hover {
+  background-color: aqua;
+}

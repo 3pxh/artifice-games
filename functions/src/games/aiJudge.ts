@@ -140,7 +140,7 @@ export type Message = {
 }
 const LETTERS = "ABCDEFGHIJKLMNOP";
 
-export function GetAIChoice(g: Generation) {
+function aiJudgeChoice(g: Generation) {
   const choice = g.generation.toUpperCase().trim().charAt(0);
   if (LETTERS.indexOf(choice) !== undefined) {
     return choice;
@@ -248,7 +248,7 @@ const Actions = {
         gameState.scores![scorePlayer].previous = gameState.scores![scorePlayer].current;
       });
       const gen = gameState.generations[Object.keys(gameState.generations)[0]];
-      const aiChoice = GetAIChoice(gen);
+      const aiChoice = aiJudgeChoice(gen);
       const pickedPlayer = Object.keys(gen.answers).find(u => gen.answers[u].letter === aiChoice);
       if (aiChoice && pickedPlayer) { // Hooray
         // You get points if the generation picked your option.

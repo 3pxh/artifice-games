@@ -24,7 +24,7 @@ type RoomProps = {
   isPlayer: boolean,
   isInputOnly: boolean,
 }
-export type RoomData = QueueRoom & RoomProps & {definition: {name: string, engine: EngineName}};
+export type RoomData = QueueRoom & RoomProps & {definition: {name: string, engine: EngineName, introVideo: {url: string, duration: number}}};
 type GameState = {
   timer: PromptGuessTimer,
   state: "Lobby"
@@ -165,14 +165,12 @@ export function Room(props: {room: RoomData}) {
     </>
   }
 
-  // TODO: does this cause super frequent rerenders because it's dynamic?
-  // We could wrap Game in a Signal.
-  let Game:any = RenderPromptGuess;
-  if (props.room.definition.engine === "PromptGuess") {
-    Game = RenderPromptGuess;
-  } else if (props.room.definition.engine === "AIJudge") {
-    Game = AIJudge.Render;
+  
+  const engines = {
+    "PromptGuess": RenderPromptGuess,
+    "AIJudge": AIJudge.RenderAIJudge,
   }
+  const Game = engines[props.room.definition.engine];
 
   if (isWaiting) {
     return <>
@@ -198,9 +196,9 @@ export function Room(props: {room: RoomData}) {
       : <></>
       }
       <PlayerStatuses key={"status"} players={players as Signal<PromptGuessRoom["players"]>} />
-      <Game
+      <Game 
         key={"game"}
-        room={props.room}
+        room={props.room as any}
         // TODO: How do we do manage type checking at the room level?
         gameState={gameState as any}
         players={players as any}

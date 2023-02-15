@@ -17,3 +17,25 @@
 .TextOptions > button.NotPicked {
 	text-decoration: line-through;
 }
+.TextOptions > button.Answer, .TextOptions > button.NotAnswer {
+	cursor: default;
+}
+
+.ScoredTextOptions {
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+}
+.ScoredTextOptions-Row {
+	margin: 10px 0;
+	padding: 10px;
+}
+.ScoredTextOptions > .Answer {
+	background-color: white;
+	color:rgb(30, 0, 202);
+}
+.ScoredTextOptions > .NotAnswer {
+	background: none;
+	text-decoration: line-through;
+}
+
