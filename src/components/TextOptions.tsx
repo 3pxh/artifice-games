@@ -45,6 +45,12 @@ export function ScoredTextOptions(props: {
   scores: {[uid: string]: {current: number, previous: number}},
   players: Signal<{[uid: string]: {handle?: string, avatar?: string}}>,
   onContinue: () => void,
+  pointValues: {
+    votedTruth?: number,
+    authorOfTruth?: number,
+    authorOfTruthVote?: number,
+    authorOfLieVote?: number,
+  }
 }) {
   const playerData = useComputed(() => {
     const scores = props.scores;
@@ -61,18 +67,37 @@ export function ScoredTextOptions(props: {
       const answerClass = isAnswer ? "Answer" : "NotAnswer";
       const p = playerData.value[option.uid];
       const voters = Object.entries(props.votes).filter(([k, v]) => v === option.uid);
+      const authorPoints = 
+        ((isAnswer && props.pointValues.authorOfTruth) 
+          ? props.pointValues.authorOfTruth 
+          : 0) +
+        ((isAnswer && props.pointValues.authorOfTruthVote) 
+          ? props.pointValues.authorOfTruthVote * voters.length
+          : 0) +
+        ((!isAnswer && props.pointValues.authorOfLieVote) 
+          ? props.pointValues.authorOfLieVote * voters.length
+          : 0);
+      const voterPoints = (isAnswer && props.pointValues.votedTruth) ? props.pointValues.votedTruth : 0;
       return <div 
         class={"ScoredTextOptions-Row " + answerClass}
         key={option.uid} >
           {/* Note scores on the avatars? This one got 10 points if truth */}
           <div class="ScoredTextOptions-RowCreatorAvatar">
-            <Avatar url={p.avatar ?? ""} handle={p.handle ?? ""} size={48} />
+            <Avatar 
+              url={p.avatar ?? ""} 
+              handle={p.handle ?? ""} 
+              size={48}
+              score={authorPoints > 0 ? `+${authorPoints}` : undefined} />
           </div>
           <span class="ScoredTextOptions-RowText HasUserText">{option.value}</span>
           <div class="ScoredTextOptions-RowVoters">
             {voters.map(([u, _], i) => {
               const vp = playerData.value[u];
-              return <Avatar url={vp.avatar ?? ""} handle={vp.handle ?? ""} size={32} />
+              return <Avatar 
+                url={vp.avatar ?? ""} 
+                handle={vp.handle ?? ""} 
+                size={32}
+                score={voterPoints > 0 ? `+${voterPoints}` : undefined} />
             })}
           </div>
       </div>

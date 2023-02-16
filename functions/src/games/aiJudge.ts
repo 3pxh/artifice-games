@@ -233,11 +233,14 @@ const Actions = {
       const pickedPlayer = JudgeUtils.choiceUid(gen);
       if (pickedPlayer) { // Hooray
         // You get points if the generation picked your option.
-        gameState.scores[pickedPlayer].current += 1000;
+        gameState.scores[pickedPlayer].current += JudgeUtils.pointValues.authorOfTruth;
         Object.entries(gameState.votes!).forEach(([u, v]) => {
           if (v === pickedPlayer) {
             // You get points for voting for the truth
-            gameState.scores![u].current += 500;
+            gameState.scores![u].current += JudgeUtils.pointValues.votedTruth;
+            gameState.scores![v].current += JudgeUtils.pointValues.authorOfTruthVote;
+          } else {
+            gameState.scores![v].current += JudgeUtils.pointValues.authorOfLieVote;
           }
         });
       } else { // The AI didn't pick a letter :(

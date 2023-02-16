@@ -112,14 +112,12 @@ export function RenderAIJudge(props: {
         players={props.players}
         votes={props.gameState.value.votes!}
         scores={props.gameState.value.scores!}
+        pointValues={JudgeUtils.pointValues}
         onContinue={() => { message("ReadyToContinue", "") }} />
     </>
   } else if (renderState.value === "Finish") {
     return <>
       <p>You're all winners!</p>
-      {/* <Engine.Scoreboard 
-        gameState={props.gameState}
-        players={props.players} /> */}
     </>
   } else {
     return <p>Congrats, you hit an unrecognized game state!</p>

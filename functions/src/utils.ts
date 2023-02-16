@@ -49,5 +49,11 @@ export const JudgeUtils = {
     } else {
       return undefined;
     }
+  },
+  pointValues: {
+    authorOfTruth: 5,
+    votedTruth: 3,
+    authorOfTruthVote: 1,
+    authorOfLieVote: 1,
   }
 }

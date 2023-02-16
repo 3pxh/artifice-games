@@ -4,6 +4,7 @@ import "./PlayerStatuses.css";
 // TODO: Make a Player type that is game-independent.
 import { Scores } from "../../functions/src/games/games";
 import { PromptGuessRoom } from "../../functions/src/games/promptGuessBase";
+import Avatar from "./Avatar";
 
 export default function PlayerStatuses(props: {
   players: Signal<PromptGuessRoom["players"]>,
@@ -30,17 +31,12 @@ export default function PlayerStatuses(props: {
       return props.players.value[props.id].handle;
     });
 
-    return <div class="PlayerStatuses-Item">
-      {props.scores ? <span class="PlayerStatuses-Score">
-        {props.scores[props.id].current}
-      </span> : ""}
-      <img 
-        key={url.value}
-        class={"Avatar " + (props.players.value[props.id].isReadyToContinue ? "Waiting" : "Playing")}
-        src={url.value}
-        width="64" />
-      <span class="PlayerStatus-Handle">{handle.value}</span>
-    </div>
+    return <Avatar
+      key={props.id}
+      url={url.value ?? ""}
+      handle={handle.value ?? "anon"}
+      size={64}
+      score={props.scores ? `${props.scores[props.id].current}` : undefined} />
   }
 
   // Show the scores, and sort left to right!

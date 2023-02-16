@@ -1,15 +1,23 @@
 import { h, Fragment } from "preact";
-// TODO: Avatar.css
-// Currently the class is defined elsewhere and that's no good!
+import "./Avatar.css";
+
+export type AvatarState = "Ready" | "Waiting" | "Picked";
+
 export default function Avatar(props: {
   url: string,
   handle: string,
   size: number,
+  score?: string,
+  state?: AvatarState,
+  showHandle?: boolean,
 }) {
-  return <img 
-    class="Avatar"
-    src={props.url} 
-    alt={props.handle} 
-    width={props.size} 
-    height={props.size} />
+  return <div class="Avatar-Container">
+    <img 
+      class="Avatar"
+      src={props.url} 
+      alt={props.handle} 
+      width={props.size} 
+      height={props.size} />
+    {props.score ? <span class="Avatar-Score">{props.score}</span> : ""}
+  </div>
 }

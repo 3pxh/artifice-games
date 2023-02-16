@@ -185,17 +185,6 @@ fieldset {
 	background-color: aqua;
 }
 
-.Avatar {
-	border-radius: 50%;
-}
-.Avatar.Selected {
-	opacity: .5;
-}
-.Avatar.Waiting {
-	border: 3px solid rgb(122, 255, 110);
-}
-
-
 .PromptGuessBase-Score {
 	align-items: center;
 	border-bottom: 1px dashed var(--border-color);
