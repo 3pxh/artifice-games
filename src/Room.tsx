@@ -9,7 +9,7 @@ import { messageRoom, pingRoom, updatePlayer } from "./actions";
 
 // TODO: figure out how we want to handle distinct rendering engines and game state objects
 // This goes along with more modular gameState types below
-import { EngineName } from "../functions/src/games/games";
+import { EngineName, Scores } from "../functions/src/games/games";
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import * as AIJudge from "./games/AIJudge/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
@@ -27,6 +27,7 @@ type RoomProps = {
 export type RoomData = QueueRoom & RoomProps & {definition: {name: string, engine: EngineName, introVideo: {url: string, duration: number}}};
 type GameState = {
   timer: PromptGuessTimer,
+  scores: Scores,
   state: "Lobby"
 }
 
@@ -36,6 +37,7 @@ export function Room(props: {room: RoomData}) {
   const gameState = useSignal<GameState | null>(null);
   const players = useSignal<PromptGuessRoom["players"] | null>(null);
   const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
+  const scores = useComputed<Scores | null>(() => gameState.value?.scores ?? null);
   const isLoaded = useComputed<boolean>(() => {
     return gameState.value !== null && players.value !== null;
   });
@@ -195,7 +197,10 @@ export function Room(props: {room: RoomData}) {
       </>
       : <></>
       }
-      <PlayerStatuses key={"status"} players={players as Signal<PromptGuessRoom["players"]>} />
+      <PlayerStatuses 
+        key={"status"} 
+        players={players as Signal<PromptGuessRoom["players"]>} 
+        scores={scores.value} />
       <Game 
         key={"game"}
         room={props.room as any}

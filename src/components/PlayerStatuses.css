@@ -1,0 +1,32 @@
+.PlayerStatuses {
+	border-bottom: 1px solid var(--border-color);
+	border-top: 1px solid var(--border-color);
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	margin: 10px 0;
+  padding-top: 10px;
+}
+.PlayerStatuses-Item {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	margin: 5px 5px;
+  position: relative;
+}
+.PlayerStatus-Handle {
+	font-size: 9pt;
+	max-width: 90px;
+	text-overflow: ellipsis;
+	overflow-x: hidden;
+	white-space: nowrap;
+}
+.PlayerStatuses-Score {
+  background-color: rgb(0, 162, 108);
+  border-radius: 15px;
+  font-size: 9pt;
+  padding: 3px 8px;
+  position: absolute;
+  right: -10px;
+  top: -10px;
+}

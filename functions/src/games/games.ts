@@ -10,6 +10,7 @@ export type GameCreateData = {
   timer: TimerOption,
 }
 
+export type Scores = {[uid: string]: {current: number, previous: number}}
 type Reducer<Room extends {gameState: any}, Message> = (gs: Room, m: Message) => Room["gameState"];
 
 type Engine<GameDef, Room extends {gameState: any}, Message> = {
