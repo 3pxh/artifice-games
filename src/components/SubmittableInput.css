@@ -1,0 +1,44 @@
+.SubmittableInput {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+}
+.SubmittableInput-InputContainer {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: 100%;
+}
+.SubmittableInput input {
+	border: none;
+	border-radius: 30px;
+  flex-grow: 1;
+	font-size: 16pt;
+	margin: 20px;
+  padding: 10px;
+}
+.SubmittableInput input.SubmittableInput--Limited {
+  padding-right: 60px;
+}
+.SubmittableInput-CharacterLimit {
+  bottom: 25px;
+  color: gray;
+  font-size: 12pt;
+  position: absolute;
+  right: 30px;
+  z-index: 2;
+}
+.SubmittableInput-CharacterLimit.SubmittableInput--CloseToLimit {
+  color: red;
+}
+.SubmittableInput button {
+	background-color: aquamarine;
+	border: none;
+	border-radius: 30px;
+	box-shadow: none;
+	font-size: 16pt;
+	padding: 10px 20px;
+}
+.SubmittableInput button:hover {
+	background-color: aqua;
+}

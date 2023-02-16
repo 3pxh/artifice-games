@@ -1,0 +1,12 @@
+.PlayerStatuses {
+	border-bottom: 1px solid var(--border-color);
+	border-top: 1px solid var(--border-color);
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	margin: 10px 0;
+  padding-top: 10px;
+}
+.PlayerStatuses > div {
+  margin-right: 10px;
+}

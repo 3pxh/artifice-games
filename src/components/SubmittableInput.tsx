@@ -1,11 +1,14 @@
 import { h, Fragment } from "preact";
 import { useState } from "preact/hooks";
+import "./SubmittableInput.css";
 
 export default function SubmittableInput(props: {
   label: string,
   buttonText: string,
   onSubmit: (v: string) => void,
   postSubmitMessage?: string,
+  placeholder?: string,
+  maxLength?: number,
 }) {
   const [input, setInput] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -19,13 +22,25 @@ export default function SubmittableInput(props: {
       {props.postSubmitMessage ?? ""}
     </>
   } else {
-    return <>
+    const closeToLimit = props.maxLength && (props.maxLength - input.length < 10);
+    return <div class="SubmittableInput">
       {props.label}
-      <input 
-        key={props.label} 
-        onInput={(e) => { setInput(e.currentTarget.value) }}
-        onKeyDown={(e) => { if (e.key === "Enter") { submit(); } }}/>
+      <div class="SubmittableInput-InputContainer">
+        <input 
+          class={props.maxLength ? "SubmittableInput--Limited" : ""}
+          key={props.label} 
+          placeholder={props.placeholder ?? ""}
+          onInput={(e) => { 
+            const v = e.currentTarget.value.substring(0, props.maxLength ?? e.currentTarget.value.length);
+            setInput(v);
+            e.currentTarget.value = v;
+          }}
+          onKeyDown={(e) => { if (e.key === "Enter") { submit(); } }}/>
+        <span class={"SubmittableInput-CharacterLimit " + (closeToLimit ? "SubmittableInput--CloseToLimit" : "")}>
+          {props.maxLength ? `${input.length}/${props.maxLength}` : ""}
+        </span>
+      </div>
       <button onClick={submit}>{props.buttonText}</button>
-    </>
+    </div>
   }
 }

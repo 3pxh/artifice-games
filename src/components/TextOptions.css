@@ -1,0 +1,61 @@
+.TextOptions {
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+}
+.TextOptions > button {
+  background-color: white;
+  border: none;
+	font-size: 16pt;
+	padding: 10px;
+	margin-bottom: 5px;
+	max-width: 100%;
+}
+.TextOptions > button.Picked {
+	color:rgb(122, 255, 110);
+}
+.TextOptions > button.NotPicked {
+	text-decoration: line-through;
+}
+.TextOptions > button.Answer, .TextOptions > button.NotAnswer {
+	cursor: default;
+}
+
+.ScoredTextOptions {
+	display: flex;
+	flex-direction: column;
+	max-width: 100%;
+}
+.ScoredTextOptions-Row {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+	margin: 10px 0;
+	padding: 10px;
+}
+.ScoredTextOptions-RowCreatorAvatar {
+	width: 48px;
+}
+.ScoredTextOptions-RowText {
+	flex: 1 1 auto;
+	padding: 0 10px;
+}
+.ScoredTextOptions > .Answer {
+	background-color: white;
+	color:rgb(30, 0, 202);
+}
+.ScoredTextOptions > .NotAnswer {
+	background: none;
+	text-decoration: line-through;
+}
+.ScoredTextOptions-RowVoters {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	justify-content: center;
+	min-width: 78px;
+}
+.ScoredTextOptions-RowVoters > * {
+	margin: 3px;
+}
+

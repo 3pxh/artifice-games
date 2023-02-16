@@ -1,5 +1,6 @@
 import { h, Fragment, JSX } from "preact";
 import { useState } from "preact/hooks";
+import "./SingleUseButton.css";
 
 //TODO: Pass this two elements, one of which has onClick already bound.
 // See SlowBroadcastInput for inspiration with cloneElement.
@@ -16,7 +17,9 @@ export default function SingleUseButton(props: {
     </>
   } else {
     return <>
-      <button onClick={() => { setHasSubmitted(true); props.onClick(); }}>{props.buttonText}</button>
+      <button 
+        class="SingleUseButton"
+        onClick={() => { setHasSubmitted(true); props.onClick(); }}>{props.buttonText}</button>
     </>
   }
 }

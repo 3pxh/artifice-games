@@ -41,5 +41,19 @@
       "url": "",
       "durationSeconds": 0
     }
+  },
+  "judge_best_answer": {
+    "engine": "AIJudge",
+    "name": "🧪🤖✅ AI Quiz",
+    "questionPreface": "Select the best answer to the question.",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    }
   }
 }}

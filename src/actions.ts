@@ -59,7 +59,8 @@ const getRoom = (id: string, cb: (r: RoomData) => void) => {
   });
 }
 
-const messageRoom = (roomId: string, m: Omit<PromptGuessMessage, "uid">) => {
+// Rely on in-game typings to wrap this type-safely.
+const messageRoom = (roomId: string, m: any) => {
   if (auth.currentUser) {
     const k = push(ref(db, `rooms/${roomId}/messages`)).key;
     set(ref(db, `rooms/${roomId}/messages/${k}`), {

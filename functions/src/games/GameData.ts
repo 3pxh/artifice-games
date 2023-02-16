@@ -1,6 +1,11 @@
-import { GameDefinition } from "./promptGuessBase"
+import * as PG from "./promptGuessBase";
+import * as Judge from "./aiJudge";
+
+// TODO: we could initialize these into the db at startup and on deploy
+// to make them a real source of truth.
+
 // Note: this is technically dead code. It exists here only for typechecking.
-export const FeaturedPGGames: {games: {[k: string]: GameDefinition}} = 
+export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} = 
 // These need to be added to emulator_data/database_export/{*}.json
 // for it to load when running the emulators, and to
 // the production DB for them to appear in prod.
@@ -48,4 +53,22 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefinition}} =
       "durationSeconds": 0
     }
   }
+}}
+
+export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
+{"games": {
+  "judge_best_answer": {
+    "engine": "AIJudge",
+    "name": "🧪🤖✅ AI Quiz",
+    "questionPreface": "Select the best answer to the question.\n\nWhich one",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    }
+  },
 }}

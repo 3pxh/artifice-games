@@ -111,7 +111,7 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): PromptGuessRoom =>
     gameState: {
       ...timer,
       state: "Lobby",
-      round: 0,
+      round: 1,
       maxRound: 3,
       currentGeneration: null,
       // These disappear b/c firebase ignores empty dicts, so need to be null guarded.

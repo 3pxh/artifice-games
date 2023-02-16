@@ -7,6 +7,10 @@ export type Models =  "GPT3" | "StableDiffusion"
 export type ModelDef = {
   name: Models,
   // Other settings?
+  stopSequences?: {
+    [k: string]: string
+  },
+  temperature?: number,
 }
 export type GenerationRequest = {
   room: string,
@@ -125,6 +129,18 @@ async function runGPT3(r: GenerationRequest): GenerationPromise {
   }
   // TODO: where do we template? Eventually we might want multipart templates.
   const prompt = r.template.template.replace("{1}", r.prompt);
+  const params:any = {
+    "model": "text-davinci-003",
+    "prompt": prompt,
+    "temperature": r.model.temperature ?? 0.7,
+    "max_tokens": 256,
+    "top_p": 1,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+  }
+  if (r.model.stopSequences) {
+    params["stop"] = Object.entries(r.model.stopSequences).map(([_, v]) => v);
+  }
   const res = await axios({
     url: "https://api.openai.com/v1/completions",
     headers: {
@@ -132,15 +148,7 @@ async function runGPT3(r: GenerationRequest): GenerationPromise {
       "Content-Type": "application/json" 
     },
     method: "POST",
-    data: JSON.stringify({
-      "model": "text-davinci-003",
-      "prompt": prompt,
-      "temperature": 0.7,
-      "max_tokens": 256,
-      "top_p": 1,
-      "frequency_penalty": 0,
-      "presence_penalty": 0
-    })
+    data: JSON.stringify(params)
   });
   const response = await res.data;
   if (response.choices && response.choices[0] && response.choices[0].text) {
