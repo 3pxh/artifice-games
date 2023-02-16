@@ -183,7 +183,7 @@ const Actions = {
       })
       const pref = room.definition.questionPreface;
       const q = gs.questions[gs.currentQuestion];
-      const opts = options.join('\n');
+      const opts = options.join("\n");
       const prompt = `${pref}${q}?\n${opts}\n\nAnswer:`;
 
       gs.generations = { // This is only plural because of how generationRequest watches the db 
