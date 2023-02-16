@@ -35,6 +35,7 @@ export default function PlayerStatuses(props: {
       key={props.id}
       url={url.value ?? ""}
       handle={handle.value ?? "anon"}
+      showHandle={true}
       size={64}
       score={props.scores ? `${props.scores[props.id].current}` : undefined} />
   }

@@ -19,5 +19,6 @@ export default function Avatar(props: {
       width={props.size} 
       height={props.size} />
     {props.score ? <span class="Avatar-Score">{props.score}</span> : ""}
+    {props.showHandle ? <span class="Avatar-Handle">{props.handle}</span> : ""}
   </div>
 }
