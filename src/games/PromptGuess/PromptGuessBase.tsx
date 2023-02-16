@@ -15,13 +15,12 @@ function Prompt(props: {
     onSubmit: (prompt: string) => void,
     template: {display: string},
   }) {
-  return <div class="Prompt-Hero">
-    <SubmittableInput 
-      onSubmit={props.onSubmit} 
-      label={props.template.display} 
-      buttonText="Make it!" 
-      postSubmitMessage="Waiting on other players..." />
-  </div>
+  return <SubmittableInput 
+    onSubmit={props.onSubmit} 
+    label={props.template.display} 
+    buttonText="Make it!" 
+    postSubmitMessage="Waiting on other players..."
+    maxLength={70} />
 };
   
 function Lie(props: {
@@ -35,13 +34,12 @@ function Lie(props: {
   } else if (authContext.user?.uid === props.generation.uid) {
     return <p>You are responsible for this masterpiece. Well done.</p>
   } else {
-    return <div class="Prompt-Hero">
-      <SubmittableInput
-        onSubmit={props.onSubmit}
-        label="Fool others with some artifice:"
-        buttonText="Lie!"
-        postSubmitMessage="Waiting on other players..." />
-    </div>
+    return <SubmittableInput
+      onSubmit={props.onSubmit}
+      label="Fool others with some artifice:"
+      buttonText="Lie!"
+      postSubmitMessage="Waiting on other players..."
+      maxLength={70} />
   }
 };
 

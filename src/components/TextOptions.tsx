@@ -5,6 +5,7 @@ import { Signal, useComputed } from "@preact/signals";
 import { seed32bit, shuffle, objectMap } from "../../functions/src/utils";
 import { AuthContext } from "../AuthProvider";
 import SingleUseButton from "./SingleUseButton";
+import Avatar from "./Avatar";
 
 export function TextOptions(props: {
   onSubmit: (uid: string) => void,
@@ -56,12 +57,24 @@ export function ScoredTextOptions(props: {
 
   return <div class="ScoredTextOptions">
     {options.map((option) => {
-      const answerClass = props.correctUid === option.uid ? "Answer" : "NotAnswer";
+      const isAnswer = props.correctUid === option.uid;
+      const answerClass = isAnswer ? "Answer" : "NotAnswer";
+      const p = playerData.value[option.uid];
+      const voters = Object.entries(props.votes).filter(([k, v]) => v === option.uid);
       return <div 
-        class={"ScoredTextOptions-Row HasUserText " + answerClass}
+        class={"ScoredTextOptions-Row " + answerClass}
         key={option.uid} >
-          {playerData.value[option.uid].handle}:
-          {option.value}
+          {/* Note scores on the avatars? This one got 10 points if truth */}
+          <div class="ScoredTextOptions-RowCreatorAvatar">
+            <Avatar url={p.avatar ?? ""} handle={p.handle ?? ""} size={48} />
+          </div>
+          <span class="ScoredTextOptions-RowText HasUserText">{option.value}</span>
+          <div class="ScoredTextOptions-RowVoters">
+            {voters.map(([u, _], i) => {
+              const vp = playerData.value[u];
+              return <Avatar url={vp.avatar ?? ""} handle={vp.handle ?? ""} size={32} />
+            })}
+          </div>
       </div>
     })}
     <SingleUseButton 

@@ -139,6 +139,8 @@ fieldset {
 }
 
 .HasUserText {
+	/* Without a min-width this can stretch its container. */
+	min-width: 1%;
 	overflow-wrap: break-word;
 }
 

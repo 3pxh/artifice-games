@@ -74,28 +74,26 @@ export function RenderAIJudge(props: {
   } else if (renderState.value === "Intro") {
     return <p>TODO: intro video</p>
   } else if (renderState.value === "Question") {
-    return <div class="Prompt-Hero">
-      <SubmittableInput
-        key="QuestionInput"
-        onSubmit={(v: string) => {submit("Question", v)}}
-        label="Write a question to quiz the AI!"
-        placeholder=""
-        buttonText="So original!"
-        postSubmitMessage="Waiting on other players..." />
-    </div>
+    return <SubmittableInput
+      key="QuestionInput"
+      onSubmit={(v: string) => {submit("Question", v)}}
+      label="Write a question to quiz the AI!"
+      placeholder=""
+      buttonText="So original!"
+      postSubmitMessage="Waiting on other players..."
+      maxLength={80} />
   } else if (renderState.value === "Answer") {
     if (!currentQ.value) {
       throw new Error("Trying to render answer without a question");
     }
-    return <div class="Prompt-Hero">
-      <SubmittableInput 
-        key="AnswerInput"
-        onSubmit={(v: string) => {submit("Answer", v)}} 
-        label={currentQ.value}
-        placeholder="write a great answer to get chosen"
-        buttonText="That's a good one!" 
-        postSubmitMessage="Waiting on other players..." />
-    </div>
+    return <SubmittableInput 
+      key="AnswerInput"
+      onSubmit={(v: string) => {submit("Answer", v)}} 
+      label={currentQ.value}
+      placeholder="write a great answer to get chosen"
+      buttonText="That's a good one!" 
+      postSubmitMessage="Waiting on other players..."
+      maxLength={80} />
   } else if (renderState.value === "Vote" && generation.value) {
     return <>
       <p>{currentQ.value}</p>
@@ -106,22 +104,15 @@ export function RenderAIJudge(props: {
     </>
   } else if (renderState.value === "Score" && generation.value) {
     return <>
-      <p>What did the AI choose?</p>
       <p>{currentQ.value}</p>
       <ScoredTextOptions
         key="ScoringAnswers"
         options={answers.value}
         correctUid={aiChoiceUid.value}
         players={props.players}
-        // We could pass the whole game state and have signals for these inside...
         votes={props.gameState.value.votes!}
         scores={props.gameState.value.scores!}
         onContinue={() => { message("ReadyToContinue", "") }} />
-      {/* <Engine.Scoreboard 
-        gameState={props.gameState}
-        players={props.players}
-        generation={generation.value}
-        onContinue={() => {message("ReadyToContinue", "")}} /> */}
     </>
   } else if (renderState.value === "Finish") {
     return <>
