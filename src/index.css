@@ -43,6 +43,24 @@ fieldset {
   color: #fff;
 }
 
+.videowrapper {
+	float: none;
+	clear: both;
+	width: 100%;
+	position: relative;
+	padding-bottom: 56.25%;
+	padding-top: 25px;
+	height: 0;
+	margin: 10px 0;
+}
+.videowrapper iframe {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+
 .Auth {
 	display: flex;
 	flex-direction: column;
@@ -172,14 +190,18 @@ fieldset {
 	color:rgb(122, 255, 110);
 }
 
-.PromptGuessLobby > button, .PromptGuessBase-Scoreboard > button {
+.PromptGuessLobby > button, 
+.PromptGuessIntro > button, 
+.PromptGuessBase-Scoreboard > button {
 	background-color: aquamarine;
 	border: none;
 	border-radius: 30px;
 	font-size: 16pt;
 	padding: 10px;
 }
-.PromptGuessLobby > button:hover, .PromptGuessBase-Scoreboard > button:hover {
+.PromptGuessLobby > button:hover, 
+.PromptGuessIntro > button, 
+.PromptGuessBase-Scoreboard > button:hover {
 	background-color: aqua;
 }
 

@@ -67,12 +67,22 @@ export function RenderPromptGuess(props: {
   if (renderState.value === "Lobby") {
     return <div class="PromptGuessLobby">
       <SingleUseButton 
+        key="inTheLobby"
         buttonText="Everybody's here!" 
-        onClick={() => {message("Start", "gogogo!")}}
-        postSubmitContent={<>Go go go!</>} />
+        onClick={() => {message("Intro", "Show me how!")}}
+        postSubmitContent={<>Ready to go!</>} />
     </div>
   } else if (renderState.value === "Intro") {
-    return <Engine.Intro introVideoUrl={props.room.definition.introVideo.url} />
+    return <div class="PromptGuessIntro">
+      <div class="videowrapper">
+        <iframe src={props.room.definition.introVideo.url}></iframe>
+      </div>
+      <SingleUseButton 
+        key="skipVideo"
+        buttonText="Continue" 
+        onClick={() => {message("ReadyToContinue", "")}}
+        postSubmitContent={<>Go go go!</>} />    
+    </div>
   } else if (renderState.value === "Prompt") {
     return <Engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
                           template={myTemplate.value} />

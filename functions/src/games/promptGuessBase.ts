@@ -133,7 +133,7 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): PromptGuessRoom =>
   }
 }
 
-type MessageType = "NewPlayer" | "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime" | "ReadyToContinue";
+type MessageType = "NewPlayer" | "Start" | "Intro" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime" | "ReadyToContinue";
 export type PromptGuessMessage = {
   type: MessageType,
   uid: UserID,
@@ -162,8 +162,8 @@ const PromptGuesserActions = {
     }
   },
 
-  Start(room: PromptGuessRoom) {
-    functions.logger.log("PromptGuesser:Start");
+  Intro(room: PromptGuessRoom, message: PromptGuessMessage) {
+    functions.logger.log("PromptGuesser:Intro");
     room.gameState.scores = {};
     Object.keys(room.players).forEach(k => {
       room.players[k].template = chooseOneInObject(room.definition.templates);
@@ -172,7 +172,7 @@ const PromptGuesserActions = {
         previous: 0
       }
     });
-    PromptGuesserActions.TransitionState(room, "Prompt");
+    PromptGuesserActions.TransitionState(room, "Intro");
   },
 
   Prompt(room: PromptGuessRoom, message: PromptGuessMessage) {
@@ -290,6 +290,9 @@ const PromptGuesserActions = {
     if (Object.entries(room.players).every(([k, p]) => p.isReadyToContinue) &&
         room.gameState.state === "Score") {
       PromptGuesserActions.ContinueAfterScoring(room);
+    } else if (Object.entries(room.players).every(([k, p]) => p.isReadyToContinue)  &&
+      room.gameState.state === "Intro") {
+      PromptGuesserActions.TransitionState(room, "Prompt"); 
     }
   },
 
@@ -325,8 +328,8 @@ function reducer(room: PromptGuessRoom, message: PromptGuessMessage): any {
   if (message.type === "NewPlayer" && gameState.state === "Lobby") {
     // Alternatively if the room allows spectators
     PromptGuesserActions.NewPlayer(room, message);
-  } else if (message.type === "Start" && gameState.state === "Lobby") {
-    PromptGuesserActions.Start(room);
+  } else if (message.type === "Intro" && gameState.state === "Lobby") {
+    PromptGuesserActions.Intro(room, message);
   } else if (message.type === gameState.state || message.type === "ReadyToContinue") { // Prompt, Lie, Vote
     PromptGuesserActions[message.type](room, message);
   } else if (message.type === "Continue" && gameState.state === "Score") {

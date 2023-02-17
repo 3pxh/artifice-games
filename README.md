@@ -9,6 +9,10 @@ In the toplevel directory, run `firebase init`.
 * <small>Select the <span style="color:green">realtime database</span>, <span style="color:green">firestore</span>, <span style="color:green">functions</span>, <span style="color:green">cloud storage</span>.<br/></small>
 * <small>When asked if it's an existing project, select the <span style="color:green">threepixelheart</span> project.<br/></small>
 * <small>File database.rules.json already exists. Do you want to overwrite it with the Realtime Database Security Rules for threepixelheart-f5674-default-rtdb from the Firebase console? <span style="color:green">No</span><br/></small>
+* <small>What file should be used for Firestore Rules? (firestore.rules) <span style="color:green">[enter]</span><br/></small>
+* <small>File firestore.rules already exists. Do you want to overwrite it with the Firestore Rules from the Firebase Console? <span style="color:green">No</span><br/></small>
+* <small>What file should be used for Firestore indexes? (firestore.indexes.json) <span style="color:green">[enter]</span><br/></small>
+* <small>File firestore.indexes.json already exists. Do you want to overwrite it with the Firestore Indexes from the Firebase Console? <span style="color:green">No</span><br/></small>
 * <small>What language would you like to use to write Cloud Functions? <span style="color:green">TypeScript</span><br/></small>
 * <small>Do you want to use ESLint to catch probable bugs and enforce style? <span style="color:green">No</span><br/></small>
 * <small>File functions/package.json already exists. Overwrite? <span style="color:green">No</span><br/></small>
