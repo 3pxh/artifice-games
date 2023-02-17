@@ -10,6 +10,7 @@ export type ModelDef = {
   stopSequences?: {
     [k: string]: string
   },
+  maxTokens?: number,
   temperature?: number,
 }
 export type GenerationRequest = {
@@ -128,12 +129,13 @@ async function runGPT3(r: GenerationRequest): GenerationPromise {
     throw new  Error("Missing OPENAI_API_KEY");
   }
   // TODO: where do we template? Eventually we might want multipart templates.
-  const prompt = r.template.template.replace("{1}", r.prompt);
+  // /\{1\}/g for global replacement.
+  const prompt = r.template.template.replace(/\{1\}/g, r.prompt);
   const params:any = {
     "model": "text-davinci-003",
     "prompt": prompt,
     "temperature": r.model.temperature ?? 0.7,
-    "max_tokens": 256,
+    "max_tokens": r.model.maxTokens ?? 256,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,

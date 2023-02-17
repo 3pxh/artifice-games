@@ -37,6 +37,39 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
       "durationSeconds": 0
     }
   },
+  "common_language": {
+    "engine": "PromptGuess",
+    "name": "Dear mom...",
+    "model": {"name": "GPT3"},
+    "templates": {
+      "0": {"template": "To whom it may concern, {1}", "display": "To whom it may concern..."},
+      "1": {"template": "You won't believe this one weird trick to {1}! ", "display": "You won't believe this one weird trick to..."},
+      "2": {"template": "Attention all {1}:", "display": "Attention all ___:"},
+      "3": {"template": "Dear mom, {1}", "display": "Dear mom, ..."},
+      "4": {"template": "BREAKING NEWS: {1}", "display": "BREAKING NEWS: ___"}
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    }
+  },
+  "poems": {
+    "engine": "PromptGuess",
+    "name": "Poems",
+    "model": {"name": "GPT3"},
+    "templates": {
+      "0": {"template": "Write a haiku about {1}, but don't mention \"{1}\"\n", "display": "Write a haiku about..."},
+      "1": {"template": "Write a heroic couplet about {1}, but don't mention \"{1}\"\n", "display": "Write a heroic couplet about..."},
+      "3": {"template": "Complete the couplet.\n\nRoses are red, {1},\n", "display": "Roses are red, ..."},
+      "4": {"template": "Write a limerick about {1}, but don't mention \"{1}\"\n", "display": "Write a limerick about..."},
+      "5": {"template": "Write a cinquain about {1}, but don't mention \"{1}\" (do not include the title).\n", "display": "Write a cinquain about..."},
+      "6": {"template": "Write a villanelle about {1}, but don't mention \"{1}\"\n", "display": "Write a villanelle about..."}
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    }
+  },
   "tresmojis_base": {
     "engine": "PromptGuess",
     "name": "Tresmojis",
@@ -64,6 +97,7 @@ export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
     "model": {
       "name": "GPT3",
       "stopSequences": {"0": ")"},
+      "maxTokens": 10,
       "temperature": 0.2
     },
     "introVideo": {
