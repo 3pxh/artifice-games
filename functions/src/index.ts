@@ -59,7 +59,7 @@ const getRoomFromShortcode = async (shortcode: string): Promise<string> => {
   }
 }
 
-const QUEUE_DURATION = 15 * 1000; // Fifteen seconds
+const QUEUE_DURATION = 1 * 1000;
 const QUEUE_MAX_WAIT = 3600/2 * 1000; // Half hour
 const MAX_QUEUE_LENGTH = 150;
 export type QueueData = {

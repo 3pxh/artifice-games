@@ -13,9 +13,42 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
   "farsketched_base": {
     "engine": "PromptGuess",
     "name": "Farsketched",
-    "model": {"name": "StableDiffusion"},
+    "model": {
+      "name": "StableDiffusion",
+      "version": "2.1"
+    },
     "templates": {
       "0": {"display": "Make an image of...", "template": "{1}"}
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
+      "durationSeconds": 128
+    }
+  },
+  "farsketched_1_5": {
+    "engine": "PromptGuess",
+    "name": "FS🍯🦡",
+    "model": {
+      "name": "StableDiffusion",
+      "version": "1.5"
+    },
+    "templates": {
+      "0": {"display": "Make an image of...", "template": "{1}"}
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
+      "durationSeconds": 128
+    }
+  },
+  "farsketched_photo": {
+    "engine": "PromptGuess",
+    "name": "Farsketched 📸",
+    "model": {
+      "name": "StableDiffusion",
+      "version": "2.1"
+    },
+    "templates": {
+      "0": {"display": "Make a photo of...", "template": "a photograph of {1}: 2 | ugly, tiling, poorly drawn hands, poorly drawn feet, poorly drawn face, out of frame, extra limbs, disfigured, deformed, body out of frame, blurry, bad anatomy, blurred, watermark, grainy, signature, cut off, draft: -1.5"}
     },
     "introVideo": {
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",

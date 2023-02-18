@@ -4,15 +4,19 @@ import * as AWS from "aws-sdk";
 import App from "./app";
 
 export type Models =  "GPT3" | "StableDiffusion"
-export type ModelDef = {
-  name: Models,
-  // Other settings?
+export type GPT3Def = {
+  name: "GPT3",
   stopSequences?: {
     [k: string]: string
   },
   maxTokens?: number,
   temperature?: number,
 }
+export type SDDef = {
+  name: "StableDiffusion",
+  version: "1.5" | "2.1",
+}
+export type ModelDef = GPT3Def | SDDef;
 export type GenerationRequest = {
   room: string,
   uid: string,
@@ -41,12 +45,31 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   }
   
   const MAX_TRIES = 2;
-  // TODO: Choose between 2.0 and 1.5 in the request, or on the room.
-  const engineId = "stable-diffusion-512-v2-0";
+  const model = r.model as SDDef;
+  const modelPaths:Record<SDDef["version"], string> = {
+    "1.5": "stable-diffusion-v1-5",
+    "2.1": "stable-diffusion-512-v2-1"
+  }
+  const version = model.version ?? "2.1";
+  const engineId = modelPaths[version];
   const apiHost = "https://api.stability.ai";
-  const url = `${apiHost}/v1alpha/generation/${engineId}/text-to-image`;
+  const url = `${apiHost}/v1beta/generation/${engineId}/text-to-image`;
 
   const prompt = r.template.template.replace("{1}", r.prompt);
+  const weightedPrompts = prompt.split("|").map(p => {
+    if (p.indexOf(":")) {
+      const weight = p.split(":").pop();
+      if (weight && parseFloat(weight)) {
+        // Do as I say, not as I do.
+        return {
+          "text": p.split(":").slice(0,-1).join(":").trim(),
+          "weight": parseFloat(weight)
+        };
+      }
+    }
+    return {"text": p.trim(), "weight": 1};
+  });
+
   let response;
   try {
     response = await axios({
@@ -64,14 +87,9 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
         height: 512,
         width: 512,
         samples: 1,
-        seed: 0,
+        // seed: 0,
         steps: 30,
-        text_prompts: [
-          {
-            text: prompt,
-            weight: 1
-          }
-        ],
+        text_prompts: weightedPrompts,
       })
     });
   } catch (e) {
@@ -128,20 +146,21 @@ async function runGPT3(r: GenerationRequest): GenerationPromise {
   if (!process.env.OPENAI_API_KEY) {
     throw new  Error("Missing OPENAI_API_KEY");
   }
+  const model = r.model as GPT3Def;
   // TODO: where do we template? Eventually we might want multipart templates.
   // /\{1\}/g for global replacement.
   const prompt = r.template.template.replace(/\{1\}/g, r.prompt);
   const params:any = {
     "model": "text-davinci-003",
     "prompt": prompt,
-    "temperature": r.model.temperature ?? 0.7,
-    "max_tokens": r.model.maxTokens ?? 256,
+    "temperature": model.temperature ?? 0.7,
+    "max_tokens": model.maxTokens ?? 256,
     "top_p": 1,
     "frequency_penalty": 0,
     "presence_penalty": 0,
   }
-  if (r.model.stopSequences) {
-    params["stop"] = Object.entries(r.model.stopSequences).map(([_, v]) => v);
+  if (model.stopSequences) {
+    params["stop"] = Object.entries(model.stopSequences).map(([_, v]) => v);
   }
   const res = await axios({
     url: "https://api.openai.com/v1/completions",
