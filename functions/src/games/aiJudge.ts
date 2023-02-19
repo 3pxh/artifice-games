@@ -294,9 +294,11 @@ const Actions = {
   ReadyToContinue(room: Room, message: Message) {
     room.players[message.uid].isReadyToContinue = true;
     // If everyone is ready, we want to transition.
-    if (Object.entries(room.players).every(([k, p]) => p.isReadyToContinue) &&
-        room.gameState.state === "Score") {
+    const allReady = Object.entries(room.players).every(([k, p]) => p.isReadyToContinue || !p.isPlayer);
+    if (allReady && room.gameState.state === "Score") {
       Actions.ContinueAfterScoring(room);
+    } else if (allReady && room.gameState.state === "Lobby") {
+      Actions.Intro(room);
     }
   },
 

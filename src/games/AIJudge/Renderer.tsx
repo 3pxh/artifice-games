@@ -67,9 +67,9 @@ export function RenderAIJudge(props: {
   if (renderState.value === "Lobby") {
     return <div class="PromptGuessLobby">
       <SingleUseButton 
-        buttonText="Everybody's here!" 
-        onClick={() => {message("Intro", "gogogo!")}}
-        postSubmitContent={<>Go go go!</>} />
+        buttonText="Let's start!" 
+        onClick={() => {message("ReadyToContinue", "gogogo!")}}
+        postSubmitContent={<>Waiting for others to press start!</>} />
     </div>
   } else if (renderState.value === "Intro") {
     return <p>TODO: intro video</p>
