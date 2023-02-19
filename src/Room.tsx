@@ -149,7 +149,7 @@ export function Room(props: {room: RoomData}) {
     });
 
     if (timer.value && timer.value.duration > 0 && timeRemaining.value < 3600*24) {
-      return <div class="Room-Timer">
+      return <div key="GameTimer" class="Room-Timer">
         {timeRemaining.value > 0 ? `Time remaining: ${timeRemaining.value} seconds` : "Out of time!"}
       </div>
     } else {
