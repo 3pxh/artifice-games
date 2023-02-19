@@ -32,6 +32,6 @@
 .Avatar.Selected {
 	opacity: .5;
 }
-.Avatar.Waiting {
+.Avatar--Waiting {
 	border: 3px solid rgb(122, 255, 110);
 }

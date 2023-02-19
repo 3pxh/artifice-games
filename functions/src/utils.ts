@@ -20,6 +20,13 @@ export const objectMap = <V,O,>(obj:{[k: string]: V}, fn:(v: V, k: string, i: nu
     )
   )
 
+export const objectFilter = <V,O,>(obj:{[k: string]: V}, fn:(v: V, k: string, i: number) => O) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(
+      ([k, v], i) => fn(v, k, i)
+    )
+  )
+
 //https://stackoverflow.com/questions/521295/seeding-the-random-number-generator-in-javascript
 function mulberry32(a?: number) {
   let seed = a ?? seed32bit();

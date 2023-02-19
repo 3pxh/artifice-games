@@ -1,7 +1,7 @@
 import { h, Fragment } from "preact";
 import "./Avatar.css";
 
-export type AvatarState = "Ready" | "Waiting" | "Picked";
+export type AvatarState = "Waiting" | "Doing" | "Picked";
 
 export default function Avatar(props: {
   url: string,
@@ -11,9 +11,10 @@ export default function Avatar(props: {
   state?: AvatarState,
   showHandle?: boolean,
 }) {
+  const waitingClass = props.state === "Waiting" ? "Avatar--Waiting" : "";
   return <div class="Avatar-Container">
     <img 
-      class="Avatar"
+      class={`Avatar ${waitingClass}`}
       src={props.url} 
       alt={props.handle} 
       width={props.size} 
