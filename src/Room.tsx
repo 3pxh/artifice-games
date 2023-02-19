@@ -110,11 +110,10 @@ export function Room(props: {room: RoomData}) {
   }
 
   const GameTimer = (props: {roomId: string, uid: string}) => {
-    const start = useComputed<number | null>(() => gameState.value?.timer.started ?? null);
-    const duration = useComputed<number | null>(() => gameState.value?.timer.duration ?? null);
+    const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
     const timeRemaining = signal(
-      (start.value && duration.value) 
-        ? Math.floor((start.value + duration.value - new Date().getTime())/1000)
+      timer.value 
+        ? Math.floor((timer.value.started + timer.value.duration - new Date().getTime())/1000)
         : 3600 * 24);
     const [endTime, setEndTime] = useState(0);
     // Only message once per timer expiry. There was a bug which was flooding
@@ -123,16 +122,16 @@ export function Room(props: {room: RoomData}) {
     const [hasMessaged, setHasMessaged] = useState(false);
 
     useEffect(() => {
-      if (start.value && duration.value && start.value + duration.value !== endTime) {
-        setEndTime(start.value + duration.value);
+      if (timer.value && timer.value.started + timer.value.duration !== endTime) {
+        setEndTime(timer.value.started + timer.value.duration);
         setHasMessaged(false); // Only reset when the end time changes.
       }
     });
 
     useEffect(() => {
         const i = window.setInterval(() => {
-          if (start.value && duration.value && !hasMessaged) {
-            const t = start.value + duration.value - new Date().getTime();
+          if (timer.value && !hasMessaged) {
+            const t = timer.value.started + timer.value.duration - new Date().getTime();
             timeRemaining.value = Math.floor(t/1000);
             if (t < 0) {
               window.clearInterval(i);
@@ -149,7 +148,7 @@ export function Room(props: {room: RoomData}) {
         return () => { window.clearInterval(i); }
     });
 
-    if (start.value && duration.value && duration.value > 0 && timeRemaining.value < 3600*24) {
+    if (timer.value && timer.value.duration > 0 && timeRemaining.value < 3600*24) {
       return <div class="Room-Timer">
         {timeRemaining.value > 0 ? `Time remaining: ${timeRemaining.value} seconds` : "Out of time!"}
       </div>
