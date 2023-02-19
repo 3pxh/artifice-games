@@ -2,7 +2,7 @@ import { ref, onValue, DataSnapshot } from "@firebase/database";
 import { db } from "./firebaseClient";
 import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
-import { useSignal, useComputed, Signal } from "@preact/signals";
+import { useSignal, useComputed, Signal, signal } from "@preact/signals";
 import { QueueRoom, QueueData } from "../functions/src/index";
 import { AuthContext } from "./AuthProvider";
 import { messageRoom, pingRoom, updatePlayer } from "./actions";
@@ -36,7 +36,6 @@ export function Room(props: {room: RoomData}) {
   const [startTime, setStartTime] = useState<number>(0);
   const gameState = useSignal<GameState | null>(null);
   const players = useSignal<PromptGuessRoom["players"] | null>(null);
-  const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
   const scores = useComputed<Scores | null>(() => gameState.value?.scores ?? null);
   const isLoaded = useComputed<boolean>(() => {
     return gameState.value !== null && players.value !== null;
@@ -111,7 +110,11 @@ export function Room(props: {room: RoomData}) {
   }
 
   const GameTimer = (props: {roomId: string, uid: string}) => {
-    const [timeRemaining, setTimeRemaining] = useState<number>(new Date().getTime());
+    const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
+    const timeRemaining = signal(
+      timer.value 
+        ? Math.floor((timer.value.started + timer.value.duration - new Date().getTime())/1000)
+        : 3600 * 24);
     const [endTime, setEndTime] = useState(0);
     // Only message once per timer expiry. There was a bug which was flooding
     // the server with messages (once a second). There's probably a better
@@ -129,7 +132,7 @@ export function Room(props: {room: RoomData}) {
         const i = window.setInterval(() => {
           if (timer.value && !hasMessaged) {
             const t = timer.value.started + timer.value.duration - new Date().getTime();
-            setTimeRemaining(Math.floor(t/1000));
+            timeRemaining.value = Math.floor(t/1000);
             if (t < 0) {
               window.clearInterval(i);
               const m:PromptGuessMessage = {
@@ -145,9 +148,9 @@ export function Room(props: {room: RoomData}) {
         return () => { window.clearInterval(i); }
     });
 
-    if (timer.value && timer.value.duration > 0 && timeRemaining < 3600*24) {
+    if (timer.value && timer.value.duration > 0 && timeRemaining.value < 3600*24) {
       return <div class="Room-Timer">
-        {timeRemaining > 0 ? `Time remaining: ${timeRemaining} seconds` : "Out of time!"}
+        {timeRemaining.value > 0 ? `Time remaining: ${timeRemaining.value} seconds` : "Out of time!"}
       </div>
     } else {
       return <></>
