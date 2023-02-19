@@ -31,6 +31,55 @@ type GameState = {
   state: "Lobby"
 }
 
+
+const GameTimer = (props: {roomId: string, uid: string, gameState: Signal<GameState | null>}) => {
+  const timer = useComputed<PromptGuessTimer | null>(() => props.gameState.value?.timer ?? null);
+  const timeRemaining = signal(
+    timer.value 
+      ? Math.floor((timer.value.started + timer.value.duration - new Date().getTime())/1000)
+      : 3600 * 24);
+  const [endTime, setEndTime] = useState(0);
+  // Only message once per timer expiry. There was a bug which was flooding
+  // the server with messages (once a second). There's probably a better
+  // pattern than this, but it will do for now.
+  const [hasMessaged, setHasMessaged] = useState(false);
+
+  useEffect(() => {
+    if (timer.value && timer.value.started + timer.value.duration !== endTime) {
+      setEndTime(timer.value.started + timer.value.duration);
+      setHasMessaged(false); // Only reset when the end time changes.
+    }
+  });
+
+  useEffect(() => {
+      const i = window.setInterval(() => {
+        if (timer.value && !hasMessaged) {
+          const t = timer.value.started + timer.value.duration - new Date().getTime();
+          timeRemaining.value = Math.floor(t/1000);
+          if (t < 0) {
+            window.clearInterval(i);
+            const m:PromptGuessMessage = {
+              type: "OutOfTime",
+              uid: props.uid,
+              value: "ping",
+            };
+            setHasMessaged(true);
+            messageRoom(props.roomId, m);
+          }
+        }
+      }, 1000);
+      return () => { window.clearInterval(i); }
+  });
+
+  if (timer.value && timer.value.duration > 0 && timeRemaining.value < 3600*24) {
+    return <div key="GameTimer" class="Room-Timer">
+      {timeRemaining.value > 0 ? `Time remaining: ${timeRemaining.value} seconds` : "Out of time!"}
+    </div>
+  } else {
+    return <></>
+  }
+}
+
 export function Room(props: {room: RoomData}) {
   const [isWaiting, setIsWaiting] = useState<boolean>(true);
   const [startTime, setStartTime] = useState<number>(0);
@@ -109,54 +158,6 @@ export function Room(props: {room: RoomData}) {
     }
   }
 
-  const GameTimer = (props: {roomId: string, uid: string}) => {
-    const timer = useComputed<PromptGuessTimer | null>(() => gameState.value?.timer ?? null);
-    const timeRemaining = signal(
-      timer.value 
-        ? Math.floor((timer.value.started + timer.value.duration - new Date().getTime())/1000)
-        : 3600 * 24);
-    const [endTime, setEndTime] = useState(0);
-    // Only message once per timer expiry. There was a bug which was flooding
-    // the server with messages (once a second). There's probably a better
-    // pattern than this, but it will do for now.
-    const [hasMessaged, setHasMessaged] = useState(false);
-
-    useEffect(() => {
-      if (timer.value && timer.value.started + timer.value.duration !== endTime) {
-        setEndTime(timer.value.started + timer.value.duration);
-        setHasMessaged(false); // Only reset when the end time changes.
-      }
-    });
-
-    useEffect(() => {
-        const i = window.setInterval(() => {
-          if (timer.value && !hasMessaged) {
-            const t = timer.value.started + timer.value.duration - new Date().getTime();
-            timeRemaining.value = Math.floor(t/1000);
-            if (t < 0) {
-              window.clearInterval(i);
-              const m:PromptGuessMessage = {
-                type: "OutOfTime",
-                uid: props.uid,
-                value: "ping",
-              };
-              setHasMessaged(true);
-              messageRoom(props.roomId, m);
-            }
-          }
-        }, 1000);
-        return () => { window.clearInterval(i); }
-    });
-
-    if (timer.value && timer.value.duration > 0 && timeRemaining.value < 3600*24) {
-      return <div key="GameTimer" class="Room-Timer">
-        {timeRemaining.value > 0 ? `Time remaining: ${timeRemaining.value} seconds` : "Out of time!"}
-      </div>
-    } else {
-      return <></>
-    }
-  }
-
   const PlayerHandleInput = () => {
     return <>
       <label for="PlayerName">Name: </label>
@@ -186,7 +187,11 @@ export function Room(props: {room: RoomData}) {
   } else if (isLoaded && authContext.user) {
     return <>
       <Header />
-      <GameTimer key={"timer"} roomId={props.room.id} uid={authContext.user.uid} />
+      <GameTimer 
+        key={"timer"} 
+        roomId={props.room.id} 
+        uid={authContext.user.uid}
+        gameState={gameState} />
       {isLobby.value
       ? <>
       {/* TODO: this doesn't reflect their name on load if they set it before */}
