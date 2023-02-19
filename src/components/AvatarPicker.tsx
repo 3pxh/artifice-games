@@ -22,7 +22,6 @@ export default function AvatarPicker(props: {
   // Colors would be the same as they'd have in chat.
   // However, making the colors stable seems tricky. (We could give them a joinedTime?)
   const selections = useComputed(() => {
-    console.log("Selections", Object.entries(props.players.value).map(([k, p]) => p.avatar ?? ""))
     return Object.entries(props.players.value).map(([k, p]) => p.avatar ?? "");
   });
 

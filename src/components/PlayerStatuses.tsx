@@ -33,7 +33,6 @@ export default function PlayerStatuses(props: {
       return props.players.value[props.id].handle;
     });
     const isReadyToContinue = useComputed(() => {
-      console.log("am i  ready", props.players.value[props.id])
       return props.players.value[props.id].isReadyToContinue;
     });
 
