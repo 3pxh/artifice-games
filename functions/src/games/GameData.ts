@@ -22,7 +22,7 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
     },
     "introVideo": {
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
-      "durationSeconds": 128
+      "durationSeconds": 133
     }
   },
   "farsketched_1_5": {
@@ -37,7 +37,7 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
     },
     "introVideo": {
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
-      "durationSeconds": 128
+      "durationSeconds": 133
     }
   },
   "farsketched_photo": {
@@ -52,7 +52,7 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
     },
     "introVideo": {
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
-      "durationSeconds": 128
+      "durationSeconds": 133
     }
   },
   "gisticle_base": {

@@ -286,10 +286,13 @@ const PromptGuesserActions = {
 
   ReadyToContinue(room: PromptGuessRoom, message: PromptGuessMessage) {
     room.players[message.uid].isReadyToContinue = true;
-    // If everyone is ready, we want to transition.
-    if (Object.entries(room.players).every(([k, p]) => p.isReadyToContinue) &&
-        room.gameState.state === "Score") {
+    const allReady = Object.entries(room.players).every(([_, p]) => p.isReadyToContinue || !p.isPlayer);
+    if (allReady && room.gameState.state === "Score") {
       PromptGuesserActions.ContinueAfterScoring(room);
+    } else if (allReady && room.gameState.state === "Lobby") {
+      PromptGuesserActions.TransitionState(room, "Intro");
+    } else if (allReady && room.gameState.state === "Intro") {
+      PromptGuesserActions.Start(room);
     }
   },
 
