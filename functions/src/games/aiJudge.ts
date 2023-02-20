@@ -297,8 +297,10 @@ const Actions = {
     const allReady = Object.entries(room.players).every(([k, p]) => p.isReadyToContinue || !p.isPlayer);
     if (allReady && room.gameState.state === "Score") {
       Actions.ContinueAfterScoring(room);
-    } else if (allReady && room.gameState.state === "Lobby") {
+    } else if (allReady && room.gameState.state === "Lobby" && room.definition.introVideo.url) {
       Actions.TransitionState(room, "Intro");
+    } else if (allReady && room.gameState.state === "Lobby" && !room.definition.introVideo.url) {
+      Actions.Intro(room);
     } else if (allReady && room.gameState.state === "Intro") {
       Actions.Intro(room);
     }

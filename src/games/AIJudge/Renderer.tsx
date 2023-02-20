@@ -74,7 +74,9 @@ export function RenderAIJudge(props: {
     </div>
   } else if (renderState.value === "Intro") {
     return <div>
-      <iframe class="YoutubeEmbed" src={`${props.room.definition.introVideo.url}?autoplay=1`}></iframe>
+      {props.room.definition.introVideo.url 
+        ? <iframe class="YoutubeEmbed" src={`${props.room.definition.introVideo.url}?autoplay=1`}></iframe>
+        : "Instruction video not found."}
       <SingleUseButton 
         key="IntroContinue"
         buttonText="Done watching" 

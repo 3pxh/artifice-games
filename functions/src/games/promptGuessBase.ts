@@ -289,8 +289,10 @@ const PromptGuesserActions = {
     const allReady = Object.entries(room.players).every(([_, p]) => p.isReadyToContinue || !p.isPlayer);
     if (allReady && room.gameState.state === "Score") {
       PromptGuesserActions.ContinueAfterScoring(room);
-    } else if (allReady && room.gameState.state === "Lobby") {
+    } else if (allReady && room.gameState.state === "Lobby" && room.definition.introVideo.url) {
       PromptGuesserActions.TransitionState(room, "Intro");
+    } else if (allReady && room.gameState.state === "Lobby" && !room.definition.introVideo.url) {
+      PromptGuesserActions.Start(room);
     } else if (allReady && room.gameState.state === "Intro") {
       PromptGuesserActions.Start(room);
     }
