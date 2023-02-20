@@ -115,6 +115,11 @@ fieldset {
 	background-color: aqua;
 }
 
+.YoutubeEmbed {
+	aspect-ratio: 16/9;
+	width: 100%;
+}
+
 .Prompt-Hero {
 	align-items: center;
 	display: flex;

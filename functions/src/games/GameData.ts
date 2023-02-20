@@ -123,10 +123,10 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
 
 export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
 {"games": {
-  "judge_best_answer": {
+  "think_tank_trivia": {
     "engine": "AIJudge",
-    "name": "🧪🤖✅ AI Quiz",
-    "questionPreface": "Select the best answer to the question.\n\nWhich one",
+    "name": "🧠 Think Tank Trivia 🎉",
+    "questionPreface": "Select the best answer to the question.\n\n",
     "model": {
       "name": "GPT3",
       "stopSequences": {"0": ")"},
@@ -134,8 +134,8 @@ export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
       "temperature": 0.2
     },
     "introVideo": {
-      "url": "",
-      "durationSeconds": 0
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
     }
   },
 }}

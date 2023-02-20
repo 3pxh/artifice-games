@@ -298,6 +298,8 @@ const Actions = {
     if (allReady && room.gameState.state === "Score") {
       Actions.ContinueAfterScoring(room);
     } else if (allReady && room.gameState.state === "Lobby") {
+      Actions.TransitionState(room, "Intro");
+    } else if (allReady && room.gameState.state === "Intro") {
       Actions.Intro(room);
     }
   },

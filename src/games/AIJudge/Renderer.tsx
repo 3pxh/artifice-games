@@ -67,12 +67,20 @@ export function RenderAIJudge(props: {
   if (renderState.value === "Lobby") {
     return <div class="PromptGuessLobby">
       <SingleUseButton 
-        buttonText="Let's start!" 
+        key="LobbyContinue"
+        buttonText="Ready to start!"
         onClick={() => {message("ReadyToContinue", "gogogo!")}}
-        postSubmitContent={<>Waiting for others to press start!</>} />
+        postSubmitContent={<>The game will start once everyone's ready.</>} />
     </div>
   } else if (renderState.value === "Intro") {
-    return <p>TODO: intro video</p>
+    return <div>
+      <iframe class="YoutubeEmbed" src={`${props.room.definition.introVideo.url}?autoplay=1`}></iframe>
+      <SingleUseButton 
+        key="IntroContinue"
+        buttonText="Done watching" 
+        onClick={() => {message("ReadyToContinue", "gogogo!")}}
+        postSubmitContent={<>Waiting on others to be done...</>} />
+    </div>
   } else if (renderState.value === "Question") {
     return <SubmittableInput
       key="QuestionInput"
@@ -98,7 +106,7 @@ export function RenderAIJudge(props: {
     return <>
       <p>{currentQ.value}</p>
       <TextOptions
-        key="ChoosingAnswers"
+        key="VoteOptions"
         onSubmit={(v: string) => {submit("Vote", v)}}
         options={answers.value} />
     </>
@@ -106,7 +114,7 @@ export function RenderAIJudge(props: {
     return <>
       <p>{currentQ.value}</p>
       <ScoredTextOptions
-        key="ScoringAnswers"
+        key="ScoreOptions"
         options={answers.value}
         correctUid={aiChoiceUid.value}
         players={props.players}
