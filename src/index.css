@@ -76,6 +76,21 @@ fieldset {
 	padding: 2px;
 	width: 100%;
 }
+.TopNav > * {
+	margin-right: 10px;
+}
+.TopNav > a {
+	color: #673ab8;
+	text-decoration: none;
+}
+.TopNav > a:hover {
+	text-decoration: underline;
+}
+.TopNav > .TopNav--active {
+	color: #3ab875;
+	font-weight: 600;
+	text-decoration: underline;
+}
 
 .GameContainer{
 	padding: 10px;
