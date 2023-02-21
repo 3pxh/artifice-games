@@ -12,7 +12,6 @@ export const useAuth = () => {
   useEffect(() => {
     auth.onAuthStateChanged(u => {
       if (u && (!user || user.uid !== u.uid)) {
-        console.log("Got a user!", u)
         setUser(u);
       }
       else {
@@ -38,7 +37,6 @@ export const useAuth = () => {
   })
 
   const emailAuth = (email: string) => {
-    console.log("starting firebase email auth");
     const actionCodeSettings = {
       url: location.hostname === "localhost" ? "http://localhost:3000" : "https://artifice.games",
       handleCodeInApp: true,
@@ -51,8 +49,7 @@ export const useAuth = () => {
       .catch(() => {
         sendSignInLinkToEmail(auth, email, actionCodeSettings)
           .then(() => {
-            // window.localStorage.setItem("emailForSignIn", email);
-            console.log("firebase auth link sent to email");
+            console.log("auth link sent to email");
           })
           .catch((error) => {
             console.error("Email link auth error", {error})

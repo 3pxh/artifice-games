@@ -115,7 +115,7 @@ export default function GameSelection() {
   }
 
   if (!user) {
-    throw new Error("Cannot render GameSelection without a user.")
+    return <>Must be logged in to create or join a game.</>
   }
 
   // TODO: we should probably set Room on App, not inside GameSelection
