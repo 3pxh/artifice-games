@@ -101,8 +101,22 @@ function TextGeneration(props: {
   }
 }
   
-// generation.model can be used to infer the type.
-function Generation(props: {generation: PromptGeneration, showPrompt?: boolean, delay?: number}) {
+function Generation(props: {
+  generation: PromptGeneration,
+  skip?: () => void,
+  showPrompt?: boolean, 
+  delay?: number
+}) {
+  if (props.generation.error && props.skip) {
+    return <>
+      <p>Oh no! The AI hit an error: {props.generation.error}</p>
+      <p>The prompt was: {props.generation.prompt}</p>
+      <SingleUseButton
+        buttonText="Skip to next"
+        postSubmitContent={<>Skipping...</>}
+        onClick={props.skip} />
+    </>
+  }
   if (props.generation.model.name === "StableDiffusion") {
     return <ImageGeneration generation={props.generation} showPrompt={props.showPrompt} />
   } else if (props.generation.model.name === "GPT3") {

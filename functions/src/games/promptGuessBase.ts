@@ -5,7 +5,7 @@ import { GameCreateData } from "./games";
 
 export type Template = {template: string, display: string};
 export type GameDefinition = {
-  engine: "PromptGuess", // Unnecessary, for clarity in reading only
+  engine: "PromptGuess",
   name: string,
   templates: { // Can't store an array in the db
     [k: string]: Template
@@ -42,7 +42,8 @@ export type PromptGuessRoom = {
     round: number,
     maxRound: number,
     currentGeneration: UserID | null,
-    // Lies/votes/gens are optional because the timer may expire.
+    // Lies/votes/gens are optional because the timer may expire,
+    // and Firebase doesn't store empty objects
     lies?: { [k: UserID]: string },
     votes?: { [k: UserID]: UserID },
     generations?: { [k: UserID]: PromptGeneration },
@@ -70,6 +71,11 @@ export type PromptGuessRoom = {
       votes: { [k: UserID]: UserID },
     }
   }
+  generationErrors: {
+    [timestamp: number]: {
+      generation: PromptGeneration,
+    }
+  }
 }
 
 const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale = 1) => {
@@ -80,8 +86,7 @@ const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale 
       duration: 0,
       stateDurations: {
         "Lobby": Number.MAX_VALUE, // Needs all states for typing :/
-        // TODO: refactor and make this easy to change out.
-        "Intro": videoDurS * 1000, //Farsketched video is 128 seconds.
+        "Intro": videoDurS * 1000,
         "Prompt": 40 * scale,
         "Lie": 30 * scale,
         "Vote": 30 * scale,
@@ -130,10 +135,11 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): PromptGuessRoom =>
       }
     },
     history: {},
+    generationErrors: {},
   }
 }
 
-type MessageType = "NewPlayer" | "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime" | "ReadyToContinue";
+type MessageType = "NewPlayer" | "Start" | "Prompt" | "Lie" | "Vote" | "Continue" | "OutOfTime" | "ReadyToContinue" | "GenerationError";
 export type PromptGuessMessage = {
   type: MessageType,
   uid: UserID,
@@ -175,11 +181,37 @@ const PromptGuesserActions = {
     PromptGuesserActions.TransitionState(room, "Prompt");
   },
 
+  chooseGeneration(room: PromptGuessRoom) {
+    // Pick and set the generation.
+    if (!room.gameState.generations) {
+      return null;
+    }
+    const gens = Object.entries(room.gameState.generations);
+    const noError = gens.filter(([_, g]) => !g.error);
+    const fulfilled = noError.filter(([_, g]) => g.fulfilled);
+    if (fulfilled.length > 0) { // Give something that's ready!
+      return chooseOne(fulfilled)[0];
+    } else if (noError.length > 0) {
+      // This could still possibly error, and we get stuck.
+      // How do we let people progress if the gen errored?
+      // ***Send a message "GenerationError" which forces a repick.***
+      return chooseOne(noError)[0];
+    } else {
+      // Move out the errored gens.
+      room.generationErrors = room.generationErrors ?? {};
+      gens.forEach(([k, g]) => {
+        room.generationErrors[new Date().getTime()] = {
+          generation: g
+        };
+        if (room.gameState.generations) {
+          delete room.gameState.generations[k];
+        }
+      });
+      return null;
+    }
+  },
+
   Prompt(room: PromptGuessRoom, message: PromptGuessMessage) {
-    // TODO: run the actual generator!
-    // Ah shit, do we need to do that outside of the transaction and pass the result in?
-    // If it's inside the transaction and the transaction fails (bc another write occurred)
-    // then it'll retry, and hit the expensive API again (and take a long time!).
     room.gameState.generations = room.gameState.generations ?? {};
     room.gameState.generations[message.uid] = {
       _context: {},
@@ -238,6 +270,18 @@ const PromptGuesserActions = {
     })
   },
 
+  setNextRoundOrFinish(room: PromptGuessRoom) {
+    if (room.gameState.round < room.gameState.maxRound) {
+      room.gameState.round += 1;
+      Object.keys(room.players).forEach(k => {
+        room.players[k].template = chooseOneInObject(room.definition.templates);
+      });
+      PromptGuesserActions.TransitionState(room, "Prompt");
+    } else if (room.gameState.round === room.gameState.maxRound) {
+      PromptGuesserActions.TransitionState(room, "Finish");
+    }
+  },
+
   ContinueAfterScoring(room: PromptGuessRoom) {
     const gameState = room.gameState;
     if (gameState.currentGeneration && gameState.generations) {
@@ -256,14 +300,8 @@ const PromptGuesserActions = {
       const gens = Object.keys(gameState.generations);
       if (gens.length > 0) {
         PromptGuesserActions.TransitionState(room, "Lie");
-      } else if (gens.length === 0 && room.gameState.round < room.gameState.maxRound) {
-        room.gameState.round += 1;
-        Object.keys(room.players).forEach(k => {
-          room.players[k].template = chooseOneInObject(room.definition.templates);
-        });
-        PromptGuesserActions.TransitionState(room, "Prompt");
-      } else if (gens.length === 0 && room.gameState.round === room.gameState.maxRound) {
-        PromptGuesserActions.TransitionState(room, "Finish");
+      } else {
+        PromptGuesserActions.setNextRoundOrFinish(room);
       }
     } else {
       // we shouldn't have gotten here...
@@ -298,16 +336,40 @@ const PromptGuesserActions = {
     }
   },
 
+  GenerationError(room: PromptGuessRoom) {
+    // The client sends this when they're trying to view a generation which
+    // hit an error. This can happen when the engine sets a current gen
+    // which isn't fulfilled and it errors.
+    const u = room.gameState.currentGeneration;
+    if (u && room.gameState.generations && 
+      room.gameState.generations[u] &&
+      room.gameState.generations[u].error
+    ) {
+      // This is verbatim in TransitionState as well.
+      const u = PromptGuesserActions.chooseGeneration(room);
+      if (u) {
+        room.gameState.currentGeneration = u;
+      } else {
+        PromptGuesserActions.setNextRoundOrFinish(room);
+      }
+    }
+  },
+
   // All gameState.state transitions MUST happen through here if the game
   // is to function properly with the timer. We could enforce this by having
   // some private / protected methods. TODO: protect these state changes.
   TransitionState(room: PromptGuessRoom, newState: PromptGuessState) {
     const outOfTimeAndNoOneSubmittedPrompts = !room.gameState.generations && newState === "Lie";
     if (!outOfTimeAndNoOneSubmittedPrompts) {
-      if (newState === "Lie" && room.gameState.generations) {
-        // We should filter out errored generations. But when?
-        const gens = Object.keys(room.gameState.generations);
-        room.gameState.currentGeneration = chooseOne(gens);
+      if (newState === "Lie") {
+        const u = PromptGuesserActions.chooseGeneration(room);
+        if (u) {
+          room.gameState.currentGeneration = u;
+        } else {
+          PromptGuesserActions.setNextRoundOrFinish(room);
+          // setNextRoundOrFinish calls TransitionState. Abort this call.
+          return;
+        }
       } else if (newState === "Score") {
         PromptGuesserActions.Score(room);
       }
@@ -338,6 +400,8 @@ function reducer(room: PromptGuessRoom, message: PromptGuessMessage): any {
     PromptGuesserActions.ContinueAfterScoring(room);
   } else if (message.type === "OutOfTime") {
     PromptGuesserActions.OutOfTime(room, message);
+  } else if (message.type === "GenerationError") {
+    PromptGuesserActions.GenerationError(room);
   }
   return gameState
 }

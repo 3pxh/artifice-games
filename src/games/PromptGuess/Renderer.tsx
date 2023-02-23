@@ -88,7 +88,9 @@ export function RenderPromptGuess(props: {
   } else if (renderState.value === "Lie") {
     if (currentGeneration.value) {
       return <>
-        <Engine.Generation generation={currentGeneration.value} />
+        <Engine.Generation 
+          generation={currentGeneration.value}
+          skip={() => { message("GenerationError", "") }} />
         <Engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
                     generation={currentGeneration.value}/>
       </>
