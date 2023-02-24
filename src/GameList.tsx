@@ -37,17 +37,17 @@ export default function GameList(props: {filter: string}) {
   } else if (games.length === 0) {
     return <>No {props.filter} games here yet.</>
   } else {
-    return <>
+    return <div class="GameList">
       {games.map(([r, m]) => {
         const date = new Date(m.timestamp).toLocaleDateString('en-us', { weekday:"long", month:"short", day:"numeric"});
         return <Link href={`/room/${r}`}>
-          <div>
-            <h3>{m.gameName}</h3>
-            <span>{date}</span>
+          <div class="GameList-Game">
+            <span class="GameList-Date">{date}</span>
+            <h3 class="GameList-Name">{m.gameName}</h3>
           </div>
         </Link>
       })}
-    </>
+    </div>
   }
   
 }

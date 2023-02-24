@@ -249,3 +249,23 @@ fieldset {
 .PromptGuessBase-LeaderboardScore > img {
 	margin-right: 5px;
 }
+
+
+.GameList a {
+	color: white;
+}
+.GameList a:hover {
+	color: yellow;
+}
+.GameList-Game {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+}
+.GameList-Name {
+	flex-grow: 1;
+}
+.GameList-Date {
+	padding: 0 10px;
+	width: 100px;
+}
