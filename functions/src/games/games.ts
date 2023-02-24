@@ -6,6 +6,7 @@ export type EngineName = PG.GameDefinition["engine"] | Judge.GameDefinition["eng
 export type GameDefinition = PG.GameDefinition | Judge.GameDefinition; // | ...
 export type GameCreateData = {
   _creator: string,
+  _isAsync: boolean,
   isPlayer: boolean,
   timer: TimerOption,
 }

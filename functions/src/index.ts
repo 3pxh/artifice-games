@@ -17,8 +17,13 @@ type GameData = {
 }
 
 type RoomState = {
+  _isAsync: boolean
   gameState: {state: string}
   players: {[uid: string]: any}
+  definition: {
+    engine: string,
+    name: string
+  }
 }
 
 type ShortcodeData = {
@@ -51,7 +56,6 @@ const createShortcode = async (roomId: string, retries = 0): Promise<string> => 
 
 const getRoomFromShortcode = async (shortcode: string): Promise<string> => {
   const roomId = await admin.database().ref(`/shortcodes/${shortcode}/room`).get();
-  functions.logger.log("Processing create request", { shortcode, roomId });
   if (roomId.val()) {
     return roomId.val();
   } else {
@@ -73,6 +77,7 @@ export type QueueRoom = {
   _queue: QueueData,
   _creator: string,
   _initialized: boolean,
+  _isAsync: boolean,
 }
 
 const roomStartTime = async (r: QueueRoom) => {
@@ -93,9 +98,28 @@ const getSpotInLine = async (r: QueueRoom) => {
         r2._createDate < t && // Made before this room
         r2._queue.startTime > now; // Not abandoned.
     });
-    functions.logger.log("Rooms in line", {n: activeRoomsInLine.length});
     return activeRoomsInLine.length;
   }
+}
+
+export type MembershipData = {
+  uid: string,
+  rid: string,
+  gameName: string,
+  isAsync: boolean,
+  timestamp: number,
+  lastUpdate: number,
+}
+type MembershipCreateData = Omit<MembershipData, "timestamp" | "lastUpdate">
+const createMembership = async (m: MembershipCreateData) => {
+  const now = new Date().getTime();
+  await admin.database().ref(`/memberships/${m.uid}/${m.rid}`).set({
+    gameName: m.gameName,
+    isAsync: m.isAsync,
+    isMyTurn: true,
+    timestamp: now,
+    lastUpdate: now,
+  });
 }
 
 export const roomCreated = functions.database.ref("/rooms/{id}")
@@ -103,7 +127,6 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
     // TODO: Disallow creating many rooms at once.
     // Could be done via DB permissions.
     const msg = snapshot.val() as CreateRequest;
-    functions.logger.log("Processing create request", {msg});
     // The database can store data that doesn't match types. How do we check it?
     const gameData = (await admin.database().ref(`/games/${msg.gameId}`).get()).val();
     if (!gameData) {
@@ -112,7 +135,6 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
         error: `Game with id ${msg.gameId} not found!`
       });
     }
-    functions.logger.log("Got game record", {gameData});
     const engineName:EngineName = (gameData as GameData).engine; // Or get from msg!
     const gameRoom = engines[engineName].init(msg, gameData as any); // TODO: typechecking on multiple games
     const t = new Date().getTime();
@@ -128,15 +150,21 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       },
       _creator: msg._creator, // Used for administration in database.rules
       _initialized: true,
+      _isAsync: msg._isAsync,
     } satisfies QueueRoom;
     const start = await roomStartTime(roomWithQueueState);
     roomWithQueueState._queue.startTime = start;
+    await createMembership({
+      gameName: (gameData as GameData).name,
+      uid: msg._creator,
+      rid: context.params.id,
+      isAsync: msg._isAsync,
+    });
     return snapshot.ref.set(roomWithQueueState);
 });
 
 export const roomPingedToStart = functions.database.ref("/rooms/{id}/_startPing")
   .onUpdate(async (snapshot, context) => {
-    functions.logger.log("Processing ping", snapshot.after.val());
     const thisRoom = (await snapshot.before.ref.parent?.get())?.val() as QueueRoom;
     // TODO: Account for abandoned rooms to speed up the queue.
     // This should work for now, but if 1000 people queue up, and then a bunch leave,
@@ -177,6 +205,12 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
       });
       // The user's player key must exist when they try to access the room.
       await admin.database().ref(`/rooms/${roomId}/players/${context.params.uid}/_init`).set(true);
+      await createMembership({
+        gameName: room.definition.name,
+        uid: context.params.uid,
+        rid: roomId,
+        isAsync: room._isAsync,
+      });
       return snapshot.ref.child("success").set({
         roomId,
         timestamp: new Date().getTime()
@@ -202,7 +236,6 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
     // which could invalidate the transaction more than we'd like.
     return snapshot.ref.parent!.parent!.transaction((room) => {
       if (room) {
-        functions.logger.log("Processing message", {msg: snapshot.val(), room: room, params: context.params});
         const engineName = room.definition.engine as EngineName;
         const message = snapshot.val() as MessageTypes[typeof engineName]; // Not sure abt this
         const reducer = engines[engineName].reducer;
@@ -231,14 +264,12 @@ export const generationRequest = functions
       ...snapshot.val(),
       room: context.params.roomId,
     } as GenerationRequest;
-    functions.logger.log("Processing generation", {apiReq});
     let result;
     try {
       result = await generate(apiReq);
     } catch(e) {
       result = {error: (e as Error).message};
     }
-    functions.logger.log("promise fulfilled", {result});
     return snapshot.ref.set({
       ...apiReq,
       ...result,

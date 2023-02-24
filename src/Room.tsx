@@ -129,6 +129,9 @@ export function Room(props: {room: RoomData}) {
   const authContext = useContext(AuthContext);
 
   const Header = () => {
+    // TODO: for async games, this room code could well be expired.
+    // We should instead have an invite link with the room id.
+    // Max room size? Could go on the room, set at create given the user's paid level.
     return (
       <>
         <p>You are playing: {props.room.definition.name} | Code: {props.room._shortcode}</p>
@@ -182,7 +185,6 @@ export function Room(props: {room: RoomData}) {
     return <>
       <Header />
       <WaitTime />
-      {/* <PlayerHandleInput /> */}
     </>
   } else if (isLoaded && authContext.user) {
     return <>
@@ -194,7 +196,6 @@ export function Room(props: {room: RoomData}) {
         gameState={gameState} />
       {isLobby.value
       ? <>
-      {/* TODO: this doesn't reflect their name on load if they set it before */}
         <PlayerHandleInput />
         <AvatarPicker 
           players={players as Signal<PromptGuessRoom["players"]>}
@@ -202,6 +203,8 @@ export function Room(props: {room: RoomData}) {
             const m:Partial<PromptGuessRoom["players"]["uid"]> = {"avatar": v}
             updatePlayer(props.room.id, m);
           }} />
+          {/* Continue / start button?
+          Which only shows once they set an avatar/name */}
       </>
       : <></>
       }

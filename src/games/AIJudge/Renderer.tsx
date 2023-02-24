@@ -65,6 +65,7 @@ export function RenderAIJudge(props: {
   }
   
   if (renderState.value === "Lobby") {
+    // TODO: don't show the button unless they have a name and avatar.
     return <div class="PromptGuessLobby">
       <SingleUseButton 
         key="LobbyContinue"
@@ -73,6 +74,7 @@ export function RenderAIJudge(props: {
         postSubmitContent={<>The game will start once everyone's ready.</>} />
     </div>
   } else if (renderState.value === "Intro") {
+    // TODO #async: check if they already hit the button.
     return <div>
       {props.room.definition.introVideo.url 
         ? <iframe class="YoutubeEmbed" src={`${props.room.definition.introVideo.url}?autoplay=1`}></iframe>
@@ -84,6 +86,7 @@ export function RenderAIJudge(props: {
         postSubmitContent={<>Waiting on others to be done...</>} />
     </div>
   } else if (renderState.value === "Question") {
+    // TODO #async: we need to check if there's already a question by them, and display it if so.
     return <SubmittableInput
       key="QuestionInput"
       onSubmit={(v: string) => {submit("Question", v)}}
@@ -96,6 +99,7 @@ export function RenderAIJudge(props: {
     if (!currentQ.value) {
       throw new Error("Trying to render answer without a question");
     }
+    // TODO #async: check if they've already answered
     return <SubmittableInput 
       key="AnswerInput"
       onSubmit={(v: string) => {submit("Answer", v)}} 
@@ -105,6 +109,7 @@ export function RenderAIJudge(props: {
       postSubmitMessage="Waiting on other players..."
       maxLength={80} />
   } else if (renderState.value === "Vote" && generation.value) {
+    // TODO #async: show their vote if they already voted
     return <>
       <p>{currentQ.value}</p>
       <TextOptions
@@ -113,6 +118,7 @@ export function RenderAIJudge(props: {
         options={answers.value} />
     </>
   } else if (renderState.value === "Score" && generation.value) {
+    // TODO #async: check if they're ready to continue, don't render button
     return <>
       <p>{currentQ.value}</p>
       <ScoredTextOptions

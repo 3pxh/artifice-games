@@ -5,6 +5,8 @@ import { useAuth, AuthContext } from "./AuthProvider";
 import Auth from "./Auth";
 import TopNav from "./TopNav";
 import GameSelection from "./GameSelection";
+import GameList from "./GameList";
+import RoomById from "./RoomById";
 
 const AuthRoute = () => {
   const auth = useAuth();
@@ -60,7 +62,9 @@ export default function App() {
     <Router onChange={handleRoute}>
       <Route path="/" component={RootRedirect} />
       <Route path="/auth" component={AuthRoute} />
-      <Route path="/games" component={Games} />
+      <Route path="/create" component={Games} />
+      <Route path="/games/:filter" component={GameList} />
+      <Route path="/room/:id" component={RoomById} />
     </Router>
   </AuthContext.Provider>
   </>

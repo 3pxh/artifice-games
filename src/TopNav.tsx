@@ -8,8 +8,14 @@ export default function TopNav() {
 
   if (authContext.user) {
     return <div class="TopNav">
-      <Link activeClassName="TopNav--active" href="/games">
-        Games
+      <Link activeClassName="TopNav--active" href="/create">
+        Create / Join
+      </Link>
+      <Link activeClassName="TopNav--active" href="/games/active">
+        Active Games
+      </Link>
+      <Link activeClassName="TopNav--active" href="/games/past">
+        Past Games
       </Link>
       Welcome, {authContext.user.email || "anonymous"} 
       <button onClick={authContext.logout}>Log out</button>

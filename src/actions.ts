@@ -1,6 +1,5 @@
 import { ref, set, update, push, onValue } from "@firebase/database";
 import { CreateRequest } from "../functions/src";
-import { PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
 import { RoomData } from "./Room";

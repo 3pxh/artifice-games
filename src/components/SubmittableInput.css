@@ -14,7 +14,8 @@
 	border-radius: 30px;
   flex-grow: 1;
 	font-size: 16pt;
-	margin: 20px;
+	margin: 20px 0;
+  max-width: 100%;
   padding: 10px;
 }
 .SubmittableInput input.SubmittableInput--Limited {
@@ -25,7 +26,7 @@
   color: gray;
   font-size: 12pt;
   position: absolute;
-  right: 30px;
+  right: 10px;
   z-index: 2;
 }
 .SubmittableInput-CharacterLimit.SubmittableInput--CloseToLimit {
