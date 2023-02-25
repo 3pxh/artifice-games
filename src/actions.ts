@@ -18,7 +18,7 @@ const pingRoom = (roomId: string) => {
   set(ref(db, `rooms/${roomId}/_startPing`), new Date().getTime());
 }
 
-const joinRoom = async (shortcode: string, isPlayer: boolean, cb: (r: RoomData) => void) => {
+const joinRoom = async (shortcode: string, isPlayer: boolean, cb: (r: RoomData) => void, onError: (e: string) => void) => {
   if (auth.currentUser) {
     const k = push(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}`)).key;
     // We need to wait until the data is set before reading for access control to work.
@@ -33,11 +33,11 @@ const joinRoom = async (shortcode: string, isPlayer: boolean, cb: (r: RoomData) 
         unsubscribe();
       } else if (request.error) {
         unsubscribe();
-        throw new Error(request.error);
+        onError(request.error);
       }
     });
   } else {
-    throw new Error("Must be authenticated to join a room");
+    onError("Must be authenticated to join a room");
   }
 }
 

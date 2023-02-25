@@ -109,8 +109,9 @@ export type MembershipData = {
   isAsync: boolean,
   timestamp: number,
   lastUpdate: number,
+  isMyTurn: boolean,
 }
-type MembershipCreateData = Omit<MembershipData, "timestamp" | "lastUpdate">
+type MembershipCreateData = Omit<MembershipData, "timestamp" | "lastUpdate" | "isMyTurn">
 const createMembership = async (m: MembershipCreateData) => {
   const now = new Date().getTime();
   await admin.database().ref(`/memberships/${m.uid}/${m.rid}`).set({
@@ -184,10 +185,10 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     try {
       roomId = await getRoomFromShortcode(context.params.code);
     } catch (e) {
-      functions.logger.log("Error getting the roomId");
+      return snapshot.ref.child("error").set("Room with that shortcode not found");
     }
     if (!roomId) {
-      return snapshot.ref.parent?.child("error").set("Room not found");
+      return snapshot.ref.child("error").set("Room does not exist");
     }
     const room = (await admin.database().ref(`/rooms/${roomId}`).get()).val() as RoomState;
     const state = room.gameState.state;
@@ -195,7 +196,12 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     // TODO: move this off of gameState and into room.hasStarted, and room.allowObservers
     // gameState should only ever be accessed by a game runner, and its schema should be
     // allowed to change only there.
-    if (state === "Lobby" || players.find(p => p === context.params.uid)) {
+    // But then, when the game is started, is the game runner responsible for mutating Room?
+    const user = await admin.auth().getUser(context.params.uid);
+    const isAnonymous = !user.email; // This is not a great proxy.
+    if (room._isAsync && isAnonymous) {
+      return snapshot.ref.child("error").set("Cannot join async rooms anonymously. Log in with an email address.");
+    } else if (state === "Lobby" || players.find(p => p === context.params.uid)) {
       // TODO: also check if the game allows observers.
       // TODO: add relevant records for access control
       await admin.database().ref(`/rooms/${roomId}/messages`).push({

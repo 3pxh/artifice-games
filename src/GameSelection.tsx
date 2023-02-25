@@ -82,7 +82,8 @@ export default function GameSelection() {
   // a component which needs that prop, renders loading indicator while the prop
   // is null, otherwise renders the component with the prop.
   const [loadingRoom, setLoadingRoom] = useState(false);
-  const [gameList, setGameList] = useState<{[id: string]: GameDefinition}>({})
+  const [gameList, setGameList] = useState<{[id: string]: GameDefinition}>({});
+  const [joinError, setJoinError] = useState("");
 
   useEffect(() => {
     get(ref(db, "games")).then(v => {
@@ -121,13 +122,17 @@ export default function GameSelection() {
     setLoadingRoom(true);
     const code = roomCode.toUpperCase();
     console.log("Trying to join room", code);
-    joinRoom(code, displayMode.value !== "observe", loadRoom);
+    joinRoom(code, displayMode.value !== "observe", loadRoom, (e: string) => {
+      setJoinError(e);
+      setLoadingRoom(false);
+    });
   }
 
   const Join = () => {
     return <div class="GameSelection-Join">
       <DisplayOptions  onSet={(v: DisplayMode) => { displayMode.value = v; }} />
       <SubmittableInput label="Room code:" onSubmit={handleJoinRoom} buttonText="Join" />
+      <span style="color:yellow;">{joinError}</span>
     </div>
   }
 
