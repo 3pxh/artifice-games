@@ -250,7 +250,9 @@ fieldset {
 	margin-right: 5px;
 }
 
-
+.GameList {
+	padding: 0 20px;
+}
 .GameList a {
 	color: white;
 }
@@ -261,6 +263,7 @@ fieldset {
 	align-items: center;
 	display: flex;
 	flex-direction: row;
+	position: relative;
 }
 .GameList-Name {
 	flex-grow: 1;
@@ -268,4 +271,15 @@ fieldset {
 .GameList-Date {
 	padding: 0 10px;
 	width: 100px;
+}
+.GameList--HasUpdate::after {
+	background-color: white;
+	border: 5px solid red;
+	border-radius: 50%;
+	content: '';
+	height: 5px;
+	position: absolute;
+	left: -20px;
+	top: calc(50% - 5px);
+	width: 5px;
 }

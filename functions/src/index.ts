@@ -109,15 +109,15 @@ export type MembershipData = {
   isAsync: boolean,
   timestamp: number,
   lastUpdate: number,
-  isMyTurn: boolean,
+  lastSeen: number,
 }
-type MembershipCreateData = Omit<MembershipData, "timestamp" | "lastUpdate" | "isMyTurn">
+type MembershipCreateData = Omit<MembershipData, "timestamp" | "lastUpdate" | "lastSeen">
 const createMembership = async (m: MembershipCreateData) => {
   const now = new Date().getTime();
   await admin.database().ref(`/memberships/${m.uid}/${m.rid}`).set({
     gameName: m.gameName,
     isAsync: m.isAsync,
-    isMyTurn: true,
+    lastSeen: now,
     timestamp: now,
     lastUpdate: now,
   });
@@ -230,7 +230,7 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
 });
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
-  .onCreate((snapshot, context) => {
+  .onCreate(async (snapshot, context) => {
     // TODO: define write rules on the room --
     // if it's inQueue, then users can't write messages!
     // (They can only touch startPing)
@@ -240,8 +240,12 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
     // TODO: this should be a transaction on the gameState, not the room.
     // Players may be frequently changing their states under room/{id}/players
     // which could invalidate the transaction more than we'd like.
-    return snapshot.ref.parent!.parent!.transaction((room) => {
+    let oldState, newState;
+    let players:string[] = [];
+    await snapshot.ref.parent!.parent!.transaction((room) => {
       if (room) {
+        oldState = room.gameState.state;
+        players = Object.keys(room.players);
         const engineName = room.definition.engine as EngineName;
         const message = snapshot.val() as MessageTypes[typeof engineName]; // Not sure abt this
         const reducer = engines[engineName].reducer;
@@ -250,11 +254,19 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
         // The only exception is the actual AI generation.
         const gs = reducer(room, message as any); // TODO: typechecking broken here.
         room.gameState = gs;
+        newState = gs.state;
         // TODO: schedule deletion for the future, for now leave it as a log.
         room.messages[context.params.key].read = true;
       }
       return room;
-    })
+    });
+    if (oldState !== newState) {
+      for (const p of players) {
+        await admin.database().ref(`/memberships/${p}/${context.params.id}`).update({
+          lastUpdate: new Date().getTime(),
+        });
+      }
+    }
 });
 
 // We trigger this after the game state mutations because they're done 

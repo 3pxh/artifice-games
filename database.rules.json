@@ -34,7 +34,12 @@ TODO: of everything in the codebase, these should have test coverage.
     },
     "memberships": {
       "$playerId": {
-        ".read": "auth !== null && $playerId === auth.uid"
+        ".read": "auth !== null && $playerId === auth.uid",
+        "$roomId": {
+          "lastSeen": {
+            ".write": "auth !== null && $playerId === auth.uid"
+          }
+        }
       }
     }
   }

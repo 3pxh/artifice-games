@@ -5,7 +5,7 @@ import { useContext, useEffect, useState } from "preact/hooks";
 import { useSignal, useComputed, Signal, signal } from "@preact/signals";
 import { QueueRoom, QueueData } from "../functions/src/index";
 import { AuthContext } from "./AuthProvider";
-import { messageRoom, pingRoom, updatePlayer } from "./actions";
+import { messageRoom, pingRoom, updatePlayer, setRoomLastSeenNow } from "./actions";
 
 // TODO: figure out how we want to handle distinct rendering engines and game state objects
 // This goes along with more modular gameState types below
@@ -101,6 +101,9 @@ export function Room(props: {room: RoomData}) {
   }
 
   useEffect(() => {
+    // TODO: Make this ack when the game updates here.
+    // As is, they have to reload the room to ack.
+    setRoomLastSeenNow(props.room.id);
     const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
     onValue(stateRef, updateGameState);
     const playerRef = ref(db, `rooms/${props.room.id}/players`);

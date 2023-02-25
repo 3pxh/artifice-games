@@ -26,7 +26,7 @@ export default function GameList(props: {filter: string}) {
           } else {
             return !(m.isAsync || (now - m.timestamp < twoHours));
           }
-        }));
+        }).sort((m1, m2) => m2[1].lastUpdate - m1[1].lastUpdate));
         setIsLoaded(true);
       });
     }
@@ -39,11 +39,12 @@ export default function GameList(props: {filter: string}) {
   } else {
     return <div class="GameList">
       {games.map(([r, m]) => {
+        const notificationClass = m.lastSeen < m.lastUpdate ? "GameList--HasUpdate" : "";
         const date = new Date(m.timestamp).toLocaleDateString('en-us', { weekday:"long", month:"short", day:"numeric"});
         return <Link href={`/room/${r}`}>
-          <div class="GameList-Game">
-            <span class="GameList-Date">{date}</span>
+          <div class={"GameList-Game " + notificationClass}>
             <h3 class="GameList-Name">{m.gameName}</h3>
+            <span class="GameList-Date">{date}</span>
           </div>
         </Link>
       })}

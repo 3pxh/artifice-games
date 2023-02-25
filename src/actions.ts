@@ -71,6 +71,13 @@ const messageRoom = (roomId: string, m: any) => {
   }
 }
 
+const setRoomLastSeenNow = (roomId: string) => {
+  // TODO: any sort of type checking...
+  if (auth.currentUser) {
+    set(ref(db, `memberships/${auth.currentUser.uid}/${roomId}/lastSeen`), new Date().getTime());  
+  }
+}
+
 const updatePlayer = (roomId: string, m: any) => {
   if (auth.currentUser) {
     update(ref(db, `rooms/${roomId}/players/${auth.currentUser.uid}`), m);
@@ -79,4 +86,4 @@ const updatePlayer = (roomId: string, m: any) => {
   }
 }
 
-export { createGame, pingRoom, joinRoom, getRoom, messageRoom, updatePlayer }
+export { createGame, pingRoom, joinRoom, getRoom, messageRoom, updatePlayer, setRoomLastSeenNow }
