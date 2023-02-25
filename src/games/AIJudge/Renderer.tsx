@@ -63,6 +63,22 @@ export function RenderAIJudge(props: {
     }
     messageRoom(props.room.id, m);
   }
+
+  /* Signals for asynchronous loads */
+  const isReadyToContinue = computed(() => {
+    return props.players.value[user.uid].isReadyToContinue;
+  });
+  const myQuestion = computed(() => {
+    return qs.value ? (qs.value[user.uid] ?? undefined) : undefined;
+  });
+  const myAnswer = computed(() => {
+    const answers = props.gameState.value.answers;
+    return answers ? (answers[user.uid] ?? undefined) : undefined;
+  });
+  const myVote = computed(() => {
+    return props.gameState.value.votes ? (props.gameState.value.votes[user.uid] ?? undefined) : undefined;
+  });
+  /* End signals for asynchronous loads */
   
   if (renderState.value === "Lobby") {
     // TODO: don't show the button unless they have a name and avatar.
@@ -70,11 +86,13 @@ export function RenderAIJudge(props: {
       <SingleUseButton 
         key="LobbyContinue"
         buttonText="Ready to start!"
+        hasBeenUsed={isReadyToContinue.value}
         onClick={() => {message("ReadyToContinue", "gogogo!")}}
         postSubmitContent={<>The game will start once everyone's ready.</>} />
     </div>
   } else if (renderState.value === "Intro") {
     // TODO #async: check if they already hit the button.
+    // i.e. are they ReadyToContinue?
     return <div>
       {props.room.definition.introVideo.url 
         ? <iframe class="YoutubeEmbed" src={`${props.room.definition.introVideo.url}?autoplay=1`}></iframe>
@@ -82,6 +100,7 @@ export function RenderAIJudge(props: {
       <SingleUseButton 
         key="IntroContinue"
         buttonText="Done watching" 
+        hasBeenUsed={isReadyToContinue.value}
         onClick={() => {message("ReadyToContinue", "gogogo!")}}
         postSubmitContent={<>Waiting on others to be done...</>} />
     </div>
@@ -91,6 +110,7 @@ export function RenderAIJudge(props: {
       key="QuestionInput"
       onSubmit={(v: string) => {submit("Question", v)}}
       label="Write a question to quiz the AI!"
+      submittedValue={myQuestion.value}
       placeholder=""
       buttonText="So original!"
       postSubmitMessage="Waiting on other players..."
@@ -104,6 +124,7 @@ export function RenderAIJudge(props: {
       key="AnswerInput"
       onSubmit={(v: string) => {submit("Answer", v)}} 
       label={currentQ.value}
+      submittedValue={myAnswer.value}
       placeholder="write a great answer to get chosen"
       buttonText="That's a good one!" 
       postSubmitMessage="Waiting on other players..."
@@ -114,6 +135,7 @@ export function RenderAIJudge(props: {
       <p>{currentQ.value}</p>
       <TextOptions
         key="VoteOptions"
+        voteValue={myVote.value}
         onSubmit={(v: string) => {submit("Vote", v)}}
         options={answers.value} />
     </>
@@ -129,6 +151,7 @@ export function RenderAIJudge(props: {
         votes={props.gameState.value.votes!}
         scores={props.gameState.value.scores!}
         pointValues={JudgeUtils.pointValues}
+        hasBeenContinued={isReadyToContinue.value}
         onContinue={() => { message("ReadyToContinue", "") }} />
     </>
   } else if (renderState.value === "Finish") {

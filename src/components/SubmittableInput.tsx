@@ -9,9 +9,10 @@ export default function SubmittableInput(props: {
   postSubmitMessage?: string,
   placeholder?: string,
   maxLength?: number,
+  submittedValue?: string,
 }) {
   const [input, setInput] = useState("");
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(props.submittedValue ? true : false);
 
   const submit = () => {
     setHasSubmitted(true); props.onSubmit(input);
@@ -19,7 +20,9 @@ export default function SubmittableInput(props: {
 
   if (hasSubmitted) {
     return <>
-      {props.postSubmitMessage ?? ""}
+      <p>{props.label}</p>
+      <p>You put: {props.submittedValue || input}</p>
+      {/* {props.submittedValue || props.postSubmitMessage || ""} */}
     </>
   } else {
     const closeToLimit = props.maxLength && (props.maxLength - input.length < 10);

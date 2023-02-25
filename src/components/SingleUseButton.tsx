@@ -8,8 +8,9 @@ export default function SingleUseButton(props: {
   buttonText: string,
   onClick: () => void,
   postSubmitContent?: JSX.Element,
+  hasBeenUsed?: boolean,
 }) {
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(props.hasBeenUsed ?? false);
 
   if (hasSubmitted) {
     return <>

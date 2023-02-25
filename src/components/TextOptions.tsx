@@ -12,11 +12,12 @@ export function TextOptions(props: {
   options: {uid: string, value: string}[],
   disableUserOption?: boolean,
   shuffle?: boolean,
+  voteValue?: string,
 }) {
   // We need a stable shuffle or anytime this rerenders it moves them.
   const [seed, _] = useState(seed32bit());
-  const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [vote, setVote] = useState("");
+  const [hasSubmitted, setHasSubmitted] = useState(props.voteValue ? true : false);
+  const [vote, setVote] = useState(props.voteValue ?? "");
   const authContext = useContext(AuthContext);
 
   const options = props.shuffle ? shuffle(props.options, seed) : props.options;
@@ -45,6 +46,7 @@ export function ScoredTextOptions(props: {
   scores: {[uid: string]: {current: number, previous: number}},
   players: Signal<{[uid: string]: {handle?: string, avatar?: string}}>,
   onContinue: () => void,
+  hasBeenContinued?: boolean,
   pointValues: {
     votedTruth?: number,
     authorOfTruth?: number,
@@ -103,7 +105,8 @@ export function ScoredTextOptions(props: {
       </div>
     })}
     <SingleUseButton 
-      buttonText="Ready to continue!" 
+      buttonText="Ready to continue!"
+      hasBeenUsed={props.hasBeenContinued ?? false}
       onClick={props.onContinue} 
       postSubmitContent={<>Waiting on others to continue...</>} />
   </div>
