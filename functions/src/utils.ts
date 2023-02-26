@@ -42,6 +42,9 @@ export const seed32bit = () => {
   return Math.floor(Math.random()*2**32);
 }
 
+export type ROOM_FINISHED_STATE_TYPE = "Finish";
+export const ROOM_FINISHED_STATE:ROOM_FINISHED_STATE_TYPE = "Finish";
+
 export const PGUtils = {
   pointValues: {
     authorOfTruth: 0,

@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { chooseOne, shuffle, JudgeUtils } from "../utils";
+import { chooseOne, shuffle, JudgeUtils, ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE } from "../utils";
 import { ModelDef, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
@@ -14,7 +14,7 @@ export type GameDefinition = {
   },
 }
 type UserID = string;
-export type State = "Lobby" | "Intro" | "Answer" | "Question" | "Vote" | "Score" | "Finish";
+export type State = "Lobby" | "Intro" | "Answer" | "Question" | "Vote" | "Score" | ROOM_FINISHED_STATE_TYPE;
 const STATE_TRANSITIONS:Record<State, State> = {
   "Lobby": "Intro",
   "Intro": "Question",
@@ -22,7 +22,7 @@ const STATE_TRANSITIONS:Record<State, State> = {
   "Answer": "Vote",
   "Vote": "Score",
   "Score": "Vote",
-  "Finish": "Finish",
+  [ROOM_FINISHED_STATE]: ROOM_FINISHED_STATE,
 }
 export type Generation = Omit<GenerationRequest, "room"> & 
   GenerationResponse & {
@@ -86,7 +86,7 @@ const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale 
       "Question": 30 * scale,
       "Vote": 20 * scale,
       "Score": 30 * scale,
-      "Finish": Number.MAX_VALUE
+      [ROOM_FINISHED_STATE]: Number.MAX_VALUE
     };
     return {timer: {
       started: 0,
@@ -270,7 +270,7 @@ const Actions = {
         gameState.questions = {};
         Actions.TransitionState(room, "Question");
       } else if (qs.length === 0 && room.gameState.round === room.gameState.maxRound) {
-        Actions.TransitionState(room, "Finish");
+        Actions.TransitionState(room, ROOM_FINISHED_STATE);
       }
     } else {
       // we shouldn't have gotten here...
@@ -320,7 +320,7 @@ const Actions = {
       room.players[p].isReadyToContinue = false;
     });
     room.gameState.state = newState;
-    if (room.gameState.timer && newState !== "Finish") {
+    if (room.gameState.timer && newState !== ROOM_FINISHED_STATE) {
       room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
       room.gameState.timer.started = new Date().getTime();
     }

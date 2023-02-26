@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { chooseOne, chooseOneInObject, PGUtils } from "../utils";
+import { chooseOne, chooseOneInObject, PGUtils, ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE } from "../utils";
 import { ModelDef, GenerationResponse } from "../generate";
 import { GameCreateData } from "./games";
 
@@ -17,7 +17,7 @@ export type GameDefinition = {
   },
 }
 export type UserID = string; 
-export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | "Finish";
+export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | ROOM_FINISHED_STATE_TYPE;
 export type PlayerState = PromptGuessState;
 export type PromptGeneration = GenerationResponse & {
   model: ModelDef,
@@ -91,7 +91,7 @@ const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale 
         "Lie": 30 * scale,
         "Vote": 30 * scale,
         "Score": 30 * scale,
-        "Finish": Number.MAX_VALUE
+        [ROOM_FINISHED_STATE]: Number.MAX_VALUE
       },
     }};
   } else {
@@ -111,7 +111,7 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): PromptGuessRoom =>
       "Lie": "Vote",
       "Vote": "Score",
       "Score": "Prompt",
-      "Finish": "Finish",
+      [ROOM_FINISHED_STATE]: ROOM_FINISHED_STATE,
     },
     gameState: {
       ...timer,
@@ -276,7 +276,7 @@ const PromptGuesserActions = {
       });
       PromptGuesserActions.TransitionState(room, "Prompt");
     } else if (room.gameState.round === room.gameState.maxRound) {
-      PromptGuesserActions.TransitionState(room, "Finish");
+      PromptGuesserActions.TransitionState(room, ROOM_FINISHED_STATE);
     }
   },
 
@@ -376,7 +376,7 @@ const PromptGuesserActions = {
         room.players[p].isReadyToContinue = false;
       });
       room.gameState.state = newState;
-      if (room.gameState.timer && newState !== "Finish") {
+      if (room.gameState.timer && newState !== ROOM_FINISHED_STATE) {
         room.gameState.timer.duration = room.gameState.timer.stateDurations[newState];
         room.gameState.timer.started = new Date().getTime();
       }
@@ -385,7 +385,6 @@ const PromptGuesserActions = {
 }
 
 function reducer(room: PromptGuessRoom, message: PromptGuessMessage): any {
-  functions.logger.log("Prompt Guesser, reducing", {msg: message, gameState: room.gameState});
   const gameState = room.gameState;
   if (message.type === "NewPlayer" && gameState.state === "Lobby") {
     // Alternatively if the room allows spectators

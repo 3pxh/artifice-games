@@ -4,6 +4,7 @@ import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
 import { engines, MessageTypes, GameCreateData, EngineName } from "./games/games";
+import { ROOM_FINISHED_STATE } from "./utils";
 
 App.instance;
 
@@ -78,6 +79,7 @@ export type QueueRoom = {
   _creator: string,
   _initialized: boolean,
   _isAsync: boolean,
+  _isFinished: boolean,
 }
 
 const roomStartTime = async (r: QueueRoom) => {
@@ -110,6 +112,7 @@ export type MembershipData = {
   timestamp: number,
   lastUpdate: number,
   lastSeen: number,
+  isFinished: boolean,
 }
 type MembershipCreateData = Omit<MembershipData, "timestamp" | "lastUpdate" | "lastSeen">
 const createMembership = async (m: MembershipCreateData) => {
@@ -152,6 +155,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       _creator: msg._creator, // Used for administration in database.rules
       _initialized: true,
       _isAsync: msg._isAsync,
+      _isFinished: false,
     } satisfies QueueRoom;
     const start = await roomStartTime(roomWithQueueState);
     roomWithQueueState._queue.startTime = start;
@@ -160,6 +164,7 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
       uid: msg._creator,
       rid: context.params.id,
       isAsync: msg._isAsync,
+      isFinished: false,
     });
     return snapshot.ref.set(roomWithQueueState);
 });
@@ -182,10 +187,17 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     functions.logger.log("Processing join request", {val: snapshot.val()});
     const isPlayer = snapshot.val().isPlayer;
     let roomId;
-    try {
-      roomId = await getRoomFromShortcode(context.params.code);
-    } catch (e) {
-      return snapshot.ref.child("error").set("Room with that shortcode not found");
+    if (snapshot.val().roomId) { // Made via an invite link.
+      roomId = snapshot.val().roomId;
+      // TODO: Do we want some token on the Room that says this invite is valid?
+      // Because as is, if you can guess a room id (or see someone's room id)
+      // you can get access to the room.
+    } else {
+      try {
+        roomId = await getRoomFromShortcode(context.params.code);
+      } catch (e) {
+        return snapshot.ref.child("error").set("Room with that shortcode not found");
+      }
     }
     if (!roomId) {
       return snapshot.ref.child("error").set("Room does not exist");
@@ -216,6 +228,7 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
         uid: context.params.uid,
         rid: roomId,
         isAsync: room._isAsync,
+        isFinished: false,
       });
       return snapshot.ref.child("success").set({
         roomId,
@@ -231,11 +244,7 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
   .onCreate(async (snapshot, context) => {
-    // TODO: define write rules on the room --
-    // if it's inQueue, then users can't write messages!
-    // (They can only touch startPing)
-
-    // TODO: If the room is currently queued, don't handle messages.
+    // TODO: If the room is currently queued or _isFinished, don't handle messages.
 
     // TODO: this should be a transaction on the gameState, not the room.
     // Players may be frequently changing their states under room/{id}/players
@@ -249,9 +258,6 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
         const engineName = room.definition.engine as EngineName;
         const message = snapshot.val() as MessageTypes[typeof engineName]; // Not sure abt this
         const reducer = engines[engineName].reducer;
-        // We need to run this computation in the transaction, or else two
-        // transitions could be computed simultaneously, and one oroomverwrite the other.
-        // The only exception is the actual AI generation.
         const gs = reducer(room, message as any); // TODO: typechecking broken here.
         room.gameState = gs;
         newState = gs.state;
@@ -264,8 +270,14 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
       for (const p of players) {
         await admin.database().ref(`/memberships/${p}/${context.params.id}`).update({
           lastUpdate: new Date().getTime(),
+          isFinished: newState === ROOM_FINISHED_STATE,
         });
       }
+    }
+    if (newState === ROOM_FINISHED_STATE) {
+      await snapshot.ref.parent!.parent!.update({
+        _isFinished: true
+      });
     }
 });
 
