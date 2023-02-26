@@ -1,5 +1,5 @@
 import * as functions from "firebase-functions";
-import { chooseOne, chooseOneInObject } from "../utils";
+import { chooseOne, chooseOneInObject, PGUtils } from "../utils";
 import { ModelDef, GenerationResponse } from "../generate";
 import { GameCreateData } from "./games";
 
@@ -258,13 +258,11 @@ const PromptGuesserActions = {
       Object.keys(v).forEach(votePlayer => {
         if (v[votePlayer] === scorePlayer && 
             gameState.currentGeneration === scorePlayer) {
-          // You wrote the truth and someone guessed it
-          gameState.scores[scorePlayer].current += 1000;
-          gameState.scores[votePlayer].current += 1000;
+          gameState.scores[scorePlayer].current += PGUtils.pointValues.authorOfTruthVote;
+          gameState.scores[votePlayer].current += PGUtils.pointValues.votedTruth;
         } else if (v[votePlayer] === scorePlayer && 
                    gameState.currentGeneration !== scorePlayer) {
-          // You wrote a lie and someone guessed it
-          gameState.scores[scorePlayer].current += 500;
+          gameState.scores[scorePlayer].current += PGUtils.pointValues.authorOfLieVote;
         }
       })
     })

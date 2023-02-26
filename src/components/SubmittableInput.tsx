@@ -21,8 +21,7 @@ export default function SubmittableInput(props: {
   if (hasSubmitted) {
     return <>
       <p>{props.label}</p>
-      <p>You put: {props.submittedValue || input}</p>
-      {/* {props.submittedValue || props.postSubmitMessage || ""} */}
+      <p>{props.submittedValue || input}</p>
     </>
   } else {
     const closeToLimit = props.maxLength && (props.maxLength - input.length < 10);

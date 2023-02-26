@@ -42,6 +42,14 @@ export const seed32bit = () => {
   return Math.floor(Math.random()*2**32);
 }
 
+export const PGUtils = {
+  pointValues: {
+    authorOfTruth: 0,
+    votedTruth: 10,
+    authorOfTruthVote: 10,
+    authorOfLieVote: 5,
+  }
+}
 
 import { Generation } from "./games/aiJudge";
 export const JudgeUtils = {

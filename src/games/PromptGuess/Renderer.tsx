@@ -1,13 +1,72 @@
 import { h, Fragment } from "preact";
 import { useContext } from "preact/hooks";
 import { computed, useComputed, Signal, ReadonlySignal } from "@preact/signals";
-import { PromptGuessMessage, PromptGuessRoom, PromptGuessState } from "../../../functions/src/games/promptGuessBase"
+import { PromptGuessMessage, PromptGuessRoom, PromptGuessState, PromptGeneration } from "../../../functions/src/games/promptGuessBase"
 import { AuthContext } from "../../AuthProvider"
-import * as Engine from "./PromptGuessBase";
-
 import { messageRoom, updatePlayer } from "../../actions";
 import { RoomData } from "../../Room";
 import SingleUseButton from "../../components/SingleUseButton";
+import SubmittableInput from "../../components/SubmittableInput";
+import { ScoredTextOptions, TextOptions } from "../../components/TextOptions";
+import { PGUtils } from "../../../functions/src/utils";
+
+
+function ImageGeneration(props: {generation: PromptGeneration, showPrompt?: boolean}) {
+  if (props.generation.generation) {
+    return <>
+    {props.showPrompt ? <p>The truth was: <span class="PromptGuessGeneration-Truth">{props.generation.prompt}</span></p> : ""}
+    <img key={props.generation.generation} src={props.generation.generation} class="PromptGuessGeneration-Image" />
+  </>
+  } else {
+    return <>Waiting on the painting robot...</>
+  }
+}
+function TextGeneration(props: {
+  generation: PromptGeneration, 
+  showPrompt?: boolean,
+}) {
+  if (!props.generation.generation) {
+    return <>Waiting on the AI...</>
+  } else {
+    const text = props.generation.generation.trim();
+    // Currently just for tresmojis.
+    const fontStyle = text.length < 10 ? "font-size: 48pt;" : "";
+    return <>
+      <p>
+        {props.generation.template.display}{' '}
+        {props.showPrompt  ? <span class="PromptGuessGeneration-Truth HasUserText">{props.generation.prompt}</span> : "?"}
+      </p>
+      <span class="PromptGuessGeneration-Text HasUserText" style={fontStyle}>
+        {text}
+      </span>
+    </>
+  }
+}
+  
+function Generation(props: {
+  generation: PromptGeneration,
+  skip?: () => void,
+  showPrompt?: boolean, 
+  delay?: number
+}) {
+  if (props.generation.error && props.skip) {
+    return <>
+      <p>Oh no! The AI hit an error: {props.generation.error}</p>
+      <p>The prompt was: {props.generation.prompt}</p>
+      <SingleUseButton
+        buttonText="Skip to next"
+        postSubmitContent={<>Skipping...</>}
+        onClick={props.skip} />
+    </>
+  }
+  if (props.generation.model.name === "StableDiffusion") {
+    return <ImageGeneration generation={props.generation} showPrompt={props.showPrompt} />
+  } else if (props.generation.model.name === "GPT3") {
+    return <TextGeneration generation={props.generation} showPrompt={props.showPrompt} />
+  } else {
+    return <>Renderer not implemented for that model type.</>
+  }
+};
 
 export function RenderPromptGuess(props: {
   room: RoomData,
@@ -57,13 +116,33 @@ export function RenderPromptGuess(props: {
     const s = Object.entries(gs.lies ?? {}).concat([truth]).sort(([u1, _], [u2, __]) => u1 < u2 ? 1 : -1).map(([uid, prompt]) => {
       return {
         uid: uid,
-        prompt: prompt
+        value: prompt
       }
     });
     return s;
   })
   
-  
+  /* Signals for asynchronous loads */
+  const isReadyToContinue = computed(() => {
+    return props.players.value[user.uid].isReadyToContinue;
+  });
+  const myPrompt = computed(() => {
+    const gens = props.gameState.value.generations;
+    return (gens && gens[user.uid]) ? gens[user.uid].prompt : undefined;
+  });
+  const myLie = computed(() => {
+    const lies = props.gameState.value.lies;
+    if (props.gameState.value.currentGeneration === user.uid) {
+      return "You are responsible for this masterpiece."
+    } else {
+      return (lies && lies[user.uid]) ? `You put: ${lies[user.uid]}` : undefined;
+    }
+  });
+  const myVote = computed(() => {
+    return props.gameState.value.votes ? (props.gameState.value.votes[user.uid] ?? undefined) : undefined;
+  });
+  /* End signals for asynchronous loads */
+
   if (renderState.value === "Lobby") {
     return <div class="PromptGuessLobby">
       <SingleUseButton 
@@ -83,16 +162,32 @@ export function RenderPromptGuess(props: {
         postSubmitContent={<>Waiting on others to be done...</>} />
     </div>
   } else if (renderState.value === "Prompt") {
-    return <Engine.Prompt onSubmit={(v: string) => {submit("Prompt", v)}} 
-                          template={myTemplate.value} />
+    return <SubmittableInput
+      key="PromptInput"
+      onSubmit={(v: string) => {submit("Prompt", v)}}
+      label={myTemplate.value.display}
+      submittedValue={myPrompt.value}
+      placeholder=""
+      buttonText="Very funny!"
+      postSubmitMessage="Waiting on other players..."
+      maxLength={80} />
   } else if (renderState.value === "Lie") {
     if (currentGeneration.value) {
       return <>
-        <Engine.Generation 
+        <Generation
+          key="LieGeneration"
           generation={currentGeneration.value}
           skip={() => { message("GenerationError", "") }} />
-        <Engine.Lie onSubmit={(v: string) => {submit("Lie", v)}} 
-                    generation={currentGeneration.value}/>
+        {currentGeneration.value.fulfilled
+          ? <SubmittableInput
+            key="LieInput"
+            onSubmit={(v: string) => {submit("Lie", v)}}
+            submittedValue={myLie.value}
+            label={myLie.value ? "" : "Fool others with some artifice:"}
+            buttonText="Lie!"
+            postSubmitMessage="Waiting on other players..."
+            maxLength={70} />
+          : ""}
       </>
     } else {
       return <p>Receiving prompts...</p>
@@ -103,34 +198,41 @@ export function RenderPromptGuess(props: {
         <p>What did people think you said?</p>
         <ul>
           {voteOptions.value.map(o => {
-            return <li class="HasUserText" key={o.uid}>{o.prompt}</li>
+            return <li class="HasUserText" key={o.uid}>{o.value}</li>
           })}
         </ul>
-        <Engine.Generation generation={currentGeneration.value} />
+        <Generation generation={currentGeneration.value} />
       </>
     } else {
       return <>
-        <Engine.Generation generation={currentGeneration.value} />
-        <Engine.LieChoices onSubmit={(v: string) => {submit("Vote", v)}} options={voteOptions} />
+        <Generation generation={currentGeneration.value} />
+        <TextOptions
+          key="VoteOptions" 
+          disableUserOption={true}
+          onSubmit={(v: string) => {submit("Vote", v)}} 
+          voteValue={myVote.value}
+          shuffle={true}
+          options={voteOptions.value} />
       </>
     }
   } else if (renderState.value === "Score" && currentGeneration.value) {
     return <>
-      <Engine.Scoreboard 
-        options={voteOptions}
-        gameState={props.gameState}
+      <ScoredTextOptions
+        options={voteOptions.value}
+        correctUid={currentGeneration.value.uid}
         players={props.players}
+        votes={props.gameState.value.votes ?? {}}
+        scores={props.gameState.value.scores ?? {}}
+        pointValues={PGUtils.pointValues}
+        hasBeenContinued={isReadyToContinue.value}
         onContinue={() => {message("ReadyToContinue", "")}} />
-      <Engine.Generation generation={currentGeneration.value}
-                        showPrompt={true} />
+      <Generation 
+        generation={currentGeneration.value}
+        showPrompt={true} />
     </>
   } else if (renderState.value === "Finish") {
     return <>
       <p>You're all winners!</p>
-      <Engine.Scoreboard 
-        options={voteOptions}
-        gameState={props.gameState}
-        players={props.players} />
     </>
   } else {
     return <p>Congrats, you hit an unrecognized game state!</p>
