@@ -1,7 +1,9 @@
 .SingleUseButton {
   background-color: aquamarine;
 	border: none;
+	border-radius: calc(16px + 2 * 10px);
 	font-size: 16pt;
+	margin: 0 auto;
 	padding: 10px;
 }
 

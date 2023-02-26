@@ -217,6 +217,9 @@ export function RenderPromptGuess(props: {
     }
   } else if (renderState.value === "Score" && currentGeneration.value) {
     return <>
+      <Generation 
+        generation={currentGeneration.value}
+        showPrompt={true} />
       <ScoredTextOptions
         options={voteOptions.value}
         correctUid={currentGeneration.value.uid}
@@ -226,9 +229,6 @@ export function RenderPromptGuess(props: {
         pointValues={PGUtils.pointValues}
         hasBeenContinued={isReadyToContinue.value}
         onContinue={() => {message("ReadyToContinue", "")}} />
-      <Generation 
-        generation={currentGeneration.value}
-        showPrompt={true} />
     </>
   } else if (renderState.value === "Finish") {
     return <>
