@@ -244,8 +244,6 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
   .onCreate(async (snapshot, context) => {
-    // TODO: If the room is currently queued or _isFinished, don't handle messages.
-
     // TODO: this should be a transaction on the gameState, not the room.
     // Players may be frequently changing their states under room/{id}/players
     // which could invalidate the transaction more than we'd like.
