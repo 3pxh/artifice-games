@@ -5,6 +5,7 @@ import { get, ref } from "@firebase/database";
 import { GameDefinition, TimerOption } from "../functions/src/games/games";
 import { db } from "./firebaseClient";
 import { AuthContext } from "./AuthProvider"
+import { Routes } from "./router";
 import { createGame, joinRoom, getRoom } from "./actions";
 import { Room, RoomData } from "./Room";
 import SubmittableInput from "./components/SubmittableInput";
@@ -73,7 +74,6 @@ const Options = <O extends string,>(props: {
 
 export default function GameSelection() {
   const { user } = useContext(AuthContext);
-  const [room, setRoom] = useState<RoomData | null>(null);
   const displayMode = signal<DisplayMode>("full");
   const timerMode = signal<TimerOption>("off");
   const [asyncMode, setAsyncMode] = useState<AsyncOption>("live");
@@ -91,11 +91,6 @@ export default function GameSelection() {
     });
   }, []);
 
-  const loadRoom = (r: RoomData) => {
-    setRoom(r);
-    setLoadingRoom(false);
-  }
-
   const handleCreateGame = async (gameId: string) => {
     if (user && !user.isAnonymous) {
       setLoadingRoom(true);
@@ -111,7 +106,7 @@ export default function GameSelection() {
         throw new Error(`Failed to create room for game: ${gameId}`);
       } else {
         console.log("Created room", id);
-        getRoom(id, loadRoom);
+        Routes.navigate(Routes.room.forId(id));
       }
     } else {
       throw new Error("Cannot create a game as an anonymous user");
@@ -122,10 +117,17 @@ export default function GameSelection() {
     setLoadingRoom(true);
     const code = roomCode.toUpperCase();
     console.log("Trying to join room", code);
-    joinRoom(code, displayMode.value !== "observe", loadRoom, (e: string) => {
-      setJoinError(e);
-      setLoadingRoom(false);
-    });
+    joinRoom(
+      code, 
+      displayMode.value !== "observe",
+      (id: string) => {
+        Routes.navigate(Routes.room.forId(id));
+      }, 
+      (e: string) => {
+        setJoinError(e);
+        setLoadingRoom(false);
+      }
+    );
   }
 
   const Join = () => {
@@ -140,14 +142,7 @@ export default function GameSelection() {
     return <>Must be logged in to create or join a game.</>
   }
 
-  // TODO: we should probably set Room on App, not inside GameSelection
-  if (room) {
-    return <Room room={{
-      ...room,
-      isPlayer: displayMode.value !== "observe",
-      isInputOnly: displayMode.value === "input",
-    }} />
-  } else if (loadingRoom) {
+  if (loadingRoom) {
     return <p>Loading room data...</p>
   } else if (user.isAnonymous || !user.emailVerified || selectedGame === "_join") {
     return <Join />

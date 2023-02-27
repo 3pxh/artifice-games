@@ -18,7 +18,7 @@ const pingRoom = (roomId: string) => {
   set(ref(db, `rooms/${roomId}/_startPing`), new Date().getTime());
 }
 
-const joinRoom = async (shortcode: string, isPlayer: boolean, cb: (r: RoomData) => void, onError: (e: string) => void) => {
+const joinRoom = async (shortcode: string, isPlayer: boolean, onSuccess: (id: string) => void, onError: (e: string) => void) => {
   if (auth.currentUser) {
     const k = push(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}`)).key;
     // We need to wait until the data is set before reading for access control to work.
@@ -28,8 +28,9 @@ const joinRoom = async (shortcode: string, isPlayer: boolean, cb: (r: RoomData) 
     const joinRef = ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`);
     const unsubscribe = onValue(joinRef, (v) => {
       const request = v.val();
+      // TODO: typechecking
       if (request.success) {
-        getRoom(request.success.roomId, cb);
+        onSuccess(request.success.roomId);
         unsubscribe();
       } else if (request.error) {
         unsubscribe();

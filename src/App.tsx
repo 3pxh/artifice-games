@@ -2,6 +2,7 @@ import { h, Fragment } from "preact";
 import { useEffect } from "preact/hooks";
 import { Router, Route, route } from "preact-router";
 import { useAuth, AuthContext } from "./AuthProvider";
+import { Routes } from "./router";
 import Auth from "./Auth";
 import TopNav from "./TopNav";
 import GameSelection from "./GameSelection";
@@ -64,7 +65,7 @@ export default function App() {
       <Route path="/auth" component={AuthRoute} />
       <Route path="/create" component={Games} />
       <Route path="/games/:filter" component={GameList} />
-      <Route path="/room/:id" component={RoomById} />
+      <Route path={Routes.room.pattern} component={RoomById} />
     </Router>
   </AuthContext.Provider>
   </>
