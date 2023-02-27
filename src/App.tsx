@@ -1,6 +1,7 @@
 import { h, Fragment } from "preact";
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { Router, Route, route } from "preact-router";
+import { auth } from "./firebaseClient";
 import { useAuth, AuthContext } from "./AuthProvider";
 import { Routes } from "./router";
 import Auth from "./Auth";
@@ -10,13 +11,6 @@ import GameList from "./GameList";
 import RoomById from "./RoomById";
 
 const AuthRoute = () => {
-  const auth = useAuth();
-  useEffect(() => {
-    if (auth.user) {
-      route("/games", true);
-    }
-  })
-
   return <>
     <h2>🎨 Artifice 🤖 Games 🕹️</h2>
     <Auth />
@@ -25,11 +19,6 @@ const AuthRoute = () => {
 
 const Games = () => {
   return <>
-    {/* Do we _just_ want to render GameSelection here, and have it render Room?
-    Or would we like to put Room on App's state, and have a callback passed to GS?
-    We shouldn't be rerendering App. So the current structure seems right, but
-    the name "GameSelection" seems bad. TODO: Rename GameSelection.
-    */}
     <div class="GameContainer">
       <GameSelection />
     </div>
@@ -37,28 +26,40 @@ const Games = () => {
 }
 
 const RootRedirect = () => {
-  const auth = useAuth();
-
   useEffect(() => {
-    if (!auth.user) {
-      route("/auth", true);
-    } else {
-      route("/games", true);
-    }
-  })
+    auth.onAuthStateChanged(() => {
+      if (!auth.currentUser) {
+        route("/auth");
+      } else if (window.location.pathname === "/auth") {
+        window.history.back();
+      } else {
+        route("/games");
+      }
+    });
+  });
   return null;
 }
 
 export default function App() {
-  const auth = useAuth();
-  const handleRoute = async (e: any) => {
-    if (e.url !== "/auth" && auth.requiresAction()) {
-      route("/auth", true);
+  const authContext = useAuth();
+  const handleRoute = (e: any) => {
+    if (e.url !== "/auth" && !auth.currentUser) {
+      route("/auth");
     }
   };
+  useEffect(() => {
+    auth.onAuthStateChanged(() => {
+      if (!auth.currentUser) {
+        route("/auth");
+      } else if (window.location.pathname === "/auth") {
+        window.history.back();
+      }
+      // TODO: check if they need to verify email?
+    });
+  }, [])
 
   return <>
-  <AuthContext.Provider value={auth}>
+  <AuthContext.Provider value={authContext}>
     <TopNav /> 
     <Router onChange={handleRoute}>
       <Route path="/" component={RootRedirect} />
