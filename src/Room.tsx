@@ -92,6 +92,14 @@ export function Room(props: {room: RoomData}) {
   const isLobby = useComputed<boolean>(() => {
     return gameState.value?.state === "Lobby";
   });
+  const authContext = useContext(AuthContext);
+  const hasSetNameAndAvatar = useComputed<boolean>(() => {
+    if (authContext.user && authContext.user.uid && players.value) {
+      const me = players.value[authContext.user.uid];
+      return (me.avatar && me.handle) ? true : false;
+    }
+    return false;
+  })
 
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
@@ -129,7 +137,6 @@ export function Room(props: {room: RoomData}) {
     // The interval might continue going if we unmount?
   }, [props.room.id]);
 
-  const authContext = useContext(AuthContext);
 
   const Header = () => {
     // TODO: for async games, this room code could well be expired.
@@ -197,7 +204,9 @@ export function Room(props: {room: RoomData}) {
         roomId={props.room.id} 
         uid={authContext.user.uid}
         gameState={gameState} />
-      {isLobby.value
+      {(isLobby.value || !hasSetNameAndAvatar.value)
+      // TODO: improve the UX.
+      // As soon as they set avatar/name this disappears, no confirmation
       ? <>
         <PlayerHandleInput />
         <AvatarPicker 

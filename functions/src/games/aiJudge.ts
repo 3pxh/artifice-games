@@ -140,11 +140,13 @@ const Actions = {
 
   NewPlayer(room: Room, message: Message) {
     functions.logger.log("AIJudge:NewPlayer");
+    room.gameState.scores = room.gameState.scores ?? {};
     room.players[message.uid] = {
-      state: "Lobby",
+      state: room.gameState?.state ?? "Lobby",
       isReadyToContinue: false,
       isPlayer: message.isPlayer ?? true,
     }
+    room.gameState.scores[message.uid] = room.gameState.scores[message.uid] ?? {current: 0, previous: 0};
   },
 
   Intro(room: Room) {
@@ -330,8 +332,7 @@ const Actions = {
 function reducer(room: Room, message: Message): any {
   functions.logger.log("aiJudge, reducing", {msg: message, gameState: room.gameState});
   const gameState = room.gameState;
-  if (message.type === "NewPlayer" && gameState.state === "Lobby") {
-    // Alternatively if the room allows spectators
+  if (message.type === "NewPlayer") {
     Actions.NewPlayer(room, message);
   } else if (message.type === "Intro" && gameState.state === "Lobby") {
     Actions.Intro(room);

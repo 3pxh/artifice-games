@@ -1,4 +1,4 @@
-import { ref, set, update, push, onValue } from "@firebase/database";
+import { ref, set, update, push, onValue, get } from "@firebase/database";
 import { CreateRequest } from "../functions/src";
 import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
@@ -18,12 +18,14 @@ const pingRoom = (roomId: string) => {
   set(ref(db, `rooms/${roomId}/_startPing`), new Date().getTime());
 }
 
-const joinRoom = async (shortcode: string, isPlayer: boolean, onSuccess: (id: string) => void, onError: (e: string) => void) => {
+const joinRoom = async (shortcode: string, isPlayer: boolean, onSuccess: (id: string) => void, onError: (e: string) => void, id?: string) => {
   if (auth.currentUser) {
     const k = push(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}`)).key;
     // We need to wait until the data is set before reading for access control to work.
+    const idAmendment = id ? {roomId: id} : {};
     await set(ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`), {
-      isPlayer: isPlayer
+      ...idAmendment,
+      isPlayer: isPlayer,
     });
     const joinRef = ref(db, `joinRequests/${auth.currentUser.uid}/${shortcode}/${k}`);
     const unsubscribe = onValue(joinRef, (v) => {
@@ -44,11 +46,24 @@ const joinRoom = async (shortcode: string, isPlayer: boolean, onSuccess: (id: st
 
 const getRoom = (id: string, cb: (r: RoomData) => void) => {
   const roomRef = ref(db, `rooms/${id}`);
+  get(roomRef).catch((e) => {
+    // If we don't have access, try to join the room.
+    joinRoom("_byID", true, 
+      () => {
+        get(roomRef).then((v) => {
+          cb(v.val())
+        })
+      },
+      (e: string) => {
+        console.log("Failed to join room ", id, e)
+      },
+      id
+    )
+  });
   const unsubscribe = onValue(roomRef, (v) => {
     const roomSnapshot = v.val() as RoomData;
     const isInitialized = roomSnapshot._initialized;
     if (isInitialized) {
-      console.log("Got room data", roomSnapshot);
       cb({
         ...roomSnapshot,
         id: id, // This sits above the snapshot itself

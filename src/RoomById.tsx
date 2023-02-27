@@ -14,8 +14,8 @@ export default function RoomById(props: {id: string}) {
     if (authContext.user && !isLoaded) {
       getRoom(props.id, (r: RoomData) => {
         setIsLoaded(true);
-        setRoom(r);
-      })
+        setRoom({...r, id: props.id});
+      });
     }
   }, [authContext.user])
 

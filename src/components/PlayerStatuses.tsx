@@ -15,7 +15,7 @@ export default function PlayerStatuses(props: {
     const players = objectFilter(props.players.value, (p) => p.isPlayer);
     if (props.scores) {
       const s = props.scores;
-      return Object.keys(players).sort((u1, u2) => s[u2].current - s[u1].current);
+      return Object.keys(players).sort((u1, u2) => s[u2]?.current ?? 0 - s[u1]?.current ?? 0);
     } else {
       return Object.keys(players).sort((u1, u2) => u1 < u2 ? -1 : 1);
     }
@@ -43,7 +43,7 @@ export default function PlayerStatuses(props: {
       showHandle={true}
       state={isReadyToContinue.value ? "Waiting" : "Doing"}
       size={64}
-      score={props.scores ? `${props.scores[props.id].current}` : undefined} />
+      score={props.scores ? `${props.scores[props.id]?.current ?? 0}` : undefined} />
   }
 
   // Show the scores, and sort left to right!

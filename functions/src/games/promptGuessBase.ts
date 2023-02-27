@@ -160,12 +160,14 @@ const PromptGuesserActions = {
 
   NewPlayer(room: PromptGuessRoom, message: PromptGuessMessage) {
     functions.logger.log("PromptGuesser:NewPlayer");
+    room.gameState.scores = room.gameState.scores ?? {};
     room.players[message.uid] = {
-      state: "Lobby",
+      state: room.gameState?.state ?? "Lobby",
       template: chooseOneInObject(room.definition.templates),
       isReadyToContinue: false,
       isPlayer: message.isPlayer ?? true,
     }
+    room.gameState.scores[message.uid] = room.gameState.scores[message.uid] ?? {current: 0, previous: 0};
   },
 
   Start(room: PromptGuessRoom) {
@@ -386,8 +388,7 @@ const PromptGuesserActions = {
 
 function reducer(room: PromptGuessRoom, message: PromptGuessMessage): any {
   const gameState = room.gameState;
-  if (message.type === "NewPlayer" && gameState.state === "Lobby") {
-    // Alternatively if the room allows spectators
+  if (message.type === "NewPlayer") {
     PromptGuesserActions.NewPlayer(room, message);
   } else if (message.type === "Start" && gameState.state === "Lobby") {
     PromptGuesserActions.Start(room);

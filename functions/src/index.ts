@@ -189,9 +189,6 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     let roomId;
     if (snapshot.val().roomId) { // Made via an invite link.
       roomId = snapshot.val().roomId;
-      // TODO: Do we want some token on the Room that says this invite is valid?
-      // Because as is, if you can guess a room id (or see someone's room id)
-      // you can get access to the room.
     } else {
       try {
         roomId = await getRoomFromShortcode(context.params.code);
@@ -200,11 +197,14 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
       }
     }
     if (!roomId) {
-      return snapshot.ref.child("error").set("Room does not exist");
+      return snapshot.ref.child("error").set("That room does not exist");
     }
-    const room = (await admin.database().ref(`/rooms/${roomId}`).get()).val() as RoomState;
-    const state = room.gameState.state;
+    const room = (await admin.database().ref(`/rooms/${roomId}`).get()).val() as (RoomState & QueueRoom);
     const players = Object.keys(room.players);
+    const hasAlreadyJoined = players.find(p => p === context.params.uid);
+    if (room._isFinished && !hasAlreadyJoined) {
+      return snapshot.ref.child("error").set("That room is no longer active and cannot be joined.");
+    }
     // TODO: move this off of gameState and into room.hasStarted, and room.allowObservers
     // gameState should only ever be accessed by a game runner, and its schema should be
     // allowed to change only there.
@@ -213,9 +213,14 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     const isAnonymous = !user.email; // This is not a great proxy.
     if (room._isAsync && isAnonymous) {
       return snapshot.ref.child("error").set("Cannot join async rooms anonymously. Log in with an email address.");
-    } else if (state === "Lobby" || players.find(p => p === context.params.uid)) {
-      // TODO: also check if the game allows observers.
-      // TODO: add relevant records for access control
+    } else if (hasAlreadyJoined) {
+      return snapshot.ref.child("success").set({
+        roomId,
+        timestamp: new Date().getTime()
+      });
+    } else {
+      // Right now we let people join at any time. Is there any reason why not?
+      // Abuse prevention of people spamming requests to all room codes?
       await admin.database().ref(`/rooms/${roomId}/messages`).push({
         type: "NewPlayer",
         uid: context.params.uid,
@@ -234,9 +239,7 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
         roomId,
         timestamp: new Date().getTime()
       });
-    } else {
-      return snapshot.ref.child("error").set(`Room is not in a Lobby, state: ${state}`);
-    }
+    } 
     // TODO: Clean up old join requests.
     // But since we create a new one each time, and adding a uid should be idempotent,
     // it's just a sanitation problem not a functionality problem.
