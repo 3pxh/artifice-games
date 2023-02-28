@@ -53,6 +53,8 @@ export default function App() {
         route("/auth");
       } else if (window.location.pathname === "/auth") {
         window.history.back();
+      } else if (window.location.pathname === "/") {
+        route("/create");
       }
       // TODO: check if they need to verify email?
     });
