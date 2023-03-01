@@ -26,6 +26,16 @@ Additionally we want to test in local env with stripe, [https://dashboard.stripe
 
 Have to create products to have them sync in firestore :/ (it'd be nice if we could import once from Stripe)
 
+Forward webhook events to your local machine:
+stripe login
+stripe listen --forward-to http://127.0.0.1:5001/threepixelheart-f5674/us-central1/ext-firestore-stripe-payments-handleWebhookEvents
+
+Running that will produce a webhook secret. You then need to configure the stripe on your local machine by creating `extensions/firestore-stripe-payments.secret.local` with the following:
+STRIPE_API_KEY=rk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+This can also be done by using `firebase ext:configure firestore-stripe-payments --local`. But don't check in the resulting `firestore-stripe-payments.env`.
+
 # Developing
 
 To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebuilds and re-serves stuff automatically. Default port 3000.

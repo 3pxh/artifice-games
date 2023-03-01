@@ -9,6 +9,7 @@ import TopNav from "./TopNav";
 import GameSelection from "./GameSelection";
 import GameList from "./GameList";
 import RoomById from "./RoomById";
+import Upgrade from "./Upgrade";
 
 const AuthRoute = () => {
   return <>
@@ -69,6 +70,7 @@ export default function App() {
       <Route path="/create" component={Games} />
       <Route path="/games/:filter" component={GameList} />
       <Route path={Routes.room.pattern} component={RoomById} />
+      <Route path="/upgrade" component={Upgrade} />
     </Router>
   </AuthContext.Provider>
   </>
