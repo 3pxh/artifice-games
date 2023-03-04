@@ -9,6 +9,7 @@ import { Routes } from "./router";
 import { createGame, joinRoom, getRoom } from "./actions";
 import { Room, RoomData } from "./Room";
 import SubmittableInput from "./components/SubmittableInput";
+import { Link } from "preact-router";
 type AsyncOption = "async" | "live";
 type DisplayMode = "observe" | "input" | "full";
 
@@ -73,7 +74,7 @@ const Options = <O extends string,>(props: {
 }
 
 export default function GameSelection() {
-  const { user } = useContext(AuthContext);
+  const authContext = useContext(AuthContext);
   const displayMode = signal<DisplayMode>("full");
   const timerMode = signal<TimerOption>("off");
   const [asyncMode, setAsyncMode] = useState<AsyncOption>("live");
@@ -92,13 +93,13 @@ export default function GameSelection() {
   }, []);
 
   const handleCreateGame = async (gameId: string) => {
-    if (user && !user.isAnonymous) {
+    if (authContext.user && !authContext.user.isAnonymous) {
       setLoadingRoom(true);
       const isPlayer = displayMode.value !== "observe";
       const id = await createGame({
         gameId, 
         isPlayer,
-        _creator: user.uid,
+        _creator: authContext.user.uid,
         _isAsync: asyncMode === "async",
         timer: timerMode.value,
       });
@@ -138,20 +139,27 @@ export default function GameSelection() {
     </div>
   }
 
-  if (!user) {
+  if (!authContext.user) {
     return <>Must be logged in to create or join a game.</>
   }
 
   if (loadingRoom) {
     return <p>Loading room data...</p>
-  } else if (user.isAnonymous || !user.emailVerified || selectedGame === "_join") {
+  } else if (authContext.user.isAnonymous || !authContext.user.emailVerified || selectedGame === "_join") {
     return <Join />
   } else if (selectedGame === null) {
     return <>
     <div class="GameSelection-GameList">
       <h1>Create a game</h1>
       {Object.entries(gameList).map(([k, v]) => {
-        return <button onClick={() => {setSelectedGame(k)}}>{v.name}</button>
+        return <button 
+          className={v.tier === "Free" ? "GameSelection-FreeTier" : "GameSelection-PaidTier"}
+          onClick={() => {setSelectedGame(k)}}
+          // TODO: #billing, how do we display different tiers of games?
+          // disabled={v.tier !== "Free" && !authContext.isPaid()}
+        >
+            {v.name}
+        </button>
       })}
       <h1>Or,</h1>
       <button onClick={() => {setSelectedGame("_join")}}>Join a game</button>
@@ -159,7 +167,11 @@ export default function GameSelection() {
   </>
   } else {
     return <>
-      <h1><button onClick={() => {setSelectedGame(null)}}><h2>←</h2></button>Create game: {gameList[selectedGame].name}</h1>
+      <h1>
+        <button onClick={() => {setSelectedGame(null)}}
+        style="border-radius:50%;width:36px;height:36px;background-color:yellow;border:none; font-size:20pt;">←</button>
+        {gameList[selectedGame].name}
+      </h1>
       <AsyncOptions onSet={(v: AsyncOption) => { setAsyncMode(v); }} />
       {asyncMode === "live" 
         ? <>
@@ -167,8 +179,9 @@ export default function GameSelection() {
           <TimerOptions onSet={(v: TimerOption) => { timerMode.value = v; }} />
         </>
         : ""}
-      {/* Game options, e.g. model type */}
-      <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>
+      {(asyncMode === "async" && !authContext.isPaid())
+      ? <><Link href="/support">Support Artifice</Link> to start async games</>
+      : <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>}
     </>
   }
 }

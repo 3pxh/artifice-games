@@ -126,6 +126,9 @@ const createMembership = async (m: MembershipCreateData) => {
   });
 }
 
+// TODO: #billing move this to be a "roomCreateRequest/{key}"
+// Just like a join request. A free user cannot create rooms of pro games,
+// and also "active #rooms" check on that user.
 export const roomCreated = functions.database.ref("/rooms/{id}")
   .onCreate(async (snapshot, context) => {
     // TODO: Disallow creating many rooms at once.

@@ -3,7 +3,9 @@ import * as Judge from "./aiJudge"
 
 export type TimerOption = "off" | "slow" | "fast";
 export type EngineName = PG.GameDefinition["engine"] | Judge.GameDefinition["engine"]; // | ...
-export type GameDefinition = PG.GameDefinition | Judge.GameDefinition; // | ...
+type GameTier = "Free" | "Underwriter"
+type GameDefBase = {tier: GameTier}
+export type GameDefinition = GameDefBase & (PG.GameDefinition | Judge.GameDefinition); // | ...
 export type GameCreateData = {
   _creator: string,
   _isAsync: boolean,
