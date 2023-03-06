@@ -13,10 +13,8 @@ export default function Auth() {
   const [loginState, setLoginState] = useState<LoginState>(LoginState.Choosing);
   
   const emailAuth = (email: string) => {
-    if (email) { 
-      setLoginState(LoginState.Email);
-      authContext.login(AuthType.EmailLink, email);
-    }
+    setLoginState(LoginState.Email);
+    authContext.login(AuthType.EmailLink, email);
   }
 
   const anonAuth = () => {

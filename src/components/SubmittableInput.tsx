@@ -15,7 +15,10 @@ export default function SubmittableInput(props: {
   const [hasSubmitted, setHasSubmitted] = useState(props.submittedValue ? true : false);
 
   const submit = () => {
-    setHasSubmitted(true); props.onSubmit(input);
+    if (input !== "") {
+      setHasSubmitted(true); 
+      props.onSubmit(input);
+    }
   }
 
   if (hasSubmitted) {
