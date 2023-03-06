@@ -129,14 +129,14 @@ export default function Support() {
           </tr>
         })}
         <tr>
-          <td>You choose!</td>
+          <td></td>
           <td>
             <select onChange={(e) => {
               const s = (e.target as HTMLSelectElement);
               setMonthlyFee(s.value === "custom" ? null : parseInt(s.value.substring(1)))
             }}>
               <option>custom</option>
-              {new Array(20).fill(0).map((_, i) => {
+              {new Array(15).fill(0).map((_, i) => {
                 return <option selected={(i+1) === monthlyFee}>${i+1}</option>
               })}
             </select>

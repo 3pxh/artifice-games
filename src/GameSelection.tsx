@@ -84,7 +84,7 @@ export default function GameSelection() {
   // is null, otherwise renders the component with the prop.
   const [loadingRoom, setLoadingRoom] = useState(false);
   const [gameList, setGameList] = useState<{[id: string]: GameDefinition}>({});
-  const [joinError, setJoinError] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     get(ref(db, "games")).then(v => {
@@ -96,21 +96,20 @@ export default function GameSelection() {
     if (authContext.user && !authContext.user.isAnonymous) {
       setLoadingRoom(true);
       const isPlayer = displayMode.value !== "observe";
-      const id = await createGame({
+      createGame({
         gameId, 
         isPlayer,
         _creator: authContext.user.uid,
         _isAsync: asyncMode === "async",
         timer: timerMode.value,
-      });
-      if (!id) {
-        throw new Error(`Failed to create room for game: ${gameId}`);
-      } else {
-        console.log("Created room", id);
+      }, (id: string) => {
         Routes.navigate(Routes.room.forId(id));
-      }
+      }, (e: string) => {
+        setErrorMessage(e);
+        setLoadingRoom(false);
+      });
     } else {
-      throw new Error("Cannot create a game as an anonymous user");
+      setErrorMessage("Cannot create a game as an anonymous user");
     }
   }
 
@@ -125,7 +124,7 @@ export default function GameSelection() {
         Routes.navigate(Routes.room.forId(id));
       }, 
       (e: string) => {
-        setJoinError(e);
+        setErrorMessage(e);
         setLoadingRoom(false);
       }
     );
@@ -135,7 +134,7 @@ export default function GameSelection() {
     return <div class="GameSelection-Join">
       <DisplayOptions  onSet={(v: DisplayMode) => { displayMode.value = v; }} />
       <SubmittableInput label="Room code:" onSubmit={handleJoinRoom} buttonText="Join" />
-      <span style="color:yellow;">{joinError}</span>
+      <p style="color:yellow;">{errorMessage}</p>
     </div>
   }
 
@@ -162,26 +161,37 @@ export default function GameSelection() {
         </button>
       })}
       <h1>Or,</h1>
-      <button onClick={() => {setSelectedGame("_join")}}>Join a game</button>
+      <button className="GameSelection-Join" onClick={() => {setSelectedGame("_join")}}>Join a game</button>
     </div>
   </>
   } else {
+    
     return <>
       <h1>
         <button onClick={() => {setSelectedGame(null)}}
         style="border-radius:50%;width:36px;height:36px;background-color:yellow;border:none; font-size:20pt;">←</button>
         {gameList[selectedGame].name}
       </h1>
-      <AsyncOptions onSet={(v: AsyncOption) => { setAsyncMode(v); }} />
-      {asyncMode === "live" 
-        ? <>
-          <DisplayOptions onSet={(v: DisplayMode) => { displayMode.value = v; }} />
-          <TimerOptions onSet={(v: TimerOption) => { timerMode.value = v; }} />
-        </>
-        : ""}
-      {(asyncMode === "async" && !authContext.isPaid())
-      ? <><Link href="/support">Support Artifice</Link> to start async games</>
-      : <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>}
+      <p style="color:yellow;">{errorMessage}</p>
+      {gameList[selectedGame].introVideo.url 
+      ? <>
+        <iframe class="YoutubeEmbed" src={`${gameList[selectedGame].introVideo.url}`}></iframe>
+      </>
+      : ""}
+      {gameList[selectedGame].tier === "Underwriter" && !authContext.isPaid() 
+      ? <><Link href="/support">Support Artifice</Link> to play this game.</>
+      : <>
+        <AsyncOptions onSet={(v: AsyncOption) => { setAsyncMode(v); }} />
+        {asyncMode === "live" 
+          ? <>
+            <DisplayOptions onSet={(v: DisplayMode) => { displayMode.value = v; }} />
+            <TimerOptions onSet={(v: TimerOption) => { timerMode.value = v; }} />
+          </>
+          : ""}
+        {(asyncMode === "async" && !authContext.isPaid())
+        ? <><Link href="/support">Support Artifice</Link> to start async games</>
+        : <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>}
+      </>}
     </>
   }
 }

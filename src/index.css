@@ -106,25 +106,25 @@ a:hover {
 
 /* Seriously need to make a single consistent Button class */
 .GameSelection-GameList > button {
-	background-color: var(--orange);
+	background-color: aquamarine;
 	border: none;
 	font-size: 16pt;
 	padding: 10px;
 	margin: 10px;
 }
-.GameSelection-GameList > button.GameSelection-FreeTier {
-	background-color: var(--orange);
-}
-.GameSelection-GameList > button.GameSelection-FreeTier:hover {
-	background-color: yellow;
-}
-.GameSelection-GameList > button.GameSelection-PaidTier {
-	background-color: aquamarine;
-}
-.GameSelection-GameList > button.GameSelection-PaidTier:hover {
+.GameSelection-GameList > button:hover {
 	background-color: aqua;
 }
-.GameSelection-GameList > button:hover {
+.GameSelection-GameList > button.GameSelection-FreeTier {
+	background-color: aquamarine;
+}
+.GameSelection-GameList > button.GameSelection-FreeTier:hover {
+	background-color: aqua;
+}
+.GameSelection-GameList > button.GameSelection-PaidTier {
+	background-color: var(--orange);
+}
+.GameSelection-GameList > button.GameSelection-PaidTier:hover {
 	background-color: yellow;
 }
 .GameSelection-Join > input {
@@ -137,16 +137,12 @@ a:hover {
 	text-transform: uppercase;
 	width: calc(4 * var(--font-size) + 10px);
 }
-.GameSelection-Join > button {
-	background-color: aquamarine;
+.GameSelection-Join {
 	border: none;
 	border-radius: 30px;
 	font-size: 16pt;
 	min-width: 80px;
 	padding: 10px;
-}
-.GameSelection-Join > button:hover {
-	background-color: aqua;
 }
 
 .YoutubeEmbed {

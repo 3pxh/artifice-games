@@ -1,11 +1,12 @@
 import * as PG from "./promptGuessBase";
 import * as Judge from "./aiJudge";
+import { GameDefBase } from "./games";
 
 // TODO: we could initialize these into the db at startup and on deploy
 // to make them a real source of truth.
 
 // Note: this is technically dead code. It exists here only for typechecking.
-export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} = 
+export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinition}} = 
 // These need to be added to emulator_data/database_export/{*}.json
 // for it to load when running the emulators, and to
 // the production DB for them to appear in prod.
@@ -23,22 +24,8 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
     "introVideo": {
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
       "durationSeconds": 133
-    }
-  },
-  "farsketched_1_5": {
-    "engine": "PromptGuess",
-    "name": "FS🍯🦡",
-    "model": {
-      "name": "StableDiffusion",
-      "version": "1.5"
     },
-    "templates": {
-      "0": {"display": "Make an image of...", "template": "{1}"}
-    },
-    "introVideo": {
-      "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
-      "durationSeconds": 133
-    }
+    "tier": "Free"
   },
   "farsketched_photo": {
     "engine": "PromptGuess",
@@ -53,7 +40,8 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
     "introVideo": {
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
       "durationSeconds": 133
-    }
+    },
+    "tier": "Underwriter"
   },
   "gisticle_base": {
     "engine": "PromptGuess",
@@ -66,9 +54,10 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
       "3": {"template": "List the top 5 reasons you should {1}, don't explain why", "display": "List the top 5 reasons you should..."}
     },
     "introVideo": {
-      "url": "",
-      "durationSeconds": 0
-    }
+      "url": "https://www.youtube.com/embed/WZetuug_Xug",
+      "durationSeconds": 57
+    },
+    "tier": "Free"
   },
   "common_language": {
     "engine": "PromptGuess",
@@ -82,9 +71,10 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
       "4": {"template": "BREAKING NEWS: {1}", "display": "BREAKING NEWS: ___"}
     },
     "introVideo": {
-      "url": "",
-      "durationSeconds": 0
-    }
+      "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
+      "durationSeconds": 59
+    },
+    "tier": "Underwriter"
   },
   "poems": {
     "engine": "PromptGuess",
@@ -99,9 +89,10 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
       "6": {"template": "Write a villanelle about {1}, but don't mention \"{1}\"\n", "display": "Write a villanelle about..."}
     },
     "introVideo": {
-      "url": "",
-      "durationSeconds": 0
-    }
+      "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
+      "durationSeconds": 59
+    },
+    "tier": "Underwriter"
   },
   "tresmojis_base": {
     "engine": "PromptGuess",
@@ -115,13 +106,14 @@ export const FeaturedPGGames: {games: {[k: string]: PG.GameDefinition}} =
       "4": {"template": "List 3 emojis to describe {1} (don't explain why)\n\n", "display": "List 3 emojis to describe [anything!]"}
     },
     "introVideo": {
-      "url": "",
-      "durationSeconds": 0
-    }
-  }
+      "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
+      "durationSeconds": 59
+    },
+    "tier": "Underwriter"
+  },
 }}
 
-export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
+export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameDefinition}} =
 {"games": {
   "think_tank_trivia": {
     "engine": "AIJudge",
@@ -136,6 +128,7 @@ export const FeaturedJudgeGames: {games: {[k: string]: Judge.GameDefinition}} =
     "introVideo": {
       "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
       "durationSeconds": 60
-    }
+    },
+    "tier": "Underwriter"
   },
 }}
