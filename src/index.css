@@ -11,6 +11,7 @@ html, body {
 	-moz-osx-font-smoothing: grayscale;
 	--brand-color: #673ab8;
 	--border-color: yellow;
+	--orange: rgb(255, 189, 127);
 }
 
 * {
@@ -41,6 +42,12 @@ fieldset {
 
 .link {
   color: #fff;
+}
+a {
+	color: white;
+}
+a:hover {
+	color: yellow;
 }
 
 .Auth {
@@ -108,6 +115,18 @@ fieldset {
 .GameSelection-GameList > button:hover {
 	background-color: aqua;
 }
+.GameSelection-GameList > button.GameSelection-FreeTier {
+	background-color: aquamarine;
+}
+.GameSelection-GameList > button.GameSelection-FreeTier:hover {
+	background-color: aqua;
+}
+.GameSelection-GameList > button.GameSelection-PaidTier {
+	background-color: var(--orange);
+}
+.GameSelection-GameList > button.GameSelection-PaidTier:hover {
+	background-color: yellow;
+}
 .GameSelection-Join > input {
 	--font-size: 16pt;
 	border-radius: 26px;
@@ -118,16 +137,12 @@ fieldset {
 	text-transform: uppercase;
 	width: calc(4 * var(--font-size) + 10px);
 }
-.GameSelection-Join > button {
-	background-color: aquamarine;
+.GameSelection-Join {
 	border: none;
 	border-radius: 30px;
 	font-size: 16pt;
 	min-width: 80px;
 	padding: 10px;
-}
-.GameSelection-Join > button:hover {
-	background-color: aqua;
 }
 
 .YoutubeEmbed {
@@ -282,4 +297,43 @@ fieldset {
 	left: -20px;
 	top: calc(50% - 5px);
 	width: 5px;
+}
+
+.Support {
+	display: flex;
+	flex-direction: column;
+	max-width: 600px;
+	padding: 10px 10px 30px 10px;
+}
+.Support p, h1, h2, h3 {
+	margin: 0;
+	padding: 10px 0;
+}
+.Support td {
+	border-bottom: 1px solid white;
+	margin: 0;
+	padding: 3px;
+}
+.Support-PriceTable button {
+	background-color: yellow;
+	border: none;
+	border-radius: calc(14px + 2*10px);
+	font-size: 14pt;
+	padding: 10px;
+}
+.Support-PriceTable button:hover {
+	background-color: var(--orange);
+}
+.Support-PriceTable select {
+	background-color: white;
+	border: none;
+	border-radius: calc(14px + 2*10px);
+	cursor: pointer;
+	font-size: 14pt;
+	margin-right: 10px;
+	padding: 10px 5px;
+	text-align: center;
+}
+.Support-PriceTable select:hover {
+	background-color: yellow;
 }

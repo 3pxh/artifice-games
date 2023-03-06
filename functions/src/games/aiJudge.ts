@@ -1,13 +1,13 @@
 import * as functions from "firebase-functions";
 import { chooseOne, shuffle, JudgeUtils, ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE } from "../utils";
-import { ModelDef, GenerationResponse, GenerationRequest } from "../generate";
+import { GPT3Def, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
 export type GameDefinition = {
   engine: "AIJudge",
   name: string,
   questionPreface: string,
-  model: ModelDef,
+  model: GPT3Def,
   introVideo: {
     url: string,
     durationSeconds: number,
@@ -26,7 +26,7 @@ const STATE_TRANSITIONS:Record<State, State> = {
 }
 export type Generation = Omit<GenerationRequest, "room"> & 
   GenerationResponse & {
-    model: ModelDef,
+    model: GPT3Def,
     uid: string,
     question: string,
     answers: {

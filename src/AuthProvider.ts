@@ -6,11 +6,28 @@ import { auth } from "./firebaseClient";
 
 export enum AuthType { "EmailLink", "Anonymous" }
 
-export const useAuth = () => {
+type Role = string | null;
+type AuthInterface = {
+  user: User | null
+  login: (t: AuthType, e?: string) => void
+  logout: () => void
+  verify: () => void
+  requiresAction: () => boolean
+  role: () => Role,
+  isPaid: () => boolean,
+}
+
+export const useAuth: () => AuthInterface = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [stripeRole, setStripeRole] = useState<Role>(null);
 
   useEffect(() => {
     auth.onAuthStateChanged(u => {
+      if (u) {
+        u.getIdTokenResult(true).then((idTokenResult) => {
+          setStripeRole(idTokenResult.claims.stripeRole);
+        });
+      }
       if (u && (!user || user.uid !== u.uid)) {
         setUser(u);
       }
@@ -95,21 +112,25 @@ export const useAuth = () => {
       return false;
     }
   }
+  
+  const role = () => {
+    return stripeRole;
+  }
 
-  return { user, login, logout, verify, requiresAction };
+  const isPaid = () => {
+    return stripeRole === "underwriter";
+  }
+
+  return { user, login, logout, verify, requiresAction, role, isPaid };
 };
 
-export const AuthContext = createContext<{
-  user: User | null;
-  login: (t: AuthType, e?: string) => void,
-  logout: () => void,
-  verify: () => void,
-  requiresAction: () => boolean,
-}>({
+export const AuthContext = createContext<AuthInterface>({
   user: null,
   login: () => {},
   logout: () => {},
   verify: () => {},
   requiresAction: () => true,
+  role: () => null,
+  isPaid: () => false,
 });
 

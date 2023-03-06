@@ -1,5 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import { Reference } from "firebase-admin/database";
 import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
@@ -126,23 +127,39 @@ const createMembership = async (m: MembershipCreateData) => {
   });
 }
 
-export const roomCreated = functions.database.ref("/rooms/{id}")
-  .onCreate(async (snapshot, context) => {
+export type CreateResponse = {
+  success?: {
+    roomId: string
+  }
+  error?: string
+}
+// TODO: #billing move this to be a "roomCreateRequest/{key}"
+// Just like a join request. A free user cannot create rooms of pro games,
+// and also "active #rooms" check on that user.
+export const createRoom = async (req: CreateRequest, createRequestRef: Reference) => {
     // TODO: Disallow creating many rooms at once.
     // Could be done via DB permissions.
-    const msg = snapshot.val() as CreateRequest;
+    const msg = req;
     // The database can store data that doesn't match types. How do we check it?
     const gameData = (await admin.database().ref(`/games/${msg.gameId}`).get()).val();
     if (!gameData) {
-      functions.logger.error("roomCreated: Game not found", {msg});
-      return snapshot.ref.set({
+      functions.logger.error("createRoom: Game not found", {msg});
+      return createRequestRef.update({
         error: `Game with id ${msg.gameId} not found!`
-      });
+      } as CreateResponse);
+    }
+    const roomRef = await admin.database().ref("/rooms").push();
+    const key = roomRef.key;
+    if (!key) {
+      functions.logger.error("createRoom: Error generating room id", {msg});
+      return createRequestRef.update({
+        error: "Error generating room id"
+      } as CreateResponse);
     }
     const engineName:EngineName = (gameData as GameData).engine; // Or get from msg!
     const gameRoom = engines[engineName].init(msg, gameData as any); // TODO: typechecking on multiple games
     const t = new Date().getTime();
-    const shortcode: string = await createShortcode(context.params.id);
+    const shortcode: string = await createShortcode(key);
     const roomWithQueueState = {
       ...gameRoom,
       _shortcode: shortcode,
@@ -162,12 +179,17 @@ export const roomCreated = functions.database.ref("/rooms/{id}")
     await createMembership({
       gameName: (gameData as GameData).name,
       uid: msg._creator,
-      rid: context.params.id,
+      rid: key,
       isAsync: msg._isAsync,
       isFinished: false,
     });
-    return snapshot.ref.set(roomWithQueueState);
-});
+    await roomRef.set(roomWithQueueState);
+    return createRequestRef.update({
+      success: {
+        roomId: key
+      }
+    } as CreateResponse);
+}
 
 export const roomPingedToStart = functions.database.ref("/rooms/{id}/_startPing")
   .onUpdate(async (snapshot, context) => {
@@ -179,6 +201,31 @@ export const roomPingedToStart = functions.database.ref("/rooms/{id}/_startPing"
     // filtering out rooms not pinged in the past 2 minutes
     if (thisRoom._queue.startTime < new Date().getTime()) {
       return admin.database().ref(`/rooms/${context.params.id}/_queue/inQueue`).set(false);
+    }
+});
+
+export const newGameRequestCreated = functions.database.ref("/newGameRequests/{uid}/{k}")
+  .onCreate(async (snapshot, context) => {
+    const msg = snapshot.val() as CreateRequest;
+    functions.logger.log("Processing new game request", {val: msg});
+    const user = await admin.auth().getUser(context.params.uid);
+    const gameData = (await admin.database().ref(`/games/${msg.gameId}`).get()).val();
+    const isUnderwriter = user.customClaims && user.customClaims.stripeRole === "underwriter";
+    if (!gameData) {
+      functions.logger.error("newGameRequestCreated: Game not found", {msg});
+      return snapshot.ref.update({
+        error: `Game with id ${msg.gameId} not found!`
+      } as CreateResponse);
+    } else if (gameData.tier === "Free" || isUnderwriter) {
+      return createRoom(msg, snapshot.ref);
+    } else if (gameData.tier !== "Free" || !isUnderwriter) {
+      return snapshot.ref.update({
+        error: "Support Artifice to start that game."
+      } as CreateResponse);
+    } else {
+      return snapshot.ref.update({
+        error: "Out of free credits. Support Artifice to start a game."
+      } as CreateResponse);
     }
 });
 

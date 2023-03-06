@@ -4,13 +4,28 @@ import { db } from "./firebaseClient";
 import { auth } from "./firebaseClient";
 import { RoomData } from "./Room";
 
-const createGame = async (opts: CreateRequest): Promise<string> => {
-  const k = push(ref(db, "rooms/")).key;
-  if (!k) {
-    throw new Error("Cannot create a new room id");
+const createGame = async (opts: CreateRequest, onSuccess: (id: string) => void, onError: (e: string) => void): Promise<void> => {
+  if (auth.currentUser) {
+    const k = push(ref(db, `newGameRequests/${auth.currentUser.uid}`)).key;
+    if (!k) {
+      onError("Failed to create a new room id");
+    }
+    const createRequestRef = ref(db, `newGameRequests/${auth.currentUser.uid}/${k}`);
+    await set(createRequestRef, opts);
+    const unsubscribe = onValue(createRequestRef, (v) => {
+      const request = v.val();
+      // TODO: typechecking
+      if (request.success) {
+        console.log("create succeeded", request.success.roomId);
+        onSuccess(request.success.roomId);
+        unsubscribe();
+      } else if (request.error) {
+        unsubscribe();
+        console.log("create fail", request.error);
+        onError(request.error);
+      }
+    });
   }
-  await set(ref(db, `rooms/${k}`), opts);
-  return k;
 }
 
 const pingRoom = (roomId: string) => {

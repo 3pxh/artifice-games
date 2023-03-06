@@ -43,7 +43,7 @@ export default function GameList(props: {filter: string}) {
     return <div class="GameList">
       {games.map(([r, m]) => {
         const notificationClass = m.lastSeen < m.lastUpdate ? "GameList--HasUpdate" : "";
-        const date = new Date(m.timestamp).toLocaleDateString('en-us', { weekday:"long", month:"short", day:"numeric"});
+        const date = new Date(m.timestamp).toLocaleDateString("en-us", { weekday:"long", month:"short", day:"numeric"});
         return <Link href={`/room/${r}`}>
           <div class={"GameList-Game " + notificationClass}>
             <h3 class="GameList-Name">{m.gameName}</h3>

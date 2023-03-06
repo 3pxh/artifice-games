@@ -11,7 +11,6 @@ TODO: If the room is currently queued, don't handle messages.
     "rooms": {
       ".indexOn": "_queue/startTime",
       "$roomId": {
-        ".write": "auth !== null && !data.exists() && newData.child('_creator').val() === auth.uid",
         ".read": "auth !== null && (data.child('_creator').val() === auth.uid || data.child('players').child(auth.uid).exists())",
         "_startPing": {
           ".write": "auth !== null && data.parent().child('players').child(auth.uid).exists()"
@@ -29,6 +28,12 @@ TODO: If the room is currently queued, don't handle messages.
       }
     },
     "joinRequests": {
+      "$playerId": {
+        ".read": "auth !== null && $playerId === auth.uid",
+        ".write": "auth !== null && $playerId === auth.uid"
+      }
+    },
+    "newGameRequests": {
       "$playerId": {
         ".read": "auth !== null && $playerId === auth.uid",
         ".write": "auth !== null && $playerId === auth.uid"
