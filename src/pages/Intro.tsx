@@ -145,7 +145,7 @@ export default function Intro() {
           }).join("\n");
           if (mediaType === "image") {
             navigator.share({
-              text: `A computer made this image, but what prompted it?\n${prompts}\nhttp://bit.ly/3YHy6KA`})
+              text: `A computer made this image, but what prompted it?\n${prompts}\nhttp://bit.ly/3YHy6KA\n\nPlay at https://artifice.games`})
           } else {
             navigator.share({
               text: `A computer made this ${mediaType}:\n${IntroData[mediaType!].content}\n\nGuess the real prompt:\n${prompts}\n\nPlay at https://artifice.games`})
