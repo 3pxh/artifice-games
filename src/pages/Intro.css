@@ -11,7 +11,7 @@
   min-width: 100%;;
 }
 .Intro img {
-  max-width: 400px;
+  max-width: min(400px, 100%);
 }
 .Intro span {
   margin: 10px 0;
