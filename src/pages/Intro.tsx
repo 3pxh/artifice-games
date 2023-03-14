@@ -4,11 +4,11 @@ import { Routes } from "../router";
 import Animate from "../components/Animate";
 import SubmittableInput from "../components/SubmittableInput";
 import "./Intro.css";
+import imageSrc from "../../assets/intro_example.png";
 
 export const INTRO_STATE_STORAGE_KEY = "Intro-Finished";
 type Media = "poem" | "image" | "list";
 // "https://artifice-1.s3.us-west-2.amazonaws.com/images/StableDiffusion/-NQWFFRyTulHHSpxNjWI/1068966989.png";
-const imageSrc = "/assets/intro_example.png";
 const IntroData:Record<Media, {content:(string | JSX.Element), choices:string[], preface: string}> = {
   poem: {
     content: "\
