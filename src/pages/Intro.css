@@ -1,0 +1,44 @@
+.Intro {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding-bottom: 100px;
+  margin-bottom: 20px;
+  margin-top: 20px;
+  position: relative;
+  width: 400px;
+}
+.Intro img {
+  max-width: 400px;
+}
+.Intro span {
+  margin: 10px 0;
+}
+
+.Intro span.Intro-Generation {
+  font-weight: 600;
+  margin: 10px 0; 
+  white-space: pre-wrap; 
+}
+
+.Intro button {
+  background-color: aquamarine;
+  border: none;
+  font-size: 16pt;
+  margin: 5px;
+  padding: 10px;
+}
+.Intro button:hover, .Intro button:active {
+  background-color: aqua;
+}
+
+.Intro-Skip {
+  align-self: center;
+  font-size: 14pt;
+  margin-top: 20px;
+}
+.Intro-Final {
+  align-self: center;
+  margin-top: 20px;
+}

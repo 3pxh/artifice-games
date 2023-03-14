@@ -10,6 +10,7 @@ import GameSelection from "./GameSelection";
 import GameList from "./GameList";
 import RoomById from "./RoomById";
 import Support from "./Support";
+import Intro, { INTRO_STATE_STORAGE_KEY } from "./pages/Intro";
 
 const AuthRoute = () => {
   return <>
@@ -29,7 +30,9 @@ const Games = () => {
 const RootRedirect = () => {
   useEffect(() => {
     auth.onAuthStateChanged(() => {
-      if (!auth.currentUser) {
+      if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) !== "true") {
+        route("/intro");
+      } else if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) === "true") {
         route("/auth");
       } else if (window.location.pathname === "/auth") {
         window.history.back();
@@ -44,13 +47,16 @@ const RootRedirect = () => {
 export default function App() {
   const authContext = useAuth();
   const handleRoute = (e: any) => {
-    if (e.url !== "/auth" && !auth.currentUser) {
+    if (e.url !== "/auth" && e.url !== "/intro" && !auth.currentUser) {
       route("/auth");
     }
   };
   useEffect(() => {
     auth.onAuthStateChanged(() => {
-      if (!auth.currentUser) {
+      console.log("INTRO", window.localStorage.getItem(INTRO_STATE_STORAGE_KEY))
+      if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) !== "true") {
+        route("/intro");
+      } else if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) === "true") {
         route("/auth");
       } else if (window.location.pathname === "/auth") {
         window.history.back();
@@ -66,6 +72,7 @@ export default function App() {
     <TopNav /> 
     <Router onChange={handleRoute}>
       <Route path="/" component={RootRedirect} />
+      <Route path="/intro" component={Intro} />
       <Route path="/auth" component={AuthRoute} />
       <Route path="/create" component={Games} />
       <Route path="/games/:filter" component={GameList} />
