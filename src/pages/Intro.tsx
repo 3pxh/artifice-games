@@ -140,7 +140,7 @@ export default function Intro() {
         {!navigator.canShare 
         ? <span>It looks like the share button doesn't work on your browser. Take a screenshot instead.</span>
         : <button onClick={async () => {
-          const prompts = IntroData[mediaType!].choices.concat([`${IntroData[mediaType!].preface} ${lie}`]).map((c, i) => {
+          const prompts = IntroData[mediaType!].choices.concat([`${mediaType !== "image" ? `${IntroData[mediaType!].preface} ` : ""}${lie}`]).map((c, i) => {
             return `${LETTERS.charAt(i)}) ${c}`;
           }).join("\n");
           if (mediaType === "image") {
