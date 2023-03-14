@@ -7,7 +7,8 @@
   margin-bottom: 20px;
   margin-top: 20px;
   position: relative;
-  width: 400px;
+  max-width: min(400px, 100%);
+  min-width: 100%;;
 }
 .Intro img {
   max-width: 400px;
