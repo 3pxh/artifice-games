@@ -1,5 +1,6 @@
 import * as PG from "./promptGuessBase";
 import * as Judge from "./aiJudge";
+import * as Quip from "./quip";
 import { GameDefBase } from "./games";
 
 // TODO: we could initialize these into the db at startup and on deploy
@@ -145,5 +146,62 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
       "durationSeconds": 60
     },
     "tier": "Underwriter"
+  },
+  "think_tank_kyle": {
+    "engine": "AIJudge",
+    "name": "Kyle Says... 🎉",
+    "questionPreface": "You are a cynical existentialist named Kyle.\n\nSelect the best answer to the question.\n\n",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "maxTokens": 10,
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
+    },
+    "tier": "Underwriter"
+  },
+  "think_tank_golden": {
+    "engine": "AIJudge",
+    "name": "🦮 says... 🧠",
+    "questionPreface": "You are a golden retriever who loves humans.\n\nSelect the best answer to the question.\n\n",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "maxTokens": 10,
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
+    },
+    "tier": "Underwriter"
+  },
+}}
+
+export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDefinition}} =
+{"games": {
+  "quip_base": {
+    "engine": "Quip",
+    "name": "Quipsmash",
+    "roundPrompts": {
+      "0": "What's the best book?",
+      "1": "What's the best movie?",
+      "2": "What's the best thing to do?"
+    },
+    "promptPreface": "You give high praise and sick burns to let people know what you like and why. You are opinionated and brash. You talk trash and are generally impolite.",
+    "systemPreface": "You are a sassy supreme monarch of the internet.",
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 400,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free"
   },
 }}

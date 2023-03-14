@@ -12,6 +12,7 @@ import { messageRoom, pingRoom, updatePlayer, setRoomLastSeenNow } from "./actio
 import { EngineName, Scores } from "../functions/src/games/games";
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import * as AIJudge from "./games/AIJudge/Renderer";
+import * as Quip from "./games/Quip/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
@@ -187,9 +188,10 @@ export function Room(props: {room: RoomData}) {
   }
 
   
-  const engines = {
+  const engines:Record<EngineName, any> = {
     "PromptGuess": RenderPromptGuess,
     "AIJudge": AIJudge.RenderAIJudge,
+    "Quip": Quip.RenderQuip,
   }
   const Game = engines[props.room.definition.engine];
 

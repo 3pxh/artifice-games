@@ -3,9 +3,17 @@ import axios, { AxiosError } from "axios";
 import * as AWS from "aws-sdk";
 import App from "./app";
 
-export type Models =  "GPT3" | "StableDiffusion" | "DALLE"
+export type Models =  "GPT3" | "StableDiffusion" | "DALLE" | "ChatGPT"
 export type GPT3Def = {
   name: "GPT3",
+  stopSequences?: {
+    [k: string]: string
+  },
+  maxTokens?: number,
+  temperature?: number,
+}
+export type ChatGPTDef = {
+  name: "ChatGPT",
   stopSequences?: {
     [k: string]: string
   },
@@ -19,18 +27,24 @@ export type SDDef = {
 export type DalleDef = {
   name: "DALLE",
 }
-export type ModelDef = GPT3Def | SDDef | DalleDef;
+export type ModelDef = GPT3Def | SDDef | DalleDef | ChatGPTDef;
+type Schema = {[key: string]: "string" | "number"};
+type ParsedSchema = {[key: string]: string | number};
 export type GenerationRequest = {
   room: string,
   uid: string,
   model: ModelDef,
   template: {template: string},
   prompt: string,
+  chatGPTParams?: {
+    messages: {role: string, content: string}[],
+    schema: Schema,
+  }
 }
 
 export type GenerationResponse = {
   _context?: any,
-  generation: string,
+  generation: string | ParsedSchema,
   timeFulfilled?: number,
 }
 
@@ -142,7 +156,7 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
     },
     generation: res.Location,
     timeFulfilled: new Date().getTime(),
-  }
+  };
 }
 
 async function runDalle(r: GenerationRequest): GenerationPromise {
@@ -183,6 +197,77 @@ async function runDalle(r: GenerationRequest): GenerationPromise {
     _context: { },
     generation: res.Location,
     timeFulfilled: new Date().getTime(),
+  }
+}
+
+function parseWithSchema(res: string, schema: Schema) {
+  try {
+    const parsed = JSON.parse(res);
+    const isValid = Object.entries(schema).every(([n, t]) => {
+      return parsed[n] && typeof(parsed[n]) === t;
+    })
+    if (isValid) {
+      return parsed;
+    } else {
+      return null;
+    }
+  } catch(e) {
+    return null;
+  }
+}
+
+async function runChatGPT(r: GenerationRequest, retries=1): GenerationPromise {
+  const MAX_RETRIES = 2;
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("Missing OPENAI_API_KEY");
+  }
+  if (!r.chatGPTParams) {
+    throw new Error("Trying to run ChatGPT without defining chatGPTMessages");
+  }
+  const model = r.model as ChatGPTDef;
+  const params:any = {
+    "model": "gpt-3.5-turbo",
+    "messages": r.chatGPTParams.messages,
+    "temperature": model.temperature ?? 0.7,
+    "max_tokens": model.maxTokens ?? 256,
+    "top_p": 1,
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+  }
+  const res = await axios({
+    url: "https://api.openai.com/v1/chat/completions",
+    headers: {
+      Authorization: "Bearer " + process.env.OPENAI_API_KEY, 
+      "Content-Type": "application/json" 
+    },
+    method: "POST",
+    data: JSON.stringify(params)
+  });
+  const response = await res.data;
+  logger.log("Running ChatGPT, got response****", {response});
+  if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
+    if (r.chatGPTParams.schema) {
+      const parsed = parseWithSchema(response.choices[0].message.content, r.chatGPTParams.schema);
+      if (parsed !== null) {
+        return {
+          _context: {},
+          generation: parsed,
+          timeFulfilled: new Date().getTime(),
+        }
+      } else if (retries < MAX_RETRIES) {
+        return runChatGPT(r, retries+1)
+      } else {
+        throw new Error(`Failed to parse schema after ${retries} tries. Last response: ${JSON.stringify(response)}`)
+      }
+    } else {
+      return {
+        _context: {},
+        generation: response.choices[0].content,
+        timeFulfilled: new Date().getTime(),
+      }  
+    }
+  } else {
+    throw new Error(`ChatGPT runner failed with response: ${JSON.stringify(response)}`)
   }
 }
 
@@ -233,6 +318,7 @@ const runners:Record<Models, Generator>  = {
   "GPT3": runGPT3,
   "StableDiffusion": runStableDiffusion,
   "DALLE": runDalle,
+  "ChatGPT": runChatGPT,
 }
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {

@@ -129,5 +129,26 @@
       "durationSeconds": 60
     },
     "tier": "Underwriter"
+  },
+  "quip_base": {
+    "engine": "Quip",
+    "name": "Quipsmash",
+    "roundPrompts": {
+      "0": "What's the best book?",
+      "1": "What's the best movie?",
+      "2": "What's the best thing to do?"
+    },
+    "promptPreface": "You give high praise and sick burns to let people know what you like and why. You are opinionated and brash. You talk trash and are generally impolite.",
+    "systemPreface": "You are a sassy supreme monarch of the internet.",
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 400,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free"
   }
 }}
