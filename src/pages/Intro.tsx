@@ -50,11 +50,6 @@ The sun fades away",
 // Preload image
 const image = new Image();
 image.src = imageSrc;
-const urlToFile = async(url: string)=> {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return new File([blob], 'image.png', {type: blob.type});
-}
 
 export default function Intro() {
   const [stage, setStage] = useState(0);
@@ -149,12 +144,8 @@ export default function Intro() {
             return `${LETTERS.charAt(i)}) ${c}`;
           }).join("\n");
           if (mediaType === "image") {
-            const img = await urlToFile(imageSrc);
             navigator.share({
-              title: "Artifice Games",
-              text: `Guess the real prompt:\n${prompts}`,
-              url: "https://artifice.games",
-              files: [img]})
+              text: `A computer made this image, but what prompted it?\n${prompts}\nhttp://bit.ly/3YHy6KA`})
           } else {
             navigator.share({
               text: `A computer made this ${mediaType}:\n${IntroData[mediaType!].content}\n\nGuess the real prompt:\n${prompts}\n\nPlay at https://artifice.games`})
