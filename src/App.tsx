@@ -1,5 +1,5 @@
 import { h, Fragment } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect } from "preact/hooks";
 import { Router, Route, route } from "preact-router";
 import { auth } from "./firebaseClient";
 import { useAuth, AuthContext } from "./AuthProvider";
@@ -16,14 +16,6 @@ const AuthRoute = () => {
   return <>
     <h2>🎨 Artifice 🤖 Games 🕹️</h2>
     <Auth />
-  </>
-}
-
-const Games = () => {
-  return <>
-    <div class="GameContainer">
-      <GameSelection />
-    </div>
   </>
 }
 
@@ -59,7 +51,7 @@ export default function App() {
       <Route path="/" component={RootRedirect} />
       <Route path="/intro" component={Intro} />
       <Route path="/auth" component={AuthRoute} />
-      <Route path="/create" component={Games} />
+      <Route path="/create" component={GameSelection} />
       <Route path="/games/:filter" component={GameList} />
       <Route path={Routes.room.pattern} component={RoomById} />
       <Route path="/support" component={Support} />
