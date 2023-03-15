@@ -1,59 +1,115 @@
-# Onboard
+# Artifice Games
 
-Get yarn. Then `yarn install`. May need to specify to install along with the devDependencies.
+# Developing in codebase
 
-Get the firebase CLI. Run `firebase login`. Make sure that you have access to the threepixelheart project with `firebase projects:list`.
+## Install and configure dependencies 
+1. Install [Yarn](https://yarnpkg.com/)
+   - May need to specify to install along with the devDependencies.
+2. Run `yarn install` from top-level directory
+3. Install [Java 19.02](https://www.oracle.com/java/technologies/javase/jdk19-archive-downloads.html) for your OS
+4. Install the [Firebase CLI](https://firebase.google.com/docs/cli) `npm install -g firebase-tools`
+5. Message George to be added to **threepixelheart** Firebase project
+   - Confirm that you have access to the project with `firebase projects:list`
+6. Run `firebase login` and authenticate with your Google account
+7. Run `firebase init` from top-level directory
+8. When asked if it's an existing project, select the **threepixelheart** project.
+9. Answer the following prompts as such:
+   - Select these with the `space` key:
+     - **realtime database**
+     - **firestore**
+     - **functions**
+     - **cloud storage**
+   - File database.rules.json already exists. Do you want to overwrite it with the Realtime Database Security Rules for threepixelheart-f5674-default-rtdb from the Firebase console? (y/N) 
+     - **N**
+   - What file should be used for Firestore Rules? (firestore.rules) 
+     - **[Enter]**
+   - File firestore.rules already exists. Do you want to overwrite it with the Firestore Rules from the Firebase Console? (y/N) 
+     - **N**
+   - What file should be used for Firestore indexes? (firestore.indexes.json) 
+     - **[Enter]**
+   - File firestore.indexes.json already exists. Do you want to overwrite it with the Firestore Indexes from the Firebase Console? (y/N)
+     - **N**
+   - Would you like to initialize a new codebase, or overwrite an existing one? (Use arrow keys)
+     - **Overwrite**
+   - What language would you like to use to write Cloud Functions? (Use arrow keys)
+     - **TypeScript**
+   - Do you want to use ESLint to catch probable bugs and enforce style? (Y/n) 
+     - **N**
+   - File functions/package.json already exists. Overwrite? (y/N) 
+     - **N**
+   - File functions/tsconfig.json already exists. Overwrite? (y/N) 
+     - **N**
+   - File functions/src/index.ts already exists. Overwrite? (y/N) 
+     - **N**
+   - File functions/.gitignore already exists. Overwrite? (y/N) 
+     - **N**
+   - Do you want to install dependencies with npm now? (Y/n) 
+     - **Y**
+   - What file should be used for Storage Rules? (storage.rules) 
+     - **[Enter]**
+   - File storage.rules already exists. Overwrite? (y/N) 
+     - **N**
 
-In the toplevel directory, run `firebase init`.
+## Run local dev environments
+1. Run `yarn dev` from top-level directory
+   - > Vite rebuilds and re-serves stuff automatically. View preview at https://localhost:3000
+2. Run `firebase init emulators` and answer the following prompts as such:
+   - Select these with the `space` key:
+     - **functions**
+     - **firestore**
+     - **database**
+     - **storage**
+     - **auth**
+     - > Auth is required to account for the database access control rules. Firestore may soon be required for stripe billing data emulation.
+3. Run firebase
+   -  In a new tab: `cd functions; npm run emulate`
+      -  > This will run all emulators (e.g., realtime databse, functions, and cloud storage) and show them with a nice UI. View at https://localhost:4000
+   -  In a new tab: `cd functions; npm run build:watch`
+      - > This allows hot reloading of the cloud functions as you work on them (whereas npm run emulate will only compile once).
 
-* <small>Select the <span style="color:green">realtime database</span>, <span style="color:green">firestore</span>, <span style="color:green">functions</span>, <span style="color:green">cloud storage</span>.<br/></small>
-* <small>When asked if it's an existing project, select the <span style="color:green">threepixelheart</span> project.<br/></small>
-* <small>File database.rules.json already exists. Do you want to overwrite it with the Realtime Database Security Rules for threepixelheart-f5674-default-rtdb from the Firebase console? <span style="color:green">No</span><br/></small>
-* <small>What language would you like to use to write Cloud Functions? <span style="color:green">TypeScript</span><br/></small>
-* <small>Do you want to use ESLint to catch probable bugs and enforce style? <span style="color:green">No</span><br/></small>
-* <small>File functions/package.json already exists. Overwrite? <span style="color:green">No</span><br/></small>
-* <small>File functions/tsconfig.json already exists. Overwrite? <span style="color:green">No</span><br/></small>
-* <small>File functions/src/index.ts already exists. Overwrite? <span style="color:green">No</span><br/></small>
-* <small>File functions/.gitignore already exists. Overwrite? <span style="color:green">No</span><br/></small>
-* <small>Do you want to install dependencies with npm now? <span style="color:green">Yes</span><br/></small>
-* <small>What file should be used for Storage Rules? (storage.rules) <span style="color:green">[enter]</span><br/></small>
-* <small>File storage.rules already exists. Overwrite? <span style="color:green">No</span><br/></small>
+Local dev won't hit the production database, just the local emulated database. If in the future we need certain data in the database at boot then we'll add an initializer and check it in (and use --import-data).
 
-# Install the billing extension
+If you like, add the [preact devtools extension](https://preactjs.github.io/preact-devtools/). Preferably, use a browser with no credentials/logins, as I haven't vetted what actually ships in the extension.
 
-In the event that you need to work on billing, `firebase ext:install --local stripe/firestore-stripe-payments`. This requires keys from Stripe.
-Additionally we want to test in local env with stripe, [https://dashboard.stripe.com/test/webhooks/create?endpoint_location=local]
+## Dev errors
+You may run into an issue where ports are already in use, causing aspects of the development environment to fail. This can happen if Firebase emulators don't shut down properly.
 
-Have to create products to have them sync in firestore :/ (it'd be nice if we could import once from Stripe)
+If you run into an error running `npm run emulate` that resembles:
 
-Forward webhook events to your local machine:
-stripe login
-stripe listen --forward-to http://127.0.0.1:5001/threepixelheart-f5674/us-central1/ext-firestore-stripe-payments-handleWebhookEvents
+```
+storage: Port 9199 is not open on localhost (127.0.0.1,::1), could not start Storage Emulator.
+```
 
-Running that will produce a webhook secret. You then need to configure the stripe on your local machine by creating `extensions/firestore-stripe-payments.secret.local` with the following:
-STRIPE_API_KEY=rk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
+You'll need to find the process occupying the port:
 
-This can also be done by using `firebase ext:configure firestore-stripe-payments --local`. But don't check in the resulting `firestore-stripe-payments.env`.
+```
+lsof -i tcp:9199
+```
 
-# Developing
+This command will provide a result similar to:
 
-To serve the frontend, from the toplevel directory simply `yarn dev`. Vite rebuilds and re-serves stuff automatically. Default port 3000.
-
-Make sure you have all the emulators with `firebase init emulators` and check off `functions`, `firestore`, `database`, `storage`, and `auth`. Auth is  required in order to account for the database access control rules. Firestore may soon be required for stripe billing data emulation.
-
-To run firebase locally it helps to open up two terminals and cd functions in both. In one: `npm run emulate` and in the other: `npm run build:watch`. This allows hot reloading of the cloud functions as you work on them (whereas npm run emulate will only compile once).
-
-That should run all the emulators (realtime databse, functions, and cloud storage) and show them with a nice UI. Default port 4000.
-
-Local dev won't hit the production database, just the local emulated db. If in the future we need certain data in the db at boot then we'll add an initializer and check it in (and use --import-data)
-
-If you like, add the preact devtools extension (preferably on a browser on which has no credentials/logins, as I haven't vetted what actually ships in the extension) https://preactjs.github.io/preact-devtools/
-
-# Dev errors
-
-If firebase emulators don't shut down properly, they can leave processes running which occupy the port. You'll notice because when you run `npm run emulate` you'll get an error like `Error: Could not start Storage Emulator, port taken.`. Track to find which port, for example `storage: Port 9199 is not open on localhost (127.0.0.1,::1), could not start Storage Emulator.`. Then find the process occupying the port, e.g. `lsof -i tcp:9199`,
+```
 COMMAND   PID     USER   FD   TYPE             DEVICE SIZE/OFF NODE NAME
 node    30594 hoqqanen   53u  IPv4 0xefe9db0c4f5f83a7      0t0  TCP localhost:9199 (LISTEN)
+```
 
-and kill it by referencing the PID column, e.g. `kill 30594` or `kill -9 30594` if it's not listening.
+This process can be killed by referencing the PID column value using the `kill` command: `kill 30594` or `kill -9 30594` if it's not listening.
+
+You can substitute **9199** with whichever port number is in use.
+
+## Billing
+In the event that you need to work on billing, you can run the following commands to configure and run Stripe: 
+
+1. Run `firebase ext:install --local stripe/firestore-stripe-payments`
+   - This requires keys from Stripe. Additionally we want to test in local env with Stripe, [https://dashboard.stripe.com/test/webhooks/create?endpoint_location=local]
+   - > **TODO:** Have to create products to have them sync in firestore. It'd be nice if we could import once from Stripe.
+2. Forward webhook events to your local machine:
+   -  `stripe login`
+   -  `stripe listen --forward-to http://127.0.0.1:5001/threepixelheart-f5674/us-central1/ext-firestore-stripe-payments-handleWebhookEvents`
+   -  > These commands will produce a webhook secret.
+3. Configure Stripe on your local machine by creating `extensions/firestore-stripe-payments.secret.local` with the following:
+    ```
+    STRIPE_API_KEY=rk_test_...
+    STRIPE_WEBHOOK_SECRET=whsec_...
+    ```
+   - > This can also be done by using `firebase ext:configure firestore-stripe-payments --local` but don't check-in the resulting `firestore-stripe-payments.env`.
