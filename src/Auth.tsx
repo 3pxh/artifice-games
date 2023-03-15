@@ -80,7 +80,7 @@ export default function Auth() {
     </>
   } else {
     return <>
-      Check {window.localStorage.getItem("emailForSignIn")} for a login link.
+      You are logged in as {authContext.user.email}
     </>
   }
 }

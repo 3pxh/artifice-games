@@ -161,7 +161,7 @@ export default function Intro() {
           That's the gist of Artifice. Tell the AI to make images, poems, listicles, and more!
         </span>
         <span>
-          There's even a game where you give the AI multiple choice questions and see what it thinks.
+          There's even a game where you quiz the AI with multiple choice questions and find out what it thinks.
         </span>
         <span>
           Play live with your friends for points, or just for the laughs.

@@ -37,7 +37,7 @@ const RootRedirect = () => {
       } else if (window.location.pathname === "/auth") {
         window.history.back();
       } else {
-        route("/games");
+        route("/create");
       }
     });
   });
@@ -48,24 +48,9 @@ export default function App() {
   const authContext = useAuth();
   const handleRoute = (e: any) => {
     if (e.url !== "/auth" && e.url !== "/intro" && !auth.currentUser) {
-      route("/auth");
+      route("/");
     }
   };
-  useEffect(() => {
-    auth.onAuthStateChanged(() => {
-      console.log("INTRO", window.localStorage.getItem(INTRO_STATE_STORAGE_KEY))
-      if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) !== "true") {
-        route("/intro");
-      } else if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) === "true") {
-        route("/auth");
-      } else if (window.location.pathname === "/auth") {
-        window.history.back();
-      } else if (window.location.pathname === "/") {
-        route("/create");
-      }
-      // TODO: check if they need to verify email?
-    });
-  }, [])
 
   return <>
   <AuthContext.Provider value={authContext}>

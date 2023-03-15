@@ -23,7 +23,7 @@ export default function TopNav() {
   } else {
     return <div class="TopNav">
       <Link activeClassName="TopNav--active" href="/auth">
-        Home
+        Log In
       </Link>
     </div>
   }

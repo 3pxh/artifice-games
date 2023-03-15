@@ -4,14 +4,12 @@
   flex-direction: column;
   height: 100%;
   padding-bottom: 100px;
-  margin-bottom: 20px;
-  margin-top: 20px;
+  margin: 20px 10px;
   position: relative;
-  max-width: min(400px, 100%);
-  min-width: 100%;;
+  width: min(500px, 100% - 20px);
 }
 .Intro img {
-  max-width: min(400px, 100%);
+  max-width: min(500px, 100% - 20px);
 }
 .Intro span {
   margin: 10px 0;
