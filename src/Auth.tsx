@@ -2,6 +2,8 @@ import { h, Fragment } from "preact";
 import { useContext, useState } from "preact/hooks";
 import { AuthContext, AuthType } from "./AuthProvider";
 import SubmittableInput from "./components/SubmittableInput";
+import { INTRO_STATE_STORAGE_KEY } from "./pages/Intro";
+import { Routes } from "./router";
 
 enum LoginState {"Anon", "Email", "Choosing"};
 // TODO: refactor this and AuthProvider so it's simpler.
@@ -58,6 +60,10 @@ export default function Auth() {
         <button onClick={anonAuth}>
           Log in anonymously
         </button>
+        <a href="#" style="text-align:center; margin: 20px 0; font-size:14pt;" onClick={() => {
+          window.localStorage.setItem(INTRO_STATE_STORAGE_KEY, "false");
+          Routes.navigate(Routes.intro.href);
+        }}>replay introduction</a>
       </div>
     } else if (loginState === LoginState.Anon) {
       return <>Logging in...</>
@@ -74,7 +80,7 @@ export default function Auth() {
     </>
   } else {
     return <>
-      Check {window.localStorage.getItem("emailForSignIn")} for a login link.
+      You are logged in as {authContext.user.email}
     </>
   }
 }
