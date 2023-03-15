@@ -97,6 +97,16 @@ This process can be killed by referencing the PID column value using the `kill` 
 
 You can substitute **9199** with whichever port number is in use.
 
+## Avatars
+
+Avatars need to be manually added to Firebase Storage when developing locally:
+
+1. Spin up the development environment
+2. Navigate to Firebase Emulators UI at https://localhost:4000
+3. Click "Storage" in top navigation
+4. Create folder named `avatars`
+5. Upload all avatars into newly-created folder
+
 ## Billing
 In the event that you need to work on billing, you can run the following commands to configure and run Stripe: 
 
