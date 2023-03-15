@@ -207,9 +207,9 @@ export function Room(props: {room: RoomData}) {
     </>
   } else if (isLoaded && authContext.user) {
     return <div className="Room">
-      <Header />
       <div className="Room-TabPane">
         <div className={`Room-Pane ${activeTab === "game" ? "Room-Pane--active" : "Room-Pane--inactive"}`}>
+          <Header />
           <GameTimer 
             key={"timer"} 
             roomId={props.room.id} 

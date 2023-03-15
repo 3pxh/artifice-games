@@ -1,7 +1,7 @@
 .Room {
 	display: flex;
 	flex-direction: column;
-	height: calc(100% - 26px);
+	height: calc(100% - 43px);
   --mobile-header-height: 60px;
   --mobile-tab-height: 50px;
 }
@@ -19,10 +19,13 @@
 }
 
 @media (max-width: 1000px) {
+  .Room {
+    max-width: 100%;
+  }
   .Room-TabPane {
     display: flex;
     flex-direction: row;
-    height: calc(100% - var(--mobile-header-height) - var(--mobile-tab-height) - 20px);
+    height: calc(100% - var(--mobile-tab-height));
     overflow-y: scroll;
     width: 100%;
   }
@@ -32,7 +35,7 @@
   }
   .Room-Pane--active {
     display: visible;
-    min-width: max(400px, 100%);
+    min-width: min(400px, 100%);
     max-width: 600px;
   }
   
@@ -63,13 +66,12 @@
   .Room-TabPane {
     display: flex;
     flex-direction: row;
-    height: calc(100% - var(--mobile-header-height) - 40px);
+    height: calc(100% - 40px);
     justify-content: center;
   }
   .Room-Pane {
     padding: 0 10px;
     width: calc(50% - 20px);
-    /* max-width: 600px; */
   }
   
   .Room-TabSelector {
