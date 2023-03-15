@@ -27,6 +27,14 @@ TODO: If the room is currently queued, don't handle messages.
         }
       }
     },
+    "chats": {
+      "$roomId": {
+        ".read": "auth !== null && data.parent().parent().child('rooms').child($roomId).child('players').child(auth.uid).exists()",
+        "$k": {
+          ".write": "auth !== null && !data.exists() && newData.child('uid').val() === auth.uid && data.parent().parent().parent().child('rooms').child($roomId).child('players').child(auth.uid).exists()"
+        }
+      }
+    },
     "joinRequests": {
       "$playerId": {
         ".read": "auth !== null && $playerId === auth.uid",

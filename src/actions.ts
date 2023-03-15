@@ -28,6 +28,19 @@ const createGame = async (opts: CreateRequest, onSuccess: (id: string) => void, 
   }
 }
 
+const sendChat = (roomId: string, message: string) => {
+  if (auth.currentUser) {
+    const k = push(ref(db, `chats/${roomId}`)).key;
+    if (k) {
+      update(ref(db, `chats/${roomId}/${k}`), {
+        content: message,
+        uid: auth.currentUser.uid,
+      });
+      return k;
+    }
+  }
+}
+
 const pingRoom = (roomId: string) => {
   console.log("ping room", new Date().getTime())
   set(ref(db, `rooms/${roomId}/_startPing`), new Date().getTime());
@@ -117,4 +130,4 @@ const updatePlayer = (roomId: string, m: any) => {
   }
 }
 
-export { createGame, pingRoom, joinRoom, getRoom, messageRoom, updatePlayer, setRoomLastSeenNow }
+export { createGame, pingRoom, joinRoom, getRoom, messageRoom, updatePlayer, setRoomLastSeenNow, sendChat }

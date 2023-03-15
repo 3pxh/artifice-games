@@ -25,13 +25,11 @@ export default function RoomById(props: {id: string}) {
   } else if (!room) {
     return <>Room not found!</>
   } else {
-    return <div class="GameContainer">
-      <Room room={{
-        ...room,
-        // TODO: should we store these / deduce them?
-        isPlayer: true,
-        isInputOnly: false,
-      }} />
-    </div>
+    return <Room room={{
+      ...room,
+      // TODO: should we store these / deduce them?
+      isPlayer: true,
+      isInputOnly: false,
+    }} />
   }
 }

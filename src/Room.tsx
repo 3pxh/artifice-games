@@ -16,6 +16,8 @@ import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functi
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
 import PlayerStatuses from "./components/PlayerStatuses";
+import Chat from "./components/Chat";
+import "./Room.css";
 
 // TODO: make the type of this depend on the game in question
 // Or rather, include the various room types
@@ -83,6 +85,7 @@ const GameTimer = (props: {roomId: string, uid: string, gameState: Signal<GameSt
 export function Room(props: {room: RoomData}) {
   const [isWaiting, setIsWaiting] = useState<boolean>(true);
   const [startTime, setStartTime] = useState<number>(0);
+  const [activeTab, setActiveTab] = useState<"game" | "chat">("game");
   const gameState = useSignal<GameState | null>(null);
   const players = useSignal<PromptGuessRoom["players"] | null>(null);
   const scores = useComputed<Scores | null>(() => gameState.value?.scores ?? null);
@@ -100,6 +103,7 @@ export function Room(props: {room: RoomData}) {
     }
     return false;
   })
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
@@ -142,11 +146,9 @@ export function Room(props: {room: RoomData}) {
     // TODO: for async games, this room code could well be expired.
     // We should instead have an invite link with the room id.
     // Max room size? Could go on the room, set at create given the user's paid level.
-    return (
-      <>
-        <p>You are playing: {props.room.definition.name} | Code: {props.room._shortcode}</p>
-      </>
-    )
+    return <p class="Room-Header">
+      You are playing: {props.room.definition.name} | Code: {props.room._shortcode}
+    </p>
   }
 
   const WaitTime = () => {
@@ -191,48 +193,77 @@ export function Room(props: {room: RoomData}) {
   }
   const Game = engines[props.room.definition.engine];
 
+  const switchTab = (tab: "game" | "chat") => {
+    if (activeTab === "chat" || tab === "chat") {
+      setHasUnreadMessages(false);
+    }
+    setActiveTab(tab);
+  }
+
   if (isWaiting) {
     return <>
       <Header />
       <WaitTime />
     </>
   } else if (isLoaded && authContext.user) {
-    return <>
+    return <div className="Room">
       <Header />
-      <GameTimer 
-        key={"timer"} 
-        roomId={props.room.id} 
-        uid={authContext.user.uid}
-        gameState={gameState} />
-      {(isLobby.value || !hasSetNameAndAvatar.value)
-      // TODO: improve the UX.
-      // As soon as they set avatar/name this disappears, no confirmation
-      ? <>
-        <PlayerHandleInput />
-        <AvatarPicker 
-          players={players as Signal<PromptGuessRoom["players"]>}
-          onSelect={(v: string) => {
-            const m:Partial<PromptGuessRoom["players"]["uid"]> = {"avatar": v}
-            updatePlayer(props.room.id, m);
-          }} />
-          {/* Continue / start button?
-          Which only shows once they set an avatar/name */}
-      </>
-      : <></>
-      }
-      <PlayerStatuses 
-        key={"status"} 
-        players={players as Signal<PromptGuessRoom["players"]>} 
-        scores={scores.value} />
-      <Game 
-        key={"game"}
-        room={props.room as any}
-        // TODO: How do we do manage type checking at the room level?
-        gameState={gameState as any}
-        players={players as any}
-        isPlayer={props.room.isPlayer}
-        isInputOnly={props.room.isInputOnly} />
-    </>
+      <div className="Room-TabPane">
+        <div className={`Room-Pane ${activeTab === "game" ? "Room-Pane--active" : "Room-Pane--inactive"}`}>
+          <GameTimer 
+            key={"timer"} 
+            roomId={props.room.id} 
+            uid={authContext.user.uid}
+            gameState={gameState} />
+          {(isLobby.value || !hasSetNameAndAvatar.value)
+          // TODO: improve the UX.
+          // As soon as they set avatar/name this disappears, no confirmation
+          ? <>
+            <PlayerHandleInput />
+            <AvatarPicker 
+              players={players as Signal<PromptGuessRoom["players"]>}
+              onSelect={(v: string) => {
+                const m:Partial<PromptGuessRoom["players"]["uid"]> = {"avatar": v}
+                updatePlayer(props.room.id, m);
+              }} />
+          </>
+          : <></>
+          }
+          <PlayerStatuses 
+            key={"status"} 
+            players={players as Signal<PromptGuessRoom["players"]>} 
+            scores={scores.value} />
+          <Game 
+            key={"game"}
+            room={props.room as any}
+            // TODO: How do we do manage type checking at the room level?
+            gameState={gameState as any}
+            players={players as any}
+            isPlayer={props.room.isPlayer}
+            isInputOnly={props.room.isInputOnly} />
+        </div>
+        <div className={`Room-Pane ${activeTab === "chat" ? "Room-Pane--active" : "Room-Pane--inactive"}`} >
+          <Chat 
+            key={"chat"} 
+            roomId={props.room.id} 
+            players={players}
+            isActive={activeTab === "chat"}
+            setHasUnreadMessages={setHasUnreadMessages} />
+        </div>
+      </div>
+      <div className="Room-TabSelector">
+        <div 
+          className={`Room-Tab ${activeTab === "game" ? "Room-Tab--active" : ""}`} 
+          onClick={() => switchTab("game")}>
+            🕹️
+        </div>
+        <div 
+          className={`Room-Tab ${activeTab === "chat" ? "Room-Tab--active" : ""}`} 
+          onClick={() => switchTab("chat")}>
+            💬{activeTab !== "chat" && hasUnreadMessages ? <span class="Room-Tab--Unread"></span> : ""}
+        </div>
+      </div>
+    </div>
   } else {
     return <Header />
   }

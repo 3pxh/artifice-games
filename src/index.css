@@ -99,8 +99,11 @@ a:hover {
 	text-decoration: underline;
 }
 
-.GameContainer{
+.GameContainer {
+	display: flex;
+	flex-direction: column;
 	padding: 10px;
+	height: 100%;
 	max-width: min(100%, 600px);
 }
 
