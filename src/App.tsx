@@ -13,10 +13,7 @@ import Support from "./Support";
 import Intro, { INTRO_STATE_STORAGE_KEY } from "./pages/Intro";
 
 const AuthRoute = () => {
-  return <>
-    <h2 className="Logo">🎨 Artifice 🤖 Games 🕹️</h2>
-    <Auth />
-  </>
+  return <Auth />
 }
 
 const RootRedirect = () => {
