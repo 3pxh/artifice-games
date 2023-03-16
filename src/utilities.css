@@ -1,0 +1,27 @@
+/* Visibility */
+._a11y_hidden {
+  height: 1px;
+  left: -10000px;
+  overflow: hidden;
+  position: absolute;
+  top: auto;
+  width: 1px;
+}
+
+._a11y_visible {
+  height: initial;
+  left: initial;
+  overflow: initial;
+  position: initial;
+  top: initial;
+  width: initial;
+}
+
+/* Layout */
+._container {
+  margin-left: auto;
+  margin-right: auto;
+  padding-bottom: .75rem;
+  padding-top: .75rem;
+  max-width: 1440px;
+}
