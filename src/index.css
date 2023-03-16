@@ -25,19 +25,11 @@ fieldset {
 }
 
 #app {
-	align-items: center;
-	bottom: 0;
-	display: flex;
-	flex-direction: column;
-	left: 0;
-  position: absolute;
-	right: 0;
-	top: 0;
-  background-color: #673ab8;
+  background-color: var(--color-purple);
   color: #fff;
+  min-height: 100vh;
+  height: 100%;
   font-size: 1.5em;
-	overflow-y: scroll;
-	overflow-x: hidden;
 }
 
 .link {
