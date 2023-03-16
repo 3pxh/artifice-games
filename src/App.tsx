@@ -14,7 +14,7 @@ import Intro, { INTRO_STATE_STORAGE_KEY } from "./pages/Intro";
 
 const AuthRoute = () => {
   return <>
-    <h2>🎨 Artifice 🤖 Games 🕹️</h2>
+    <h2 className="Logo">🎨 Artifice 🤖 Games 🕹️</h2>
     <Auth />
   </>
 }
