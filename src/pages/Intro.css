@@ -6,11 +6,12 @@
   padding-bottom: 100px;
   margin: 20px 10px;
   position: relative;
-  width: min(500px, 100% - 20px);
 }
+
 .Intro img {
   max-width: min(500px, 100% - 20px);
 }
+
 .Intro span {
   margin: 10px 0;
 }
@@ -28,6 +29,7 @@
   margin: 5px;
   padding: 10px;
 }
+
 .Intro button:hover, .Intro button:active {
   background-color: aqua;
 }
@@ -37,6 +39,7 @@
   font-size: 14pt;
   margin-top: 20px;
 }
+
 .Intro-Final {
   align-self: center;
   margin-top: 20px;
