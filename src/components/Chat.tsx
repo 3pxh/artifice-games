@@ -48,18 +48,18 @@ export default function Chat(props: {
     onValue(chatRef, (snapshot) => {
       messages.value = {
         ...messages.value,
-        ...(snapshot.val() as Messages)
+        ...(snapshot.val() ?? {} as Messages)
       };
     }, {onlyOnce: true});
     const MAX_NEW_MESSAGES = 5;
     const unsubscribe = onValue(query(chatRef, limitToLast(MAX_NEW_MESSAGES)), (snapshot) => {
-      const unread = Object.keys(snapshot.val()).filter(k => !messages.value[k]).length;
+      const unread = Object.keys(snapshot.val() ?? {}).filter(k => !messages.value[k]).length;
       if (unread > 0 && props.setHasUnreadMessages) {
         props.setHasUnreadMessages(true);
       }
       messages.value = {
         ...messages.value,
-        ...(snapshot.val() as Messages)
+        ...(snapshot.val() ?? {} as Messages)
       };
       scrollToBottom();
     });
