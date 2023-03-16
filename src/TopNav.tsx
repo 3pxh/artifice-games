@@ -5,26 +5,24 @@ import { AuthContext } from './AuthProvider'
 
 export default function TopNav() {
   const authContext = useContext(AuthContext);
+  const loggedInLinks = [
+    { href: "/create", label: "Create / Join" },
+    { href: "/games/active", label: "Active Games" },
+    { href: "/games/past", label: "Past Games" },
+  ];
+  const loggedOutLinks = [
+    { href: "/auth", label: "Log In" },
+  ]
+  const links = authContext.user ? loggedInLinks : loggedOutLinks;
 
-  if (authContext.user) {
-    return <div class="TopNav">
-      <Link activeClassName="TopNav--active" href="/create">
-        Create / Join
-      </Link>
-      <Link activeClassName="TopNav--active" href="/games/active">
-        Active Games
-      </Link>
-      <Link activeClassName="TopNav--active" href="/games/past">
-        Past Games
-      </Link>
+  return <div class="TopNav">
+    {links.map(link => <Link activeClassName="TopNav--active" href={link.href} key={link.label}>
+      {link.label}
+    </Link>)}
+
+    {authContext.user && <>
       Welcome, {authContext.user.email || "anonymous"} 
       <button onClick={authContext.logout}>Log out</button>
-    </div>
-  } else {
-    return <div class="TopNav">
-      <Link activeClassName="TopNav--active" href="/auth">
-        Log In
-      </Link>
-    </div>
-  }
+    </>}
+  </div>
 }
