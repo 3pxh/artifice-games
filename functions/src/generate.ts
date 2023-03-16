@@ -160,13 +160,12 @@ async function runDalle(r: GenerationRequest): GenerationPromise {
     data: JSON.stringify({
       "prompt": prompt,
       "n": 1,
-      "size": "256x256",
+      "size": "512x512",
     })
   });
   if (response.status !== 200) {
     throw new Error("Response from Dalle not ok");
   }
-  console.log("DALLE DATA", response.data, response.data.data[0])
   const imgUrl = response.data.data[0].url;
   const response2 = await axios({
     url: imgUrl,
