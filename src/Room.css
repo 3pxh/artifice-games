@@ -1,9 +1,10 @@
 .Room {
 	display: flex;
 	flex-direction: column;
-	height: calc(100% - 43px);
+  max-width: 100%;
   --mobile-header-height: 60px;
   --mobile-tab-height: 50px;
+  height: calc(100% - var(--top-nav-height));
 }
 .Room-Header {
   height: var(--mobile-header-height);
@@ -19,9 +20,6 @@
 }
 
 @media (max-width: 1000px) {
-  .Room {
-    max-width: 100%;
-  }
   .Room-TabPane {
     display: flex;
     flex-direction: row;
@@ -34,18 +32,22 @@
     display: none;
   }
   .Room-Pane--active {
-    display: visible;
     min-width: min(400px, 100%);
     max-width: 600px;
   }
   
   .Room-TabSelector {
+    background-color: var(--brand-color);
     border-top: 1px solid white;
+    bottom: 0;
     display: flex;
     flex-direction: row;
-    justify-content: center;
-    width: 100%;
     height: var(--mobile-tab-height);
+    justify-content: center;
+    left: 0;
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
   }
 
   .Room-Tab {
@@ -66,16 +68,19 @@
   .Room-TabPane {
     display: flex;
     flex-direction: row;
-    height: calc(100% - 40px);
+    height: 100%;
     justify-content: center;
   }
   .Room-Pane {
     padding: 0 10px;
+    height: 100%;
+    overflow-y: scroll;
     width: calc(50% - 20px);
   }
   
   .Room-TabSelector {
     display: none;
+    height: 0;
   }
 }
 

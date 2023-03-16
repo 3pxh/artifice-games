@@ -1,3 +1,8 @@
+/* This could be helpful to have visible in prod, just in case... */
+.firebase-emulator-warning {
+  display: none;
+}
+
 html, body {
 	height: 100%;
 	width: 100%;
@@ -26,18 +31,16 @@ fieldset {
 
 #app {
 	align-items: center;
-	bottom: 0;
+  background-color: var(--brand-color);
+  color: #fff;
 	display: flex;
 	flex-direction: column;
-	left: 0;
-  position: absolute;
-	right: 0;
-	top: 0;
-  background-color: #673ab8;
-  color: #fff;
+	height: 100vh;
   font-size: 1.5em;
-	overflow-y: scroll;
+	overflow-y: hidden;
 	overflow-x: hidden;
+	width: 100vw;
+	--top-nav-height: 45px;
 }
 
 .link {
@@ -75,16 +78,23 @@ a:hover {
 }
 
 .TopNav {
+	align-items: center;
 	background: white;
 	color: #673ab8;
 	display: flex;
 	flex-direction: row;
+	flex-shrink: 0;
 	font-size: 12pt;
+	height: var(--top-nav-height);
 	padding: 2px;
 	width: 100%;
 }
 .TopNav > * {
-	margin-right: 10px;
+	align-items: center;
+	border-right: 1px solid var(--brand-color);
+	display: flex;
+	height: 100%;
+	padding: 0 5px;
 }
 .TopNav > a {
 	color: #673ab8;

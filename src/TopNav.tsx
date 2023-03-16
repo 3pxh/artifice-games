@@ -17,8 +17,8 @@ export default function TopNav() {
       <Link activeClassName="TopNav--active" href="/games/past">
         Past Games
       </Link>
-      Welcome, {authContext.user.email || "anonymous"} 
-      <button onClick={authContext.logout}>Log out</button>
+      <span>Welcome, {authContext.user.email || "anonymous"} 
+      <button onClick={authContext.logout}>Log out</button></span>
     </div>
   } else {
     return <div class="TopNav">
