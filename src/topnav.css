@@ -1,0 +1,28 @@
+.TopNav {
+  background: white;
+  color: var(--color-purple);
+  display: flex;
+  flex-direction: row;
+  font-size: 12pt;
+  padding: 2px;
+  width: 100%;
+}
+
+.TopNav>* {
+  margin-right: 10px;
+}
+
+.TopNav>a {
+  color: var(--color-purple);
+  text-decoration: none;
+}
+
+.TopNav>a:hover {
+  text-decoration: underline;
+}
+
+.TopNav>.TopNav--active {
+  color: #3ab875;
+  font-weight: 600;
+  text-decoration: underline;
+}

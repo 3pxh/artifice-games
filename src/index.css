@@ -49,53 +49,6 @@ a:hover {
 	color: yellow;
 }
 
-.Auth {
-	display: flex;
-	flex-direction: column;
-}
-.Auth > h2 {
-	align-self: center;
-}
-.Auth > input {
-	border-radius: 26px;
-	font-size: 16pt;
-	padding: 10px;
-	margin: 5px 0;
-}
-.Auth > button {
-	background-color: aquamarine;
-	border: none;
-	border-radius: 30px;
-	font-size: 16pt;
-	padding: 10px;
-}
-.Auth > button:hover {
-	background-color: aqua;
-}
-
-.TopNav {
-	background: white;
-	color: var(--color-purple);
-	display: flex;
-	flex-direction: row;
-	font-size: 12pt;
-	padding: 2px;
-	width: 100%;
-}
-.TopNav > * {
-	margin-right: 10px;
-}
-.TopNav > a {
-	color: var(--color-purple);
-	text-decoration: none;
-}
-.TopNav > a:hover {
-	text-decoration: underline;
-}
-.TopNav > .TopNav--active {
-	color: #3ab875;
-	font-weight: 600;
-	text-decoration: underline;
 }
 
 .GameContainer {

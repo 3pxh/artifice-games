@@ -1,0 +1,30 @@
+.Auth {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 300px;
+}
+
+.Auth>h2 {
+  align-self: center;
+}
+
+.Auth>input {
+  border-radius: 26px;
+  font-size: 16pt;
+  padding: 10px;
+  margin: 5px 0;
+}
+
+.Auth>button {
+  background-color: aquamarine;
+  border: none;
+  border-radius: 30px;
+  font-size: 16pt;
+  padding: 10px;
+}
+
+.Auth>button:hover {
+  background-color: aqua;
+}
