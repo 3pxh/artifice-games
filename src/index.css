@@ -58,6 +58,8 @@ a:hover {
 	flex-direction: column;
 	padding: 10px;
 	height: 100%;
+  margin-left: auto;
+  margin-right: auto;
 	max-width: min(100%, 600px);
 }
 
@@ -69,21 +71,27 @@ a:hover {
 	padding: 10px;
 	margin: 10px;
 }
+
 .GameSelection-GameList > button:hover {
 	background-color: aqua;
 }
+
 .GameSelection-GameList > button.GameSelection-FreeTier {
 	background-color: aquamarine;
 }
+
 .GameSelection-GameList > button.GameSelection-FreeTier:hover {
 	background-color: aqua;
 }
+
 .GameSelection-GameList > button.GameSelection-PaidTier {
 	background-color: var(--color-orange);
 }
+
 .GameSelection-GameList > button.GameSelection-PaidTier:hover {
 	background-color: yellow;
 }
+
 .GameSelection-Join > input {
 	--font-size: 16pt;
 	border-radius: 26px;
@@ -93,13 +101,6 @@ a:hover {
 	text-align: center;
 	text-transform: uppercase;
 	width: calc(4 * var(--font-size) + 10px);
-}
-.GameSelection-Join {
-	border: none;
-	border-radius: 30px;
-	font-size: 16pt;
-	min-width: 80px;
-	padding: 10px;
 }
 
 .YoutubeEmbed {

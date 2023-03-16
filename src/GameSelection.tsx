@@ -131,7 +131,7 @@ export default function GameSelection() {
   }
 
   const Join = () => {
-    return <div class="GameSelection-Join">
+    return <div class="GameContainer GameSelection-Join">
       <DisplayOptions  onSet={(v: DisplayMode) => { displayMode.value = v; }} />
       <SubmittableInput label="Room code:" onSubmit={handleJoinRoom} buttonText="Join" />
       <p style="color:yellow;">{errorMessage}</p>
