@@ -1,6 +1,6 @@
 .PlayerStatuses {
-	border-bottom: 1px solid var(--border-color);
-	border-top: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--color-yellow);
+	border-top: 1px solid var(--color-yellow);
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;

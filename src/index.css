@@ -1,3 +1,9 @@
+:root {
+  --color-purple: #673ab8;
+  --color-yellow: yellow;
+  --color-orange: rgb(255, 189, 127);
+}
+
 html, body {
 	height: 100%;
 	width: 100%;
@@ -9,12 +15,11 @@ html, body {
 	color: #444;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	--brand-color: #673ab8;
-	--border-color: yellow;
-	--orange: rgb(255, 189, 127);
 }
 
-* {
+*,
+*::before,
+*::after {
 	box-sizing: border-box;
 }
 
@@ -25,27 +30,21 @@ fieldset {
 }
 
 #app {
-	align-items: center;
-	bottom: 0;
-	display: flex;
-	flex-direction: column;
-	left: 0;
-  position: absolute;
-	right: 0;
-	top: 0;
-  background-color: #673ab8;
+  background-color: var(--color-purple);
   color: #fff;
+  min-height: 100vh;
+  height: 100%;
   font-size: 1.5em;
-	overflow-y: scroll;
-	overflow-x: hidden;
 }
 
 .link {
   color: #fff;
 }
+
 a {
 	color: white;
 }
+
 a:hover {
 	color: yellow;
 }
@@ -76,7 +75,7 @@ a:hover {
 
 .TopNav {
 	background: white;
-	color: #673ab8;
+	color: var(--color-purple);
 	display: flex;
 	flex-direction: row;
 	font-size: 12pt;
@@ -87,7 +86,7 @@ a:hover {
 	margin-right: 10px;
 }
 .TopNav > a {
-	color: #673ab8;
+	color: var(--color-purple);
 	text-decoration: none;
 }
 .TopNav > a:hover {
@@ -125,7 +124,7 @@ a:hover {
 	background-color: aqua;
 }
 .GameSelection-GameList > button.GameSelection-PaidTier {
-	background-color: var(--orange);
+	background-color: var(--color-orange);
 }
 .GameSelection-GameList > button.GameSelection-PaidTier:hover {
 	background-color: yellow;
@@ -225,7 +224,7 @@ a:hover {
 
 .PromptGuessBase-Score {
 	align-items: center;
-	border-bottom: 1px dashed var(--border-color);
+	border-bottom: 1px dashed var(--color-yellow);
 	display: flex;
 	flex-direction: row;
 	padding: 5px 0;
@@ -325,7 +324,7 @@ a:hover {
 	padding: 10px;
 }
 .Support-PriceTable button:hover {
-	background-color: var(--orange);
+	background-color: var(--color-orange);
 }
 .Support-PriceTable select {
 	background-color: white;
