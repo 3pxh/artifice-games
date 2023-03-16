@@ -27,6 +27,21 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
     },
     "tier": "Free"
   },
+  "farsketched_dalle": {
+    "engine": "PromptGuess",
+    "name": "Farsketched DALLE",
+    "model": {
+      "name": "DALLE"
+    },
+    "templates": {
+      "0": {"display": "Make an image of...", "template": "{1}"}
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
+      "durationSeconds": 133
+    },
+    "tier": "Underwriter"
+  },
   "farsketched_photo": {
     "engine": "PromptGuess",
     "name": "Farsketched 📸",

@@ -166,7 +166,7 @@ export default function GameSelection() {
   </>
   } else {
     
-    return <>
+    return <div class="GameSelection">
       <h1>
         <button onClick={() => {setSelectedGame(null)}}
         style="border-radius:50%;width:36px;height:36px;background-color:yellow;border:none; font-size:20pt;">←</button>
@@ -192,6 +192,6 @@ export default function GameSelection() {
         ? <><Link href="/support">Support Artifice</Link> to start async games</>
         : <button onClick={() => {handleCreateGame(selectedGame)}}>Create room</button>}
       </>}
-    </>
+    </div>
   }
 }

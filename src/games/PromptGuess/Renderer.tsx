@@ -59,7 +59,7 @@ function Generation(props: {
         onClick={props.skip} />
     </>
   }
-  if (props.generation.model.name === "StableDiffusion") {
+  if (props.generation.model.name === "StableDiffusion" || props.generation.model.name === "DALLE") {
     return <ImageGeneration generation={props.generation} showPrompt={props.showPrompt} />
   } else if (props.generation.model.name === "GPT3") {
     return <TextGeneration generation={props.generation} showPrompt={props.showPrompt} />

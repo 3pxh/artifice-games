@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import * as AWS from "aws-sdk";
 import App from "./app";
 
-export type Models =  "GPT3" | "StableDiffusion"
+export type Models =  "GPT3" | "StableDiffusion" | "DALLE"
 export type GPT3Def = {
   name: "GPT3",
   stopSequences?: {
@@ -16,7 +16,10 @@ export type SDDef = {
   name: "StableDiffusion",
   version: "1.5" | "2.1",
 }
-export type ModelDef = GPT3Def | SDDef;
+export type DalleDef = {
+  name: "DALLE",
+}
+export type ModelDef = GPT3Def | SDDef | DalleDef;
 export type GenerationRequest = {
   room: string,
   uid: string,
@@ -142,6 +145,48 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   }
 }
 
+async function runDalle(r: GenerationRequest): GenerationPromise {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new  Error("Missing OPENAI_API_KEY");
+  }
+  const prompt = r.template.template.replace(/\{1\}/g, r.prompt);
+  const response = await axios({
+    url: "https://api.openai.com/v1/images/generations",
+    headers: {
+      Authorization: "Bearer " + process.env.OPENAI_API_KEY, 
+      "Content-Type": "application/json" 
+    },
+    method: "POST",
+    data: JSON.stringify({
+      "prompt": prompt,
+      "n": 1,
+      "size": "256x256",
+    })
+  });
+  if (response.status !== 200) {
+    throw new Error("Response from Dalle not ok");
+  }
+  console.log("DALLE DATA", response.data, response.data.data[0])
+  const imgUrl = response.data.data[0].url;
+  const response2 = await axios({
+    url: imgUrl,
+    method: "GET",
+    responseType: "stream",
+  });
+  const filename = `images/Dalle/${r.room}/${Math.random()}.png`;
+  const uploadParams = {
+    Bucket: BUCKET_NAME,
+    Key: filename,
+    Body: response2.data
+  };
+  const res = await s3.upload(uploadParams).promise();
+  return {
+    _context: { },
+    generation: res.Location,
+    timeFulfilled: new Date().getTime(),
+  }
+}
+
 async function runGPT3(r: GenerationRequest): GenerationPromise {
   if (!process.env.OPENAI_API_KEY) {
     throw new  Error("Missing OPENAI_API_KEY");
@@ -188,6 +233,7 @@ type Generator = (r: GenerationRequest) => GenerationPromise;
 const runners:Record<Models, Generator>  = {
   "GPT3": runGPT3,
   "StableDiffusion": runStableDiffusion,
+  "DALLE": runDalle,
 }
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {
