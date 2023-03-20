@@ -31,6 +31,9 @@
     flex-direction: row;
     height: calc(100% - var(--mobile-tab-height));
     justify-content: center;
+  }
+
+  .Room-Pane {
     overflow-y: scroll;
   }
   
