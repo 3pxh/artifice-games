@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 import * as AWS from "aws-sdk";
 import App from "./app";
 
-export type Models =  "GPT3" | "StableDiffusion" | "DALLE" | "ChatGPT"
+export type Models =  "GPT3" | "StableDiffusion" | "DALLE" | "ChatGPT" | "GPT4"
 export type GPT3Def = {
   name: "GPT3",
   stopSequences?: {
@@ -20,6 +20,14 @@ export type ChatGPTDef = {
   maxTokens?: number,
   temperature?: number,
 }
+export type GPT4Def = {
+  name: "GPT4",
+  stopSequences?: {
+    [k: string]: string
+  },
+  maxTokens?: number,
+  temperature?: number,
+}
 export type SDDef = {
   name: "StableDiffusion",
   version: "1.5" | "2.1",
@@ -27,7 +35,7 @@ export type SDDef = {
 export type DalleDef = {
   name: "DALLE",
 }
-export type ModelDef = GPT3Def | SDDef | DalleDef | ChatGPTDef;
+export type ModelDef = GPT3Def | SDDef | DalleDef | ChatGPTDef | GPT4Def;
 type Schema = {[key: string]: "string" | "number"};
 type ParsedSchema = {[key: string]: string | number};
 export type GenerationRequest = {
@@ -216,7 +224,7 @@ function parseWithSchema(res: string, schema: Schema) {
   }
 }
 
-async function runChatGPT(r: GenerationRequest, retries=1): GenerationPromise {
+async function runChatCompletion(modelName: "ChatGPT" | "GPT4", r: GenerationRequest, retries=1): GenerationPromise {
   const MAX_RETRIES = 2;
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("Missing OPENAI_API_KEY");
@@ -226,7 +234,7 @@ async function runChatGPT(r: GenerationRequest, retries=1): GenerationPromise {
   }
   const model = r.model as ChatGPTDef;
   const params:any = {
-    "model": "gpt-3.5-turbo",
+    "model": modelName === "ChatGPT" ? "gpt-3.5-turbo" : "gpt-4",
     "messages": r.chatGPTParams.messages,
     "temperature": model.temperature ?? 0.7,
     "max_tokens": model.maxTokens ?? 256,
@@ -255,7 +263,7 @@ async function runChatGPT(r: GenerationRequest, retries=1): GenerationPromise {
           timeFulfilled: new Date().getTime(),
         }
       } else if (retries < MAX_RETRIES) {
-        return runChatGPT(r, retries+1)
+        return runChatCompletion(modelName, r, retries+1);
       } else {
         throw new Error(`Failed to parse schema after ${retries} tries. Last response: ${JSON.stringify(response)}`)
       }
@@ -318,7 +326,8 @@ const runners:Record<Models, Generator>  = {
   "GPT3": runGPT3,
   "StableDiffusion": runStableDiffusion,
   "DALLE": runDalle,
-  "ChatGPT": runChatGPT,
+  "ChatGPT": (r: GenerationRequest) => runChatCompletion("ChatGPT", r),
+  "GPT4": (r: GenerationRequest) => runChatCompletion("GPT4", r),
 }
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {

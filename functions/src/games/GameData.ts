@@ -179,6 +179,22 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
     },
     "tier": "Underwriter"
   },
+  "think_tank_sf": {
+    "engine": "AIJudge",
+    "name": "🤖 says... 🧠",
+    "questionPreface": "You are the spiritual zeitgeist of San Francisco and Silicon Valley put together.\n\nSelect the best answer to the question.\n\n",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "maxTokens": 10,
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
+    },
+    "tier": "Underwriter"
+  },
 }}
 
 export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDefinition}} =
@@ -196,6 +212,32 @@ export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDef
     "model": {
       "name": "ChatGPT",
       "maxTokens": 400,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free"
+  },
+  "witty_witches": {
+    "engine": "Quip",
+    "name": "Witty Witches",
+    "userInputSuffix": "\n\nGive your output in the format {\"points\": number, \"comment\": \"string\"}",
+    "messages": {
+      0: {"role": "system", "text": "You are a judge for a game show who awards points and dishes out sick burns."},
+      1: {"role": "user", "text": "Let's play a game of Witty Witches! The party game where everyone tries to write witty improv as a witch-themed character. You be the judge, awarding players points and giving funny commentary about their improvisation."},
+      2: {"role": "assistant", "text": "Welcome, ladies and gentlemen, to Witty Witches, the game that will leave you spellbound! I am your scorching host and judge, and I'm here to conjure up some laughs, award points, and roast our contestants like it's the Salem witch trials. Let's meet our witchy contenders!\n\
+\n\
+Player 1: Samantha, the sassy sorceress.\n\
+Player 2: Glinda, the good witch gone bad.\n\
+Player 3: Esmeralda, the enchantress of the eerie.\n\
+\n\
+Round 1, each player must come up with a witty spell they would cast on their worst enemy. Let the magic begin!"},
+    },
+    "model": {
+      "name": "GPT4",
+      "maxTokens": 100,
       "temperature": 0.7
     },
     "introVideo": {
