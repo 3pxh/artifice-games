@@ -53,13 +53,13 @@ export default function Auth() {
       return <div class="Auth">
         <SubmittableInput
           label="Email:"
-          buttonText="Log in/sign up with email"
+          buttonText="Log in/sign up"
           onSubmit={emailAuth}
           />
-        <h2>or</h2>
+        {/* <h2>or</h2>
         <button onClick={anonAuth}>
           Log in anonymously
-        </button>
+        </button> */}
         <a href="#" style="text-align:center; margin: 20px 0; font-size:14pt;" onClick={() => {
           window.localStorage.setItem(INTRO_STATE_STORAGE_KEY, "false");
           Routes.navigate(Routes.intro.href);

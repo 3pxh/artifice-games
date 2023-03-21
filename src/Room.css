@@ -6,6 +6,7 @@
   --mobile-tab-height: 50px;
   height: calc(100% - var(--top-nav-height));
   width:  min(100%, 2000px);
+  overflow-y: scroll;
 }
 .Room-Header {
   height: var(--mobile-header-height);
