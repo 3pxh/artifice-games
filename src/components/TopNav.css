@@ -1,0 +1,55 @@
+
+.TopNav {
+	align-items: center;
+	background: white;
+	color: #673ab8;
+	display: flex;
+	flex-direction: row;
+	flex-shrink: 0;
+	font-size: 12pt;
+	height: var(--top-nav-height);
+	justify-content: space-between;
+	padding: 2px;
+	width: 100%;
+}
+.TopNav-Logo {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+}
+.TopNav-Logo img {
+	height: 100%;
+	margin: 0 10px;
+}
+
+.TopNav nav {
+	align-items: center;
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+	justify-content: center;
+}
+.TopNav a {
+	border-left: 1px solid var(--brand-color);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	height: 100%;
+	padding: 0 5px;
+	color: #673ab8;
+	text-decoration: none;
+}
+.TopNav a:first-child {
+	border-left: none;
+}
+.TopNav a:hover {
+	color: #673ab8;
+	text-decoration: underline;
+}
+.TopNav .TopNav--active {
+	color: #3ab875;
+	font-weight: 600;
+	text-decoration: underline;
+}

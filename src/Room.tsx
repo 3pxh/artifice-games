@@ -207,7 +207,7 @@ export function Room(props: {room: RoomData}) {
     </>
   } else if (isLoaded && authContext.user) {
     return <div className="Room">
-      {/* <div className="Room-TabPane"> */}
+      <div className="Room-Pane">
         {/* <div className={`Room-Pane ${activeTab === "game" ? "Room-Pane--active" : "Room-Pane--inactive"}`}> */}
           <Header />
           <GameTimer 
@@ -241,15 +241,15 @@ export function Room(props: {room: RoomData}) {
             players={players as any}
             isPlayer={props.room.isPlayer}
             isInputOnly={props.room.isInputOnly} />
-        {/* </div> */}
-        {/* <div className={`Room-Pane ${activeTab === "chat" ? "Room-Pane--active" : "Room-Pane--inactive"}`} > */}
+        </div>
+        <div className="Room-Pane" >
           <Chat 
             key={"chat"} 
             roomId={props.room.id} 
             players={players}
             isActive={activeTab === "chat"}
             setHasUnreadMessages={setHasUnreadMessages} />
-        {/* </div> */}
+        </div>
       {/* </div>
       <div className="Room-TabSelector">
         <div 

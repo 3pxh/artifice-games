@@ -43,6 +43,17 @@ fieldset {
 	--top-nav-height: 45px;
 }
 
+#appbody {
+	align-items: center;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow-y: scroll;
+	padding: 0 10px;
+	width: 100%;
+}
+
 .link {
   color: #fff;
 }
@@ -77,38 +88,6 @@ a:hover {
 	background-color: aqua;
 }
 
-.TopNav {
-	align-items: center;
-	background: white;
-	color: #673ab8;
-	display: flex;
-	flex-direction: row;
-	flex-shrink: 0;
-	font-size: 12pt;
-	height: var(--top-nav-height);
-	padding: 2px;
-	width: 100%;
-}
-.TopNav > * {
-	align-items: center;
-	border-right: 1px solid var(--brand-color);
-	display: flex;
-	height: 100%;
-	padding: 0 5px;
-}
-.TopNav > a {
-	color: #673ab8;
-	text-decoration: none;
-}
-.TopNav > a:hover {
-	text-decoration: underline;
-}
-.TopNav > .TopNav--active {
-	color: #3ab875;
-	font-weight: 600;
-	text-decoration: underline;
-}
-
 .GameContainer {
 	display: flex;
 	flex-direction: column;
@@ -117,13 +96,9 @@ a:hover {
 	max-width: min(100%, 600px);
 }
 
-/* This is because it was broken on mobile, overflow not displayed.
-Consider wrapping all of these at top level in something which does the scroll. */
-.GameSelection, .GameSelection-GameList, .GameList {
-	height: 100%;
-	overflow-y: scroll;
+.GameSelection-GameList {
+	max-width: 600px;
 }
-
 /* Seriously need to make a single consistent Button class */
 .GameSelection-GameList > button {
 	background-color: aquamarine;

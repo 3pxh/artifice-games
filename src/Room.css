@@ -1,24 +1,8 @@
 .Room {
 	display: flex;
-	flex-direction: column;
   max-width: 100%;
-  --mobile-header-height: 60px;
-  --mobile-tab-height: 50px;
-  height: calc(100% - var(--top-nav-height));
   width:  min(100%, 2000px);
   overflow-y: scroll;
-}
-.Room-Header {
-  height: var(--mobile-header-height);
-  margin: 0;
-  text-align: center;
-}
-.Room-Tab--Unread {
-  border-radius: 50%;
-  background-color: red;
-  height: 10px;
-  position: absolute;
-  width: 10px;
 }
 .Room-Pane {
   align-items: center;
@@ -27,69 +11,20 @@
 }
 
 @media (max-width: 1000px) {
-  .Room-TabPane {
-    display: flex;
-    flex-direction: row;
-    height: calc(100% - var(--mobile-tab-height));
-    justify-content: center;
-  }
-
-  .Room-Pane {
-    overflow-y: scroll;
-  }
-  
-  .Room-Pane--inactive {
-    display: none;
-  }
-  .Room-Pane--active {
-    width: max(100%, 600px);
-  }
-  
-  .Room-TabSelector {
-    background-color: var(--brand-color);
-    border-top: 1px solid white;
-    bottom: 0;
-    display: flex;
-    flex-direction: row;
-    height: var(--mobile-tab-height);
-    justify-content: center;
-    left: 0;
-    position: absolute;
-    width: 100%;
-    z-index: 1000;
-  }
-
-  .Room-Tab {
-    background-color: aquamarine;
-    color: black;
-    cursor: pointer;
-    margin: 0 2px;
-    padding: 10px;
-    text-align: center;
-    width: 60px;
-  }
-  .Room-Tab.Room-Tab--active {
-    background-color: yellow;
+  .Room {
+  	flex-direction: column;
   }
 }
 
 @media (min-width: 1001px) {
-  .Room-TabPane {
-    display: flex;
-    flex-direction: row;
-    height: 100%;
-    justify-content: center;
+  .Room {
+  	flex-direction: row;
+    overflow: hidden;
   }
   .Room-Pane {
-    padding: 0 10px;
     height: 100%;
     overflow-y: scroll;
-    width: calc(50% - 20px);
-  }
-  
-  .Room-TabSelector {
-    display: none;
-    height: 0;
+    width: 50%;
   }
 }
 

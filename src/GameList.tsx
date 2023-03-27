@@ -38,7 +38,7 @@ export default function GameList(props: {filter: string}) {
   if (!isLoaded) {
     return <>Loading games...</>
   } else if (games.length === 0) {
-    return <>No {props.filter} games here yet.</>
+    return <>No {props.filter} games here at the moment.</>
   } else {
     return <div class="GameList">
       {games.map(([r, m]) => {

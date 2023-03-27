@@ -2,13 +2,11 @@ import { h, Fragment } from "preact";
 import { useState, useContext, useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { get, ref } from "@firebase/database";
-import { GameDefinition, TimerOption } from "../functions/src/games/games";
-import { db } from "./firebaseClient";
-import { AuthContext } from "./AuthProvider"
-import { Routes } from "./router";
-import { createGame, joinRoom, getRoom } from "./actions";
-import { Room, RoomData } from "./Room";
-import SubmittableInput from "./components/SubmittableInput";
+import { GameDefinition, TimerOption } from "../../functions/src/games/games";
+import { db } from "../firebaseClient";
+import { AuthContext } from "../AuthProvider"
+import { Routes } from "../router";
+import { createGame } from "../actions";
 import { Link } from "preact-router";
 type AsyncOption = "async" | "live";
 type DisplayMode = "observe" | "input" | "full";
@@ -113,55 +111,38 @@ export default function GameSelection() {
     }
   }
 
-  const handleJoinRoom = (roomCode: string) => {
-    setLoadingRoom(true);
-    const code = roomCode.toUpperCase();
-    console.log("Trying to join room", code);
-    joinRoom(
-      code, 
-      displayMode.value !== "observe",
-      (id: string) => {
-        Routes.navigate(Routes.room.forId(id));
-      }, 
-      (e: string) => {
-        setErrorMessage(e);
-        setLoadingRoom(false);
-      }
-    );
-  }
-
-  const Join = () => {
-    return <div class="GameSelection-Join">
-      <DisplayOptions  onSet={(v: DisplayMode) => { displayMode.value = v; }} />
-      <SubmittableInput label="Room code:" onSubmit={handleJoinRoom} buttonText="Join" />
-      <p style="color:yellow;">{errorMessage}</p>
-    </div>
-  }
-
   if (!authContext.user) {
     return <>Must be logged in to create or join a game.</>
   }
 
   if (loadingRoom) {
     return <p>Loading room data...</p>
-  } else if (authContext.user.isAnonymous || !authContext.user.emailVerified || selectedGame === "_join") {
-    return <Join />
   } else if (selectedGame === null) {
     return <>
     <div class="GameSelection-GameList">
-      <h1>Create a game</h1>
-      {Object.entries(gameList).map(([k, v]) => {
+      <h1>Start a new game</h1>
+      <h2>Rotating Free Games</h2>
+      {Object.entries(gameList).filter(([_, v]) => v.tier === "Free").map(([k, v]) => {
         return <button 
-          className={v.tier === "Free" ? "GameSelection-FreeTier" : "GameSelection-PaidTier"}
+          className="GameSelection-FreeTier"
           onClick={() => {setSelectedGame(k)}}
-          // TODO: #billing, how do we display different tiers of games?
-          // disabled={v.tier !== "Free" && !authContext.isPaid()}
         >
             {v.name}
         </button>
       })}
-      <h1>Or,</h1>
-      <button className="GameSelection-Join" onClick={() => {setSelectedGame("_join")}}>Join a game</button>
+      <h2>Full Catalogue</h2>
+      <div>{!authContext.isPaid() 
+        ? <><Link href="/support">Support Artifice</Link> and get access to all games!</> 
+        : "Thanks for supporting our games!"
+      }</div>
+      {Object.entries(gameList).map(([k, v]) => {
+        return <button 
+          className={v.tier === "Free" ? "GameSelection-FreeTier" : "GameSelection-PaidTier"}
+          onClick={() => {setSelectedGame(k)}}
+        >
+            {v.name}
+        </button>
+      })}
     </div>
   </>
   } else {
@@ -181,7 +162,8 @@ export default function GameSelection() {
       {gameList[selectedGame].tier === "Underwriter" && !authContext.isPaid() 
       ? <><Link href="/support">Support Artifice</Link> to play this game.</>
       : <>
-        <AsyncOptions onSet={(v: AsyncOption) => { setAsyncMode(v); }} />
+        {/* TODO: #APP re-enable async games  */}
+        {/* <AsyncOptions onSet={(v: AsyncOption) => { setAsyncMode(v); }} /> */}
         {asyncMode === "live" 
           ? <>
             <DisplayOptions onSet={(v: DisplayMode) => { displayMode.value = v; }} />

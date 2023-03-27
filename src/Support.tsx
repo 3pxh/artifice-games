@@ -111,9 +111,9 @@ export default function Support() {
     const creditCardAnnual = monthlyFee ? Math.ceil(100*(12*monthlyFee*.029 + .3)/(12*monthlyFee)) : 0;
     const suggestions = [["50k", "2.50", "30"], ["100k", "5.00", "60"], ["150k", "10.00", "120"]]
     return <div class="Support">
-      <h2>Support Artifice</h2>
+      <h2>Give what you feel</h2>
       <p>Thanks for playing! I hope you're having fun, and I'm looking forward to sharing more games with you.</p>
-      <p><strong>I feel that fun is a public good and I'd like a more generous world, so Artifice subscriptions are on a sliding scale where you pay what you want.</strong></p>
+      <p>I feel that fun is a public good and I'd like a more generous world, so Artifice subscriptions are on a sliding scale where you pay what you want.</p>
       <p>If you know what you'd like to pay, select from the dropdown below. Some people I've talked to prefer a bit of guidance, so here are <strong>optional suggestions</strong> based on income:</p>
       <table cellPadding={0} cellSpacing={0} className="Support-PriceTable">
         <tr>
