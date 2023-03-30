@@ -113,6 +113,11 @@ export default function GameSelection() {
 
   if (!authContext.user) {
     return <>Must be logged in to create or join a game.</>
+  } else if (!authContext.user.emailVerified) {
+    return <>
+      Verify {authContext.user.email} to create a game. Refresh after verification.
+      <button onClick={() => authContext.verify()}>Re-send verification email</button>
+    </>
   }
 
   if (loadingRoom) {
