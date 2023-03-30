@@ -103,7 +103,7 @@ export default function Chat(props: {
     <div class="Chat-Input">
       {playerData.value[authContext.user.uid].handle}:
       <input 
-        onInput={(e) => {setMessageContent(e.currentTarget.value.trim())}}
+        onInput={(e) => {setMessageContent(e.currentTarget.value)}}
         value={messageContent}
         onKeyDown={(e) => { if (e.key === "Enter") { sendMessage(); } }} />
       <button onClick={sendMessage}>Send</button>
