@@ -10,9 +10,10 @@ import GameSelection from "./pages/GameSelection";
 import GameList from "./GameList";
 import RoomById from "./RoomById";
 import Support from "./Support";
-import Intro, { INTRO_STATE_STORAGE_KEY } from "./pages/Intro";
+import Intro from "./pages/Intro";
 import Account from "./pages/Account";
 import Join from "./pages/Join";
+import Welcome from "./pages/Welcome";
 
 const AuthRoute = () => {
   return <>
@@ -24,10 +25,8 @@ const AuthRoute = () => {
 const RootRedirect = () => {
   useEffect(() => {
     auth.onAuthStateChanged(() => {
-      if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) !== "true") {
-        route("/intro");
-      } else if (!auth.currentUser && window.localStorage.getItem(INTRO_STATE_STORAGE_KEY) === "true") {
-        route("/auth");
+      if (!auth.currentUser) {
+        route("/welcome");
       } else if (window.location.pathname === "/auth") {
         window.history.back();
       } else {
@@ -41,7 +40,7 @@ const RootRedirect = () => {
 export default function App() {
   const authContext = useAuth();
   const handleRoute = (e: any) => {
-    if (e.url !== "/auth" && e.url !== "/intro" && !auth.currentUser) {
+    if (e.url !== "/auth" && e.url !== "/intro" && e.url !== "/welcome" && !auth.currentUser) {
       route("/");
     }
   };
@@ -52,6 +51,7 @@ export default function App() {
     <div id="appbody">
       <Router onChange={handleRoute}>
         <Route path="/" component={RootRedirect} />
+        <Route path="/welcome" component={Welcome} />
         <Route path="/intro" component={Intro} />
         <Route path="/auth" component={AuthRoute} />
         <Route path="/create" component={GameSelection} />
