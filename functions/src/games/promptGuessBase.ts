@@ -19,7 +19,7 @@ export type GameDefinition = {
 export type UserID = string; 
 export type PromptGuessState = "Lobby" | "Intro" | "Prompt" | "Lie" | "Vote" | "Score" | ROOM_FINISHED_STATE_TYPE;
 export type PlayerState = PromptGuessState;
-export type PromptGeneration = GenerationResponse & {
+export type PromptGeneration = GenerationResponse<string> & {
   model: ModelDef,
   uid: UserID,
   prompt: string,

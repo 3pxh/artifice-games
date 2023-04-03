@@ -2,6 +2,10 @@ export const chooseOne = <T,>(A: T[]) => {
   return A[Math.floor(Math.random() * A.length)];
 }
 
+export const chooseOneKeyInObject = <T,>(A: {[k: string]: T}) => {
+  return chooseOne(Object.entries(A))[0];
+}
+
 export const chooseOneInObject = <T,>(A: {[k: string]: T}) => {
   return chooseOne(Object.entries(A))[1];
 }
@@ -11,6 +15,10 @@ export const shuffle = <T>(A: T[], seed?: number) => {
   return A.map(value => ({ value, sort: rand() }))
           .sort((a, b) => a.sort - b.sort)
           .map(({ value }) => value);
+}
+
+export const arrayFromKeyedObject = <T,>(obj:{[k: string]: T}) => {
+  return Object.entries(obj).sort(([k1, _], [k2, __]) => k1 < k2 ? -1 : 1).map(([_, v]) => v);
 }
 
 export const objectMap = <V,O,>(obj:{[k: string]: V}, fn:(v: V, k: string, i: number) => O) =>

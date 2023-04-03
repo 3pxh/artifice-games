@@ -13,15 +13,7 @@ export type GPT3Def = {
   temperature?: number,
 }
 export type ChatGPTDef = {
-  name: "ChatGPT",
-  stopSequences?: {
-    [k: string]: string
-  },
-  maxTokens?: number,
-  temperature?: number,
-}
-export type GPT4Def = {
-  name: "GPT4",
+  name: "ChatGPT" | "GPT4",
   stopSequences?: {
     [k: string]: string
   },
@@ -35,9 +27,9 @@ export type SDDef = {
 export type DalleDef = {
   name: "DALLE",
 }
-export type ModelDef = GPT3Def | SDDef | DalleDef | ChatGPTDef | GPT4Def;
+export type ModelDef = GPT3Def | SDDef | DalleDef | ChatGPTDef;
 type Schema = {[key: string]: "string" | "number"};
-type ParsedSchema = {[key: string]: string | number};
+// type ParsedSchema = {[key: string]: string | number};
 export type GenerationRequest = {
   room: string,
   uid: string,
@@ -50,9 +42,9 @@ export type GenerationRequest = {
   }
 }
 
-export type GenerationResponse = {
+export type GenerationResponse<G> = {
   _context?: any,
-  generation: string | ParsedSchema,
+  generation: G, // How do we type this given we may have Schemas passed to the generator?
   timeFulfilled?: number,
 }
 
@@ -212,7 +204,7 @@ function parseWithSchema(res: string, schema: Schema) {
   try {
     const parsed = JSON.parse(res);
     const isValid = Object.entries(schema).every(([n, t]) => {
-      return parsed[n] && typeof(parsed[n]) === t;
+      return (parsed[n] !== undefined) && (typeof(parsed[n]) === t);
     })
     if (isValid) {
       return parsed;
@@ -224,7 +216,7 @@ function parseWithSchema(res: string, schema: Schema) {
   }
 }
 
-async function runChatCompletion(modelName: "ChatGPT" | "GPT4", r: GenerationRequest, retries=1): GenerationPromise {
+async function runChatCompletion(modelName: "gpt-3.5-turbo" | "gpt-4", r: GenerationRequest, retries=1): GenerationPromise {
   const MAX_RETRIES = 2;
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("Missing OPENAI_API_KEY");
@@ -234,7 +226,7 @@ async function runChatCompletion(modelName: "ChatGPT" | "GPT4", r: GenerationReq
   }
   const model = r.model as ChatGPTDef;
   const params:any = {
-    "model": modelName === "ChatGPT" ? "gpt-3.5-turbo" : "gpt-4",
+    "model": modelName,
     "messages": r.chatGPTParams.messages,
     "temperature": model.temperature ?? 0.7,
     "max_tokens": model.maxTokens ?? 256,
@@ -258,7 +250,6 @@ async function runChatCompletion(modelName: "ChatGPT" | "GPT4", r: GenerationReq
       const parsed = parseWithSchema(response.choices[0].message.content, r.chatGPTParams.schema);
       if (parsed !== null) {
         return {
-          _context: {},
           generation: parsed,
           timeFulfilled: new Date().getTime(),
         }
@@ -269,7 +260,6 @@ async function runChatCompletion(modelName: "ChatGPT" | "GPT4", r: GenerationReq
       }
     } else {
       return {
-        _context: {},
         generation: response.choices[0].content,
         timeFulfilled: new Date().getTime(),
       }  
@@ -320,17 +310,17 @@ async function runGPT3(r: GenerationRequest): GenerationPromise {
   }
 }
 
-type GenerationPromise = Promise<GenerationResponse | Error>;
+type GenerationPromise = Promise<GenerationResponse<any> | Error>;
 type Generator = (r: GenerationRequest) => GenerationPromise;
 const runners:Record<Models, Generator>  = {
   "GPT3": runGPT3,
   "StableDiffusion": runStableDiffusion,
   "DALLE": runDalle,
-  "ChatGPT": (r: GenerationRequest) => runChatCompletion("ChatGPT", r),
-  "GPT4": (r: GenerationRequest) => runChatCompletion("GPT4", r),
+  "ChatGPT": (r: GenerationRequest) => runChatCompletion("gpt-3.5-turbo", r),
+  "GPT4": (r: GenerationRequest) => runChatCompletion("gpt-4", r),
 }
 
-export async function generate(r: GenerationRequest): Promise<GenerationResponse | Error> {
+export async function generate(r: GenerationRequest): Promise<GenerationResponse<any> | Error> {
   if (runners[r.model.name]) {
     // TODO: what if this errors? Who is handling it, how?
     // We had a try/catch here before but the linter said it was useless.

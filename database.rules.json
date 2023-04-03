@@ -24,6 +24,9 @@ TODO: If the room is currently queued, don't handle messages.
           "$k": {
             ".write": "auth !== null && !data.exists() && data.parent().parent().child('_isFinished').val() !== true && data.parent().parent().child('players').child(auth.uid).exists() && newData.child('uid').val() === auth.uid"
           }
+        },
+        "scratchpad": {
+          ".write": "data.parent().child('players').child(auth.uid).exists()"
         }
       }
     },

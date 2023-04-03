@@ -1,34 +1,37 @@
 import * as functions from "firebase-functions";
-import { ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE, chooseOneInObject } from "../utils";
+import { ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE, chooseOneInObject, arrayFromKeyedObject, objectFilter, chooseOneKeyInObject } from "../utils";
 import { ChatGPTDef, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
+type ChatGPTMessage = {role: string, content: string};
+type ChatGPTPrompt = {[i: string]: ChatGPTMessage};
+export type QuipResponse = {points: number, comment: string};
 export type GameDefinition = {
   engine: "Quip",
   name: string,
+  description: string,
   model: ChatGPTDef,
   introVideo: {
     url: string,
     durationSeconds: number,
   },
-  promptPreface: string,
-  systemPreface: string,
+  promptPreface: ChatGPTPrompt,
   roundPrompts: {
     [k: number]: string
   }
 }
 type UserID = string;
-export type State = "Lobby" | "Intro" | "Input" | "ShowResults" | "Score" | ROOM_FINISHED_STATE_TYPE;
+export type State = "Lobby" | "Intro" | "Input" | "Response" | "Score" | ROOM_FINISHED_STATE_TYPE;
 const STATE_TRANSITIONS:Record<State, State> = {
   "Lobby": "Intro",
   "Intro": "Input",
-  "Input": "ShowResults",
-  "ShowResults": "Score",
+  "Input": "Response",
+  "Response": "Score",
   "Score": "Input",
   [ROOM_FINISHED_STATE]: ROOM_FINISHED_STATE,
 }
 export type Generation = Omit<GenerationRequest, "room" | "template" | "prompt"> & 
-  GenerationResponse & {
+  GenerationResponse<QuipResponse> & {
     model: ChatGPTDef,
     uid: string,
     fulfilled: boolean,
@@ -46,10 +49,11 @@ export type Room = {
     timer?: Timer,
     state: State,
     round: number,
+    promptPreface: ChatGPTPrompt,
     roundPrompt: string,
-    promptPreface: string,
-    systemPreface: string,
     maxRound: number,
+    currentPlayer: UserID,
+    donePlayers: { [k: UserID]: boolean },
     quips?: { [k: UserID]: string },
     generations?: { [k: UserID]: Generation },
     scores?: {
@@ -67,6 +71,9 @@ export type Room = {
       avatar?: string,
     }
   }
+  scratchpad: { // Designed for realtime sync, all players can write to it.
+    input: string,
+  },
   history?: { // Where we're going to store generations along with all context.
     [timestamp: number]: {
       generation: Generation,
@@ -81,8 +88,8 @@ const makeTimer = (timer: GameCreateData["timer"], videoDurS: number, gameScale 
       "Lobby": Number.MAX_VALUE, // Needs all states for typing :/
       "Intro": videoDurS * 1000,
       "Input": 30 * scale,
-      "ShowResults": 30 * scale,
-      "Score": 30 * scale,
+      "Response": 10 * scale,
+      "Score": 10 * scale,
       [ROOM_FINISHED_STATE]: Number.MAX_VALUE
     };
     return {timer: {
@@ -103,11 +110,12 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
     gameState: {
       ...timer,
       state: "Lobby",
+      currentPlayer: roomOpts._creator,
+      donePlayers: {},
       roundPrompt: chooseOneInObject(def.roundPrompts),
       promptPreface: def.promptPreface,
-      systemPreface: def.systemPreface,
       round: 1,
-      maxRound: 7,
+      maxRound: 3,
     },
     players: {
       [roomOpts._creator]: {
@@ -116,10 +124,12 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
         isReadyToContinue: false,
       }
     },
+    scratchpad: {
+      input: "",
+    },
   }
 }
-type MessageType = "Intro" | "Input" | 
-  "NewPlayer" | "OutOfTime" | "ReadyToContinue";
+type MessageType = "Intro" | "Input" | "NewPlayer" | "OutOfTime" | "ReadyToContinue";
 export type Message = {
   type: MessageType,
   uid: UserID,
@@ -127,8 +137,8 @@ export type Message = {
   isPlayer?: boolean,
 }
 export type GenerationSchema = {
-  better: string,
-  reason: string
+  points: string,
+  comment: string
 }
 const MAX_PLAYERS = 2;
 
@@ -151,6 +161,7 @@ const Actions = {
   },
 
   Intro(room: Room) {
+    room.gameState.currentPlayer = chooseOneKeyInObject(objectFilter(room.players, p => p.isPlayer));
     room.gameState.scores = {};
     Object.keys(room.players).forEach(k => {
       room.gameState.scores![k] = {
@@ -163,93 +174,92 @@ const Actions = {
   Input(room: Room, message: Message) {
     room.gameState.quips = room.gameState.quips ?? {};
     room.gameState.quips[message.uid] = message.value;
-    if (Object.keys(room.gameState.quips).length === Actions.activePlayerCount(room)) {
-      Actions.generate(room);
-      Actions.TransitionState(room, "ShowResults");
-    }
+    Actions.generate(room);
+    Actions.TransitionState(room, "Response");
   },
 
   generate(room: Room) {
     const gs = room.gameState;
     if (gs.quips) {
       gs.generations = {};
-      const letters = "AB";
-      // Sort by player uid to know which is A or B when scoring
-      const playerPrompts = Object.entries(gs.quips).sort(([uid, _],[uid2, __]) => {
-        return uid < uid2 ? -1 : 1;
-      }).map(([_, q], i) => {
-        return `${letters.charAt(i)}: ${q}`;
-      }).join('\n');
-      const schema = {better: "the letter 'A' or 'B'", reason: "string"};
-      const schemaTypes:GenerationSchema = {better: "string", reason: "string"};
-      const formatPrompt = `\n\nGive output in the form ${JSON.stringify(schema)}. Begin your output with "{"`
+      const prompt = gs.quips[gs.currentPlayer];
+      const handle = room.players[gs.currentPlayer].handle;
+      const schema = '{"points": number, "comment": "string"}';
+      const schemaFormat = {points: "number", comment: "string"};
+      const formatPrompt = `\n\nGive output in the form ${schema}, return valid JSON. Begin your output with "{"`
       gs.generations["_engine"] = {
         _context: {},
         uid: "_engine",
         chatGPTParams: {
           messages: [
-            {role: "system", content: room.gameState.systemPreface},
-            {role: "user", content: `${room.gameState.promptPreface}\n\n${room.gameState.roundPrompt}\n\n${playerPrompts}\n\n${formatPrompt}`},
+            ...arrayFromKeyedObject(gs.promptPreface),
+            {role: "user", content: `Question: ${gs.roundPrompt}\n\nResponse from ${handle}: ${prompt}\n\n${formatPrompt}`},
           ],
-          schema: schemaTypes
+          schema: schemaFormat
         },
         model: room.definition.model,
-        generation: "",
+        generation: {points: 0, comment: ""},
         fulfilled: false,
       } as Generation;
     }
   },
 
-
-  ShowResults(room: Room, message: Message) {
-  },
-
   Score(room: Room) {
     const gs = room.gameState;
-    // See what the generation produced and give that player a point.
     if (gs.generations && gs.quips && gs.scores) {
-      const letters = "AB";
-      const g = gs.generations["_engine"].generation as {better: string, reason: string};
-      const pickUid = Object.keys(gs.quips).sort((uid,uid2) => {
-        return uid < uid2 ? -1 : 1;
-      }).find((_, i) => {
-        return letters.charAt(i) === g.better;
-      });
-      if (pickUid) {
-        gs.scores[pickUid].current += 1;
-      }
+      const g = gs.generations["_engine"].generation as QuipResponse;
+      gs.scores[gs.currentPlayer].current += g.points;
+      room.history = room.history ?? {};
+      room.history[Date.now()] = {
+        generation: gs.generations["_engine"],
+      };
     }
   },
 
   ContinueAfterScoring(room: Room) {
-    room.gameState.roundPrompt = chooseOneInObject(room.definition.roundPrompts);
-    if (room.gameState.round < room.gameState.maxRound) {
-      room.gameState.round += 1;
+    const gs = room.gameState;
+    gs.donePlayers = gs.donePlayers ?? {};
+    gs.donePlayers[gs.currentPlayer] = true;
+    gs.generations = {};
+    room.scratchpad = {input: ""};
+    if (Object.keys(gs.donePlayers).length < Actions.activePlayerCount(room)) {
+      const nextPlayer = chooseOneKeyInObject(objectFilter(room.players, (p, uid) => p.isPlayer && !gs.donePlayers[uid]));
+      gs.currentPlayer = nextPlayer;
       Actions.TransitionState(room, "Input");
     } else {
-      Actions.TransitionState(room, ROOM_FINISHED_STATE);
+      gs.roundPrompt = chooseOneInObject(room.definition.roundPrompts);
+      if (gs.round < gs.maxRound) {
+        gs.round += 1;
+        gs.quips = {};
+        gs.donePlayers = {};
+        gs.currentPlayer = chooseOneKeyInObject(objectFilter(room.players, p => p.isPlayer));
+        Actions.TransitionState(room, "Input");
+      } else {
+        Actions.TransitionState(room, ROOM_FINISHED_STATE);
+      }
     }
   },
 
   OutOfTime(room: Room, message: Message) {
-    // const t = room.gameState.timer;
-    // const now = new Date().getTime();
-    // if (t && t.duration + t.started < now) { // Actually out of time
-    //   const state = room.gameState.state;
-    //   const autoTransitions:State[] = ["Intro", "Answer", "Question"];
-    //   if (autoTransitions.includes(state)) {
-    //     Actions.TransitionState(room, room.stateTransitions[room.gameState.state]);
-    //   } else if (state === "Score") {
-    //     Actions.ContinueAfterScoring(room);
-    //   }
-    // }
+    // We can simply progress to the next player or state.
+    const t = room.gameState.timer;
+    const now = new Date().getTime();
+    if (t && t.duration + t.started < now) { // Actually out of time
+      const state = room.gameState.state;
+      const autoTransitions:State[] = ["Intro", "Input", "Response"];
+      if (autoTransitions.includes(state)) {
+        Actions.TransitionState(room, room.stateTransitions[room.gameState.state]);
+      } else if (state === "Score") {
+        Actions.ContinueAfterScoring(room);
+      }
+    }
   },
 
   ReadyToContinue(room: Room, message: Message) {
     room.players[message.uid].isReadyToContinue = true;
     // If everyone is ready, we want to transition.
-    const allReady = Object.entries(room.players).every(([k, p]) => p.isReadyToContinue || !p.isPlayer);
-    if (allReady && room.gameState.state === "ShowResults") {
+    const allReady = Object.entries(room.players).every(([_, p]) => p.isReadyToContinue || !p.isPlayer);
+    if (allReady && room.gameState.state === "Response") {
       Actions.Score(room);
       Actions.TransitionState(room, "Score");
     } else if (allReady && room.gameState.state === "Score") {

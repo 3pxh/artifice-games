@@ -25,7 +25,7 @@ const STATE_TRANSITIONS:Record<State, State> = {
   [ROOM_FINISHED_STATE]: ROOM_FINISHED_STATE,
 }
 export type Generation = Omit<GenerationRequest, "room"> & 
-  GenerationResponse & {
+  GenerationResponse<string> & {
     model: GPT3Def,
     uid: string,
     question: string,
