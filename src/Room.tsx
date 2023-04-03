@@ -12,6 +12,7 @@ import { messageRoom, pingRoom, updatePlayer, setRoomLastSeenNow } from "./actio
 import { EngineName, Scores } from "../functions/src/games/games";
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import * as AIJudge from "./games/AIJudge/Renderer";
+import * as Quip from "./games/Quip/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
@@ -89,6 +90,7 @@ export function Room(props: {room: RoomData}) {
   const gameState = useSignal<GameState | null>(null);
   const players = useSignal<PromptGuessRoom["players"] | null>(null);
   const scores = useComputed<Scores | null>(() => gameState.value?.scores ?? null);
+  const scratchpad = useSignal<any>(null);
   const isLoaded = useComputed<boolean>(() => {
     return gameState.value !== null && players.value !== null;
   });
@@ -111,6 +113,9 @@ export function Room(props: {room: RoomData}) {
   const updatePlayerState = (snapshot: DataSnapshot) => {
     players.value = snapshot.val();
   }
+  const updateScratchpadState = (snapshot: DataSnapshot) => {
+    scratchpad.value = snapshot.val();
+  }
 
   useEffect(() => {
     // TODO: Make this ack when the game updates here.
@@ -120,6 +125,8 @@ export function Room(props: {room: RoomData}) {
     onValue(stateRef, updateGameState);
     const playerRef = ref(db, `rooms/${props.room.id}/players`);
     onValue(playerRef, updatePlayerState);
+    const scratchpadRef = ref(db, `rooms/${props.room.id}/scratchpad`);
+    onValue(scratchpadRef, updateScratchpadState);
     // TODO: When we add async rooms, how do we handle queuing?
     // In case the component has been rerendered.
     if (isWaiting) {
@@ -187,9 +194,10 @@ export function Room(props: {room: RoomData}) {
   }
 
   
-  const engines = {
+  const engines:Record<EngineName, any> = {
     "PromptGuess": RenderPromptGuess,
     "AIJudge": AIJudge.RenderAIJudge,
+    "Quip": Quip.RenderQuip,
   }
   const Game = engines[props.room.definition.engine];
 
@@ -239,6 +247,7 @@ export function Room(props: {room: RoomData}) {
             // TODO: How do we do manage type checking at the room level?
             gameState={gameState as any}
             players={players as any}
+            scratchpad={scratchpad as any}
             isPlayer={props.room.isPlayer}
             isInputOnly={props.room.isInputOnly} />
         </div>

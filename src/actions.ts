@@ -115,6 +115,14 @@ const messageRoom = (roomId: string, m: any) => {
   }
 }
 
+const setScratchpad = (roomId: string, s: any) => {
+  if (auth.currentUser) {
+    set(ref(db, `rooms/${roomId}/scratchpad`), s);
+  } else {
+    throw new Error("Must be authenticated to message room")
+  }
+}
+
 const setRoomLastSeenNow = (roomId: string) => {
   // TODO: any sort of type checking...
   if (auth.currentUser) {
@@ -130,4 +138,4 @@ const updatePlayer = (roomId: string, m: any) => {
   }
 }
 
-export { createGame, pingRoom, joinRoom, getRoom, messageRoom, updatePlayer, setRoomLastSeenNow, sendChat }
+export { createGame, pingRoom, joinRoom, getRoom, messageRoom, setScratchpad, updatePlayer, setRoomLastSeenNow, sendChat }

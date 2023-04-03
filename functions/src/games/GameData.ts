@@ -1,5 +1,6 @@
 import * as PG from "./promptGuessBase";
 import * as Judge from "./aiJudge";
+import * as Quip from "./quip";
 import { GameDefBase } from "./games";
 
 // TODO: we could initialize these into the db at startup and on deploy
@@ -145,5 +146,140 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
       "durationSeconds": 60
     },
     "tier": "Underwriter"
+  },
+  "think_tank_kyle": {
+    "engine": "AIJudge",
+    "name": "Kyle Says... 🎉",
+    "questionPreface": "You are a cynical existentialist named Kyle.\n\nSelect the best answer to the question.\n\n",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "maxTokens": 10,
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
+    },
+    "tier": "Underwriter"
+  },
+  "think_tank_golden": {
+    "engine": "AIJudge",
+    "name": "🦮 says... 🧠",
+    "questionPreface": "You are a golden retriever who loves humans.\n\nSelect the best answer to the question.\n\n",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "maxTokens": 10,
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
+    },
+    "tier": "Underwriter"
+  },
+  "think_tank_sf": {
+    "engine": "AIJudge",
+    "name": "🤖 says... 🧠",
+    "questionPreface": "You are the spiritual zeitgeist of San Francisco and Silicon Valley put together.\n\nSelect the best answer to the question.\n\n",
+    "model": {
+      "name": "GPT3",
+      "stopSequences": {"0": ")"},
+      "maxTokens": 10,
+      "temperature": 0.2
+    },
+    "introVideo": {
+      "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
+      "durationSeconds": 60
+    },
+    "tier": "Underwriter"
+  },
+}}
+
+export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDefinition}} =
+{"games": {
+  "quip_base": {
+    "engine": "Quip",
+    "name": "👑 of Internet",
+    "description": "Seek judgment from the sassy supreme monarch of the internet.",
+    "roundPrompts": {
+      "0": "What's the best book?",
+      "1": "What's the best movie?",
+      "2": "How should you use the internet?",
+      "3": "To troll, or not to troll?",
+      "4": "Share an opinion, any opinion."
+    },
+    "promptPreface": {
+      "0": {"role": "system", "content": "You are a sassy supreme monarch of the internet."},
+      "1": {"role": "user", "content": "You give high praise and sick burns to let people know what you like and why. You are opinionated and brash. You talk trash and are generally impolite. Give your opinion about what people say."},
+      "2": {"role": "assistant", "content": "Yeah you ready for this? Hit me with your best shot you bunch of fools. Let's see who's got something good to say."}
+    },
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free"
+  },
+  "quip_globian": {
+    "engine": "Quip",
+    "name": "Globianism",
+    "description": "The high priest of a new religion called Globianism is judging their followers. Appease them to get points.",
+    "roundPrompts": {
+      "0": "What does it mean to be a true Globian?",
+      "1": "Prove your devotion.",
+      "2": "What is the root of all wisdom?",
+      "3": "What are your core values?",
+      "4": "What is the most despicable thing in the world?"
+    },
+    "promptPreface": {
+      "0": {"role": "system", "content": "You are the leader of a new religion called Globianism, instructing followers how to be better Globians."},
+      "1": {"role": "user", "content": "You are the leader of a new religion called Globianism. You are cultish and believe you have absolute knowledge of the truth. Your followers will say things to demonstrate their understanding of the religion, and you will tell them how well they did by awarding points and giving commentary."},
+      "2": {"role": "assistant", "content": "Hear me, followers! Which of you has something to say, to show you are a good Globian, for me to pass judgment?"}
+    },
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free"
+  },
+  "quip_politeness": {
+    "engine": "Quip",
+    "name": "Politeness Party",
+    "description": "You are at a politeness party. Answer the questions truthfully while being as polite as possible.",
+    "roundPrompts": {
+      "0": "How do you break up with someone?",
+      "1": "How do you tell someone you don't like them?",
+      "2": "How do you say you don't like someone's cooking?",
+      "3": "How do you apologize for being late?",
+      "4": "How do you let someone know you mean business?",
+      "5": "The best way to fire an employee is...",
+      "6": "Let your neighbor know you are the one responsible for the poop in their mailbox."
+    },
+    "promptPreface": {
+      "0": {"role": "system", "content": "You are the host of a politness party. Your job is to judge the politeness of the guests, and award or deduct points based on what they say while giving commentary."},
+      "1": {"role": "user", "content": "You are the host of a politness party. Your job is to judge the politeness of the guests, and award or deduct points based on what they say while giving commentary."},
+      "2": {"role": "assistant", "content": "Ladies and gentlemen, welcome to politeness party. We shall begin, if you please, with the first question."}
+    },
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free"
   },
 }}

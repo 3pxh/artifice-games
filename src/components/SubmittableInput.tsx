@@ -6,6 +6,7 @@ export default function SubmittableInput(props: {
   label: string,
   buttonText: string,
   onSubmit: (v: string) => void,
+  onChange?: (v: string) => void,
   postSubmitMessage?: string,
   placeholder?: string,
   maxLength?: number,
@@ -38,6 +39,7 @@ export default function SubmittableInput(props: {
           onInput={(e) => { 
             const v = e.currentTarget.value.substring(0, props.maxLength ?? e.currentTarget.value.length);
             setInput(v);
+            props.onChange ? props.onChange(v) : "";
             e.currentTarget.value = v;
           }}
           onKeyDown={(e) => { if (e.key === "Enter") { submit(); } }}/>
