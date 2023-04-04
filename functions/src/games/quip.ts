@@ -140,7 +140,7 @@ export type GenerationSchema = {
   points: string,
   comment: string
 }
-const MAX_PLAYERS = 2;
+const MAX_PLAYERS = 20;
 
 const Actions = {
   activePlayerCount(room: Room) {
@@ -184,7 +184,7 @@ const Actions = {
       gs.generations = {};
       const prompt = gs.quips[gs.currentPlayer];
       const handle = room.players[gs.currentPlayer].handle;
-      const schema = '{"points": number, "comment": "string"}';
+      const schema = "{\"points\": number, \"comment\": \"string\"}";
       const schemaFormat = {points: "number", comment: "string"};
       const formatPrompt = `\n\nGive output in the form ${schema}, return valid JSON. Begin your output with "{"`
       gs.generations["_engine"] = {

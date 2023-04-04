@@ -95,7 +95,7 @@ export function RenderQuip(props: {
         placeholder=""
         buttonText="So original!"
         postSubmitMessage="Waiting on other players..."
-        maxLength={80} />
+        maxLength={140} />
     } else {
       return<>
         <p>{roundPrompt.value}</p>
