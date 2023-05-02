@@ -8,6 +8,7 @@ import { AuthContext } from "../AuthProvider"
 import { Routes } from "../router";
 import { createGame } from "../actions";
 import { Link } from "preact-router";
+import { objectFilter } from "../../functions/src/utils";
 type AsyncOption = "async" | "live";
 type DisplayMode = "observe" | "input" | "full";
 
@@ -86,7 +87,7 @@ export default function GameSelection() {
 
   useEffect(() => {
     get(ref(db, "games")).then(v => {
-      setGameList(v.val());
+      setGameList(objectFilter(v.val(), (v:GameDefinition) => !v.hidden));
     });
   }, []);
 
