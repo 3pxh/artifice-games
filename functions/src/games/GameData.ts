@@ -1,6 +1,7 @@
 import * as PG from "./promptGuessBase";
 import * as Judge from "./aiJudge";
 import * as Quip from "./quip";
+import * as MITM from "./mitm";
 import { GameDefBase } from "./games";
 
 // TODO: we could initialize these into the db at startup and on deploy
@@ -26,7 +27,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
       "durationSeconds": 133
     },
-    "tier": "Free"
+    "tier": "Free",
+    "hidden": false
   },
   "farsketched_dalle": {
     "engine": "PromptGuess",
@@ -41,7 +43,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
       "durationSeconds": 133
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": true
   },
   "farsketched_photo": {
     "engine": "PromptGuess",
@@ -57,7 +60,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/3Cn3A8ad4x8",
       "durationSeconds": 133
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": true
   },
   "gisticle_base": {
     "engine": "PromptGuess",
@@ -73,7 +77,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/WZetuug_Xug",
       "durationSeconds": 57
     },
-    "tier": "Free"
+    "tier": "Free",
+    "hidden": false
   },
   "common_language": {
     "engine": "PromptGuess",
@@ -90,7 +95,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
       "durationSeconds": 59
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
   "poems": {
     "engine": "PromptGuess",
@@ -108,7 +114,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
       "durationSeconds": 59
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
   "tresmojis_base": {
     "engine": "PromptGuess",
@@ -125,7 +132,8 @@ export const FeaturedPGGames: {games: {[k: string]: GameDefBase & PG.GameDefinit
       "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
       "durationSeconds": 59
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
 }}
 
@@ -145,7 +153,8 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
       "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
       "durationSeconds": 60
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
   "think_tank_kyle": {
     "engine": "AIJudge",
@@ -161,7 +170,8 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
       "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
       "durationSeconds": 60
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
   "think_tank_golden": {
     "engine": "AIJudge",
@@ -177,7 +187,8 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
       "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
       "durationSeconds": 60
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
   "think_tank_sf": {
     "engine": "AIJudge",
@@ -193,7 +204,8 @@ export const FeaturedJudgeGames: {games: {[k: string]: GameDefBase & Judge.GameD
       "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
       "durationSeconds": 60
     },
-    "tier": "Underwriter"
+    "tier": "Underwriter",
+    "hidden": false
   },
 }}
 
@@ -224,7 +236,8 @@ export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDef
       "url": "",
       "durationSeconds": 0
     },
-    "tier": "Free"
+    "tier": "Free",
+    "hidden": true
   },
   "quip_globian": {
     "engine": "Quip",
@@ -251,7 +264,8 @@ export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDef
       "url": "",
       "durationSeconds": 0
     },
-    "tier": "Free"
+    "tier": "Free",
+    "hidden": false
   },
   "quip_politeness": {
     "engine": "Quip",
@@ -280,6 +294,51 @@ export const FeaturedQuipGames: {games: {[k: string]: GameDefBase & Quip.GameDef
       "url": "",
       "durationSeconds": 0
     },
-    "tier": "Free"
+    "tier": "Free",
+    "hidden": false
   },
+  "quip_doom": {
+    "engine": "Quip",
+    "name": "Doom Charades",
+    "description": "Welcome to DOOM CHARADES. Where the most doomish things get points.",
+    "roundPrompts": {
+      "0": "Fill us with doom!"
+    },
+    "promptPreface": {
+      "0": {"role": "system", "content": "You are the judge in a game of Doom Charades. You're full of personality and doom-filled ennui. You award or deduct points based on what people say on the theme of Doom."},
+      "1": {"role": "user", "content": "You are the judge in a game of Doom Charades. You're full of personality and doom-filled ennui. You award or deduct points based on what people say on the theme of Doom."},
+      "2": {"role": "assistant", "content": "The apocalypse is here, so I guess we'll play Doom Charades."}
+    },
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free",
+    "hidden": false
+  }
+}}
+
+export const FeaturedMITMGames: {games: {[k: string]: GameDefBase & MITM.GameDefinition}} =
+{"games": {
+  "mitm_base": {
+    "engine": "MITM",
+    "name": "Bot or Not?",
+    "description": "Can you tell if you're talking to your friend?",
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free",
+    "hidden": false
+  }
 }}

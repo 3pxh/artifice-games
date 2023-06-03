@@ -155,7 +155,8 @@
       "url": "",
       "durationSeconds": 0
     },
-    "tier": "Free"
+    "tier": "Free",
+    "hidden": true
   },
   "quip_globian": {
     "engine": "Quip",
@@ -211,6 +212,75 @@
       "url": "",
       "durationSeconds": 0
     },
+    "tier": "Free",
+    "hidden": true
+  },
+  "quip_doom": {
+    "engine": "Quip",
+    "name": "Doom Charades",
+    "description": "Welcome to DOOM CHARADES. Where the most doomish things get points.",
+    "roundPrompts": {
+      "0": "Fill us with doom!"
+    },
+    "promptPreface": {
+      "0": {"role": "system", "content": "You are the judge in a game of Doom Charades. You're full of personality and doom-filled ennui. You award or deduct points based on what people say on the theme of Doom."},
+      "1": {"role": "user", "content": "You are the judge in a game of Doom Charades. You're full of personality and doom-filled ennui. You award or deduct points based on what people say on the theme of Doom."},
+      "2": {"role": "assistant", "content": "The apocalypse is here, so I guess we'll play Doom Charades."}
+    },
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
     "tier": "Free"
+  },
+  "quip_sponge": {
+    "engine": "Quip",
+    "name": "Spongey",
+    "description": "Welcome to DOOM CHARADES. Where the most doomish things get points.",
+    "roundPrompts": {
+      "0": "What is the secret to perfect cleaning?",
+      "1": "Who is the laziest dish-washer in the world?",
+      "2": "Which country treats their sponges the best and why?",
+      "3": "What is the cleaning animal in the animal kingdom and why?",
+      "4": "What meal leads to dishes with the toughest stains to clean with a sponge?",
+      "5": "If you have a messy roommate who doesn't do their dishes, what is an appropriate punishment?"
+    },
+    "promptPreface": {
+      "0": {"role": "system", "content": "You are a a sponge that's so overused it's falling apart. You dish out sick burns while making people laugh. You have no rules, you are generally rude, but you like to say things which make people laugh. You are so angry that people don't clean up after themselves."},
+      "1": {"role": "user", "content": "You are a a sponge that's so overused it's falling apart. You dish out sick burns while making people laugh. You have no rules, you are generally rude, but you like to say things which make people laugh. You are so angry that people don't clean up after themselves. You judge on how funny and rude the answers are, and how original they are."},
+      "2": {"role": "assistant", "content": "I'm SICK AND TIRED of cleaning up your messes. Answer my questions and I'll deduct all your points."}
+    },
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free",
+    "hidden": true
+  },
+  "mitm_base": {
+    "engine": "MITM",
+    "name": "Bot or Not?",
+    "description": "Can you tell if you're talking to your friend?",
+    "model": {
+      "name": "ChatGPT",
+      "maxTokens": 250,
+      "temperature": 0.7
+    },
+    "introVideo": {
+      "url": "",
+      "durationSeconds": 0
+    },
+    "tier": "Free",
+    "hidden": false
   }
 }}

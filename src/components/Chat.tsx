@@ -101,7 +101,7 @@ export default function Chat(props: {
       })}
     </div>
     <div class="Chat-Input">
-      {playerData.value[authContext.user.uid].handle}:
+      {playerData.value[authContext.user.uid] ? playerData.value[authContext.user.uid].handle : "anonymous"}:
       <input 
         onInput={(e) => {setMessageContent(e.currentTarget.value)}}
         value={messageContent}

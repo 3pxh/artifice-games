@@ -38,7 +38,7 @@ export type GenerationRequest = {
   prompt: string,
   chatGPTParams?: {
     messages: {role: string, content: string}[],
-    schema: Schema,
+    schema?: Schema,
   }
 }
 
@@ -260,7 +260,7 @@ async function runChatCompletion(modelName: "gpt-3.5-turbo" | "gpt-4", r: Genera
       }
     } else {
       return {
-        generation: response.choices[0].content,
+        generation: response.choices[0].message.content,
         timeFulfilled: new Date().getTime(),
       }  
     }

@@ -1,12 +1,13 @@
 import * as PG from "./promptGuessBase";
 import * as Judge from "./aiJudge";
 import * as Quip from "./quip";
+import * as MITM from "./mitm"
 
 export type TimerOption = "off" | "slow" | "fast";
-export type EngineName = PG.GameDefinition["engine"] | Judge.GameDefinition["engine"] | Quip.GameDefinition["engine"]; // | ...
+export type EngineName = PG.GameDefinition["engine"] | Judge.GameDefinition["engine"] | Quip.GameDefinition["engine"] | MITM.GameDefinition["engine"]; // | ...
 type GameTier = "Free" | "Underwriter"
-export type GameDefBase = {tier: GameTier}
-export type GameDefinition = GameDefBase & (PG.GameDefinition | Judge.GameDefinition | Quip.GameDefinition); // | ...
+export type GameDefBase = {tier: GameTier, hidden: boolean}
+export type GameDefinition = GameDefBase & (PG.GameDefinition | Judge.GameDefinition | Quip.GameDefinition | MITM.GameDefinition); // | ...
 export type GameCreateData = {
   _creator: string,
   _isAsync: boolean,
@@ -24,12 +25,14 @@ type Engine<GameDef, Room extends {gameState: any}, Message> = {
 type PromptGuessEngine = Engine<PG.GameDefinition, PG.PromptGuessRoom, PG.PromptGuessMessage>
 type JudgeEngine = Engine<Judge.GameDefinition, Judge.Room, Judge.Message>
 type QuipEngine = Engine<Quip.GameDefinition, Quip.Room, Quip.Message>
+type MITMEngine = Engine<MITM.GameDefinition, MITM.Room, MITM.Message>
 
-type GameEngine = PromptGuessEngine | JudgeEngine | QuipEngine; // | AnotherEngine
+type GameEngine = PromptGuessEngine | JudgeEngine | QuipEngine | MITMEngine; // | AnotherEngine
 export const engines:Record<EngineName, GameEngine> = {
   "PromptGuess": PG.engine,
   "AIJudge": Judge.engine,
   "Quip": Quip.engine,
+  "MITM": MITM.engine,
 }
 
 // TODO: this doesn't seem quite right as far as managing types...
@@ -37,4 +40,5 @@ export type MessageTypes = {
   "PromptGuess": PG.PromptGuessMessage,
   "AIJudge": Judge.Message,
   "Quip": Quip.Message,
+  "MITM": MITM.Message,
 }

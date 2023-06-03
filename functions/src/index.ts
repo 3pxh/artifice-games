@@ -329,6 +329,9 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
     }
 });
 
+export type GENERATION_FULFILLED_MSG_TYPE = "_GenerationFulfilled";
+export const GENERATION_FULFILLED_MSG:GENERATION_FULFILLED_MSG_TYPE = "_GenerationFulfilled";
+
 // We trigger this after the game state mutations because they're done 
 // in a transaction and we don't want to accidentally retry API requests.
 export const generationRequest = functions
@@ -348,6 +351,11 @@ export const generationRequest = functions
     } catch(e) {
       result = {error: (e as Error).message};
     }
+    const msgRef = await admin.database().ref(`/rooms/${apiReq.room}/messages`).push();
+    await msgRef.set({
+      type: GENERATION_FULFILLED_MSG,
+      uid: context.params.uid,
+    });
     return snapshot.ref.set({
       ...apiReq,
       ...result,

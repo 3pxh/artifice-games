@@ -13,6 +13,7 @@ import { EngineName, Scores } from "../functions/src/games/games";
 import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import * as AIJudge from "./games/AIJudge/Renderer";
 import * as Quip from "./games/Quip/Renderer";
+import * as MITM from "./games/MITM/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
@@ -198,6 +199,7 @@ export function Room(props: {room: RoomData}) {
     "PromptGuess": RenderPromptGuess,
     "AIJudge": AIJudge.RenderAIJudge,
     "Quip": Quip.RenderQuip,
+    "MITM": MITM.RenderMitm,
   }
   const Game = engines[props.room.definition.engine];
 
