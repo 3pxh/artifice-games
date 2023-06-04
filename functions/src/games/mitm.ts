@@ -67,7 +67,7 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
       state: "Lobby",
       player1: roomOpts._creator,
       currentStep: 0,
-      stepsBeforeMITM: 3//10 + Math.floor(Math.random() * 40)
+      stepsBeforeMITM: 10 + Math.floor(Math.random() * 30)
     },
     players: {
       [roomOpts._creator]: {state: "Lobby", handle: "Player 1"}
@@ -154,22 +154,19 @@ const Actions = {
   ProcessGeneration(room: Room, message: Message) {
     if (room.gameState.generations && room.gameState.generations[message.uid]) {
       const chat = (message.uid === room.gameState.player1 ? room.gameState.chat1 : room.gameState.chat2) ?? {};
-      // TODO: make a time estimate for when it should be revealed.
-      // We could calculate average typing speed by length of messages per time?
-      // const otherPlayer = message.uid === "player1" ? "player2" : "player1";
-      // let timeTyping = 0;
-      // let messageLength = 0;
-      // Object.keys is apparently a string[], even though we're using timestamps ugh
-      // Object.keys(chat).sort((a,b) => { return a - b < 0 ? -1 : 1 }).forEach((t, i) => {
-      //   if (i > 0 && chat[parseInt(t)].author === otherPlayer) {
-      //     timeTyping += 
-      //   }
-      // });
+      // Calculate the average typing speed      
+      const chatArray = Object.entries(chat).sort((a,b) => { return parseInt(a[0]) - parseInt(b[0]) });
+      const whichPlayer = chatArray.length % 2 === 0 ? 2 : 1;
+      let totalWords = 0; let totalTime = 0;
+      for (let i = whichPlayer; i < Math.min(chatArray.length, room.gameState.stepsBeforeMITM); i += 2) {
+        totalTime += parseInt(chatArray[i][0]) - parseInt(chatArray[i - 1][0]);
+        totalWords += chatArray[i][1].message.split(" ").length;
+      }
+      const rate = totalTime /totalWords; // TODO: make the rate somewhat variable?
       const generatedValue = room.gameState.generations[message.uid]?.generation ?? "";
       const parse = (input: string) => {
         const regex = /\[\[(.*?)\]\]/;  // Regular expression to match the string inside double square brackets
         const match = regex.exec(input);  // Find the match using the regex
-      
         if (match && match.length > 1) {
           return match[1];
         } else {
@@ -177,7 +174,7 @@ const Actions = {
         }
       }
       const parsedResponse = parse(generatedValue);
-      const now = Date.now();
+      const now = Math.floor(parseInt(chatArray[chatArray.length - 1][0]) + rate * parsedResponse.split(" ").length);
       chat[now] = {message: parsedResponse, author: "robot"};
       delete room.gameState.generations[message.uid];
     }

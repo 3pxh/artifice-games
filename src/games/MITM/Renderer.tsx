@@ -1,5 +1,5 @@
 import { h, Fragment } from "preact";
-import { useContext } from "preact/hooks";
+import { useContext, useState } from "preact/hooks";
 import { computed, Signal, ReadonlySignal } from "@preact/signals";
 import * as MITM from "../../../functions/src/games/mitm";
 import { AuthContext } from "../../AuthProvider";
@@ -13,6 +13,9 @@ export function RenderMitm(props: {
   isInputOnly: boolean,
 }) {
   const { user } = useContext(AuthContext);
+  const [time, setTime] = useState(Date.now());
+  window.setInterval(() => {setTime(Date.now())}, 200);
+
   if (!user) {
     throw new Error("User isn't defined in game renderer!");
   }
@@ -55,16 +58,17 @@ export function RenderMitm(props: {
     </div>
   } else if (renderState.value === "Chat" || renderState.value === "MITM") {
     const chatArray = myChat.value ? Object.entries(myChat.value) : [];
-    const c:[number, {author:string, message:string}][] = chatArray.map(([timestamp, message]) => { return [parseInt(timestamp), message] })
+    const chatEntries:[number, {author:string, message:string}][] = chatArray.map(([timestamp, message]) => { return [parseInt(timestamp), message] });
+    const c = chatEntries.sort(([t1, _], [t2, __]) => {return t1 - t2});
     const isMyTurn = c.length === 0 ? user.uid === player1.value : c[c.length - 1][1].author !== user.uid;
     return <div class="MITM-Container">
       <div class="MITM-Chats">
-        {c.sort(([t1, _], [t2, __]) => {return t1 - t2}).map(([t, message]) => {
-          return <p key={t} class={message.author === user.uid ? "MITM-Chat--FromMe" : "MITM-Chat--FromThem"}>{message.message}</p>
+        {c.map(([t, message]) => {
+          return t < time ? <p key={t} class={message.author === user.uid ? "MITM-Chat--FromMe" : "MITM-Chat--FromThem"}>{message.message}</p> : "";
         })}
       </div>
       <input id="MITM-MessageInput" />
-      <button disabled={!isMyTurn} onClick={sendMessage}>Send</button>
+      <button disabled={!isMyTurn || (c[c.length - 1][0] > time)} onClick={sendMessage}>Send</button>
       <button disabled={c.length < 10} onClick={() => message("ICallRobot", "woo!")}>I Call Robot!</button>
     </div>
   } else if (renderState.value === "Finish") {
