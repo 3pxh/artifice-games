@@ -10,13 +10,13 @@
   flex-direction: column;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 10000px) {
   .Room {
   	flex-direction: column;
   }
 }
 
-@media (min-width: 1001px) {
+@media (min-width: 10001px) {
   .Room {
   	flex-direction: row;
     overflow: hidden;

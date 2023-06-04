@@ -5,6 +5,8 @@ import * as MITM from "../../../functions/src/games/mitm";
 import { AuthContext } from "../../AuthProvider";
 import { messageRoom } from "../../actions";
 import SingleUseButton from "../../components/SingleUseButton";
+import "./mitm.css";
+import { arrayFromKeyedObject } from "../../../functions/src/utils";
 
 export function RenderMitm(props: {
   room: MITM.Room & {id: string},
@@ -14,7 +16,7 @@ export function RenderMitm(props: {
 }) {
   const { user } = useContext(AuthContext);
   const [time, setTime] = useState(Date.now());
-  window.setInterval(() => {setTime(Date.now())}, 200);
+  
 
   if (!user) {
     throw new Error("User isn't defined in game renderer!");
@@ -23,13 +25,27 @@ export function RenderMitm(props: {
   const renderState:ReadonlySignal<MITM.State> = computed(() => {
     return props.gameState.value.state
   });
-  const currentStep:ReadonlySignal<number> = computed(() => {
-    return props.gameState.value.currentStep
-  });
   const player1:ReadonlySignal<string> = computed(() => {
     return props.gameState.value.player1
   });
   const myChat = computed(() => user.uid === props.gameState.value.player1 ? props.gameState.value.chat1 : props.gameState.value.chat2)
+
+  window.setInterval(() => {    
+    setTime(Date.now());
+    // Scroll to bottom on new messages.
+    const chatContainer = document.getElementById("MITM-ScrollingContainer");
+    if (chatContainer) {
+      const chatArray = myChat.value ? Object.entries(myChat.value) : [];
+      const chatEntries:[number, {author:string, message:string}][] = chatArray.map(([timestamp, message]) => { return [parseInt(timestamp), message] });
+      const c = chatEntries.sort(([t1, _], [t2, __]) => {return t1 - t2});
+      const lastMessageTimestamp = (c && c.length) ? c[c.length-1][0] : null;
+      if (lastMessageTimestamp) {
+        if (lastMessageTimestamp > Date.now() - 200 && lastMessageTimestamp < Date.now()) {
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+      }
+    }
+  }, 200);
 
   const message = (type: MITM.Message["type"], value: string) => {
     const m:Omit<MITM.Message, "uid"> = {
@@ -40,8 +56,12 @@ export function RenderMitm(props: {
   }
 
   const sendMessage = () => {
+    const chatArray = myChat.value ? Object.entries(myChat.value) : [];
+    const chatEntries:[number, {author:string, message:string}][] = chatArray.map(([timestamp, message]) => { return [parseInt(timestamp), message] });
+    const c = chatEntries.sort(([t1, _], [t2, __]) => {return t1 - t2});
+    const isMyTurn = c.length === 0 ? user.uid === player1.value : c[c.length - 1][1].author !== user.uid;
     const input = document.getElementById("MITM-MessageInput") as HTMLInputElement;
-    if (input) {
+    if (input && isMyTurn && !(!!c && !!c.length && (c[c.length - 1][0] > time))) {
       message("ChatMessage", input.value);
       input.value = "";
     }
@@ -62,13 +82,13 @@ export function RenderMitm(props: {
     const c = chatEntries.sort(([t1, _], [t2, __]) => {return t1 - t2});
     const isMyTurn = c.length === 0 ? user.uid === player1.value : c[c.length - 1][1].author !== user.uid;
     return <div class="MITM-Container">
-      <div class="MITM-Chats">
+      <div class="MITM-Chats" id="MITM-ScrollingContainer">
         {c.map(([t, message]) => {
-          return t < time ? <p key={t} class={message.author === user.uid ? "MITM-Chat--FromMe" : "MITM-Chat--FromThem"}>{message.message}</p> : "";
+          return t < time ? <p key={t} class={message.author === user.uid ? "MITM-Chat--FromMe" : "MITM-Chat--FromThem"}><p class="MITM-ChatText">{message.message}</p></p> : "";
         })}
       </div>
-      <input id="MITM-MessageInput" />
-      <button disabled={!isMyTurn || (c[c.length - 1][0] > time)} onClick={sendMessage}>Send</button>
+      <input id="MITM-MessageInput" type="text" onKeyPress={(e) => {if (e.key === "Enter") {sendMessage()}}} />
+      <button disabled={!isMyTurn || (!!c && !!c.length && (c[c.length - 1][0] > time))} onClick={sendMessage}>Send</button>
       <button disabled={c.length < 10} onClick={() => message("ICallRobot", "woo!")}>I Call Robot!</button>
     </div>
   } else if (renderState.value === "Finish") {

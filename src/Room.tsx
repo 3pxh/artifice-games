@@ -253,14 +253,14 @@ export function Room(props: {room: RoomData}) {
             isPlayer={props.room.isPlayer}
             isInputOnly={props.room.isInputOnly} />
         </div>
-        <div className="Room-Pane" >
+        {/* <div className="Room-Pane" >
           <Chat 
             key={"chat"} 
             roomId={props.room.id} 
             players={players}
             isActive={activeTab === "chat"}
             setHasUnreadMessages={setHasUnreadMessages} />
-        </div>
+        </div> */}
       {/* </div>
       <div className="Room-TabSelector">
         <div 

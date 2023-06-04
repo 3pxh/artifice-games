@@ -2,3 +2,42 @@
     max-height: 500px;
     overflow-y: scroll;
 }
+
+.MITM-Chat--FromMe, .MITM-Chat--FromThem {
+    margin: 0;
+}
+
+.MITM-Chat--FromMe {
+    margin-left: 100px;
+    text-align: right;
+}
+
+.MITM-Chat--FromThem {
+    margin-right: 100px;
+}
+
+.MITM-ChatText {
+    border-radius: 20px;
+    margin: 5px 0;
+    padding: 10px;
+    display: inline-block;
+}
+
+.MITM-Chat--FromThem .MITM-ChatText {
+    background-color: #939597;
+    color: white;
+}
+
+.MITM-Chat--FromMe .MITM-ChatText {
+    background-color: #007AFF;
+}
+
+#MITM-MessageInput {
+    width: 100%;
+    border: none;
+    margin-top: 5px;
+    padding: 10px;
+    font-size: 16px;
+    resize: none;
+    outline: none;
+}

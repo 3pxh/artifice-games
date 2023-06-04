@@ -116,22 +116,14 @@ const Actions = {
     const now = Date.now();
     const msg = {message: message.value, author: message.uid};
     chat[now] = msg;
-    // const chatMessages = arrayFromKeyedObject(chat).map((m, i) => {
-    //   return {role: message.uid === m.author ? "user" : "assistant", content: m.message};
-    // })
-    // const messages = [
-    //   {role: "system", content: "You are having a chat conversation."},
-    //   ...chatMessages
-    // ];
     const dialogue = arrayFromKeyedObject(chat).reduce((prev, curr, i) => {
       return `${prev}\n${i % 2 === 0 ? "1" : "2"}: ${curr.message}`;
     }, "");
+    const aiSpeaker = message.uid === room.gameState.player1 ? "2" : "1";
     const messages = [
       {role: "system", content: "You are a helpful assistant."},
-      {role: "user", content: `Two people are having a dialogue.\n\n${dialogue}\n\nWrite the next line of dialogue to be in a consistent tone with the speaker. First, explain the tone, and then output their line of dialogue. Format the response like so [[your response here]].`},
+      {role: "user", content: `Two people are having a dialogue.\n\n${dialogue}\n\nWrite the next line of dialogue to be in a consistent tone with speaker ${aiSpeaker}. First, explain the tone of speaker ${aiSpeaker}, and then output their line of dialogue. Format the speaker's response like so [[${aiSpeaker}: ...]].`},
     ];
-
-    // Turn chat into an array of alternating user/assistant messages
     room.gameState.generations = room.gameState.generations ?? {};
     room.gameState.generations[message.uid] = {
       _context: {},
@@ -162,7 +154,7 @@ const Actions = {
         totalTime += parseInt(chatArray[i][0]) - parseInt(chatArray[i - 1][0]);
         totalWords += chatArray[i][1].message.split(" ").length;
       }
-      const rate = totalTime /totalWords; // TODO: make the rate somewhat variable?
+      const rate = .6 * totalTime / totalWords; // TODO: make the rate somewhat variable?
       const generatedValue = room.gameState.generations[message.uid]?.generation ?? "";
       const parse = (input: string) => {
         const regex = /\[\[(.*?)\]\]/;  // Regular expression to match the string inside double square brackets
@@ -173,7 +165,10 @@ const Actions = {
           return `Failed to parse ${input}`;
         }
       }
-      const parsedResponse = parse(generatedValue);
+      let parsedResponse = parse(generatedValue);
+      const indicator = `${chatArray.length % 2 ? 2 : 1}:`
+      parsedResponse = parsedResponse.indexOf(indicator) === 0 ? parsedResponse.slice(parsedResponse.indexOf(indicator) + 2) : parsedResponse;
+      parsedResponse = parsedResponse.trim();
       const now = Math.floor(parseInt(chatArray[chatArray.length - 1][0]) + rate * parsedResponse.split(" ").length);
       chat[now] = {message: parsedResponse, author: "robot"};
       delete room.gameState.generations[message.uid];
