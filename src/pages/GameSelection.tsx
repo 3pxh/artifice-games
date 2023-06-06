@@ -9,6 +9,8 @@ import { Routes } from "../router";
 import { createGame } from "../actions";
 import { Link } from "preact-router";
 import { objectFilter } from "../../functions/src/utils";
+import "./GameSelection.css";
+
 type AsyncOption = "async" | "live";
 type DisplayMode = "observe" | "input" | "full";
 
@@ -72,6 +74,23 @@ const Options = <O extends string,>(props: {
   </>
 }
 
+function GameList(props: {games: [string, GameDefinition][], onSelect: (id: string) => void}) {
+  return <div class="GameSelection-GameList">
+    {props.games.map(([k, v]) => {
+      return <div class="GameSelection-GameCard">
+        <button 
+          onClick={() => {props.onSelect(k)}}
+          style={`background-color: ${v.color || "#DDD"}`}
+        >
+          <span class="GameSelection-Emoji">{(v as any).emoji || "🎉"}</span><br/>
+          {v.name}
+        </button>
+        <span class="GameSelection-ShortAbout">{v.shortAbout ?? ""}</span>
+      </div>
+    })}
+  </div>;
+}
+
 export default function GameSelection() {
   const authContext = useContext(AuthContext);
   const displayMode = signal<DisplayMode>("full");
@@ -125,30 +144,16 @@ export default function GameSelection() {
     return <p>Loading room data...</p>
   } else if (selectedGame === null) {
     return <>
-    <div class="GameSelection-GameList">
-      <h1>Start a new game</h1>
-      <h2>Rotating Free Games</h2>
-      {Object.entries(gameList).filter(([_, v]) => v.tier === "Free").map(([k, v]) => {
-        return <button 
-          className="GameSelection-FreeTier"
-          onClick={() => {setSelectedGame(k)}}
-        >
-            {v.name}
-        </button>
-      })}
-      <h2>Full Catalogue</h2>
+    <div class="GameSelection-Container">
+      <h1>Hello, human :)</h1>
+      <h2><em>free this week</em></h2>
+      <GameList games={Object.entries(gameList).filter(([_, v]) => v.tier === "Free")} onSelect={setSelectedGame} />
+      <h2><em>full catalogue</em></h2>
       <div>{!authContext.isPaid() 
-        ? <><Link href="/support">Support Artifice</Link> and get access to all games!</> 
+        ? <small><Link href="/support">support artifice and get access to the full catalogue ➔</Link></small> 
         : "Thanks for supporting our games!"
       }</div>
-      {Object.entries(gameList).map(([k, v]) => {
-        return <button 
-          className={v.tier === "Free" ? "GameSelection-FreeTier" : "GameSelection-PaidTier"}
-          onClick={() => {setSelectedGame(k)}}
-        >
-            {v.name}
-        </button>
-      })}
+      <GameList games={Object.entries(gameList).filter(([_, v]) => v.tier !== "Free")} onSelect={setSelectedGame} />
     </div>
   </>
   } else {
@@ -157,7 +162,7 @@ export default function GameSelection() {
       <h1>
         <button onClick={() => {setSelectedGame(null)}}
         style="border-radius:50%;width:36px;height:36px;background-color:yellow;border:none; font-size:20pt;">←</button>
-        {gameList[selectedGame].name}
+        {gameList[selectedGame].name} {gameList[selectedGame].emoji}
       </h1>
       <p style="color:yellow;">{errorMessage}</p>
       {gameList[selectedGame].introVideo.url 
@@ -165,6 +170,7 @@ export default function GameSelection() {
         <iframe class="YoutubeEmbed" src={`${gameList[selectedGame].introVideo.url}`}></iframe>
       </>
       : ""}
+      <p>{gameList[selectedGame].about}</p>
       {gameList[selectedGame].tier === "Underwriter" && !authContext.isPaid() 
       ? <><Link href="/support">Support Artifice</Link> to play this game.</>
       : <>

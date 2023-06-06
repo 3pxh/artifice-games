@@ -1,0 +1,54 @@
+.GameSelection-Container {
+	display: flex;
+	flex-direction: column;
+	max-width: 600px;
+}
+
+.GameSelection-GameList {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+.GameSelection-GameCard {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	margin: 10px;
+}
+/* Seriously need to make a single consistent Button class */
+.GameSelection-GameCard button {
+	border: 3px solid transparent;
+  	border-radius: 5px;
+	box-sizing: border-box;
+	font-size: 16pt;
+  	font-weight: 600;
+	padding: 10px 20px;
+}
+
+.GameSelection-GameList button:hover {
+	border-color: white;
+}
+.GameSelection-Emoji {
+	font-size: 36px;
+}
+.GameSelection-ShortAbout {
+	font-size: 10pt;
+}
+
+.GameSelection-Join > input {
+	--font-size: 16pt;
+	border-radius: 26px;
+	font-size: var(--font-size);
+	padding: 10px;
+	margin: 10px;
+	text-align: center;
+	text-transform: uppercase;
+	width: calc(4 * var(--font-size) + 10px);
+}
+.GameSelection-Join {
+	border: none;
+	border-radius: 30px;
+	font-size: 16pt;
+	min-width: 80px;
+	padding: 10px;
+}

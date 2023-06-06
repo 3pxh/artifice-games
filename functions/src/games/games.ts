@@ -6,7 +6,7 @@ import * as MITM from "./mitm"
 export type TimerOption = "off" | "slow" | "fast";
 export type EngineName = PG.GameDefinition["engine"] | Judge.GameDefinition["engine"] | Quip.GameDefinition["engine"] | MITM.GameDefinition["engine"]; // | ...
 type GameTier = "Free" | "Underwriter"
-export type GameDefBase = {tier: GameTier, hidden: boolean}
+export type GameDefBase = {tier: GameTier, hidden: boolean, emoji: string, color: string, about: string, shortAbout: string}
 export type GameDefinition = GameDefBase & (PG.GameDefinition | Judge.GameDefinition | Quip.GameDefinition | MITM.GameDefinition); // | ...
 export type GameCreateData = {
   _creator: string,

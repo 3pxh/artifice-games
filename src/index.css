@@ -14,7 +14,7 @@ html, body {
 	color: #444;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-	--brand-color: #673ab8;
+	--brand-color: #222;
 	--border-color: yellow;
 	--orange: rgb(255, 189, 127);
 }
@@ -94,50 +94,6 @@ a:hover {
 	padding: 10px;
 	height: 100%;
 	max-width: min(100%, 600px);
-}
-
-.GameSelection-GameList {
-	max-width: 600px;
-}
-/* Seriously need to make a single consistent Button class */
-.GameSelection-GameList > button {
-	background-color: aquamarine;
-	border: none;
-	font-size: 16pt;
-	padding: 10px;
-	margin: 10px;
-}
-.GameSelection-GameList > button:hover {
-	background-color: aqua;
-}
-.GameSelection-GameList > button.GameSelection-FreeTier {
-	background-color: aquamarine;
-}
-.GameSelection-GameList > button.GameSelection-FreeTier:hover {
-	background-color: aqua;
-}
-.GameSelection-GameList > button.GameSelection-PaidTier {
-	background-color: var(--orange);
-}
-.GameSelection-GameList > button.GameSelection-PaidTier:hover {
-	background-color: yellow;
-}
-.GameSelection-Join > input {
-	--font-size: 16pt;
-	border-radius: 26px;
-	font-size: var(--font-size);
-	padding: 10px;
-	margin: 10px;
-	text-align: center;
-	text-transform: uppercase;
-	width: calc(4 * var(--font-size) + 10px);
-}
-.GameSelection-Join {
-	border: none;
-	border-radius: 30px;
-	font-size: 16pt;
-	min-width: 80px;
-	padding: 10px;
 }
 
 .YoutubeEmbed {

@@ -2,13 +2,15 @@
   "name": "functions",
   "scripts": {
     "lint": "eslint --ext .js,.ts .",
-    "build": "tsc",
+    "build": "tsc && npm run games:build",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "emulate": "npm run build && firebase emulators:start --import=emulator_data",
     "shell": "npm run build && firebase functions:shell",
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
+    "games:build": "node lib/deployGames.js",
+    "games:deploy": "npm run games:build && firebase database:set /games emulator_data/database_export/games.json",
     "logs": "firebase functions:log"
   },
   "engines": {
