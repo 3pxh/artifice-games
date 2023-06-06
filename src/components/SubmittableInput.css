@@ -20,6 +20,7 @@
 }
 .SubmittableInput input.SubmittableInput--Limited {
   padding-right: 60px;
+  width: calc(100% - 70px);
 }
 .SubmittableInput-CharacterLimit {
   bottom: 25px;
