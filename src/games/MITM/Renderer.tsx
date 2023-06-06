@@ -108,6 +108,11 @@ export function RenderMitm(props: {
       {props.gameState.value.whoCalledRobot === user.uid ? <p>You called robot!</p> : <p>The other player called robot!</p>}
       {props.gameState.value.currentStep >= props.gameState.value.stepsBeforeMITM ? <p>And you were both talking to robots.</p> : <p>But it was called too early.</p>}
       <p>You're all winners!</p>
+      <p>
+        I originally conceived of this game as an installation with the players each in a telephone booth,
+        where the audience outside can see both transcripts as they happen.
+        If you'd like to help make that happen, please get in touch with me at <a href="mailto:george@hoqqanen.com">george@hoqqanen.com</a>!
+      </p>
     </>
   } else {
     return <p>Congrats, you hit an unrecognized game state!</p>
