@@ -1,4 +1,3 @@
-import { logger } from "firebase-functions";
 import axios, { AxiosError } from "axios";
 import * as AWS from "aws-sdk";
 import App from "./app";
@@ -56,7 +55,6 @@ const s3 = new AWS.S3({
 const BUCKET_NAME = "artifice-1";
 
 async function runStableDiffusion(r: GenerationRequest, tryCount = 0): GenerationPromise {
-  logger.log("Running Stable Diffusion");
   if (!process.env.STABILITY_API_KEY) {
     throw new Error("Missing STABILITY_API_KEY");
   }
@@ -244,7 +242,6 @@ async function runChatCompletion(modelName: "gpt-3.5-turbo" | "gpt-4", r: Genera
     data: JSON.stringify(params)
   });
   const response = await res.data;
-  logger.log("Running ChatGPT, got response****", {response});
   if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
     if (r.chatGPTParams.schema) {
       const parsed = parseWithSchema(response.choices[0].message.content, r.chatGPTParams.schema);

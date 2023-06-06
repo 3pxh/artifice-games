@@ -345,6 +345,7 @@ export const generationRequest = functions
       ...snapshot.val(),
       room: context.params.roomId,
     } as GenerationRequest;
+    functions.logger.log("*generate*", {request: apiReq, params: context.params});
     let result;
     try {
       result = await generate(apiReq);
