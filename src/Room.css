@@ -3,6 +3,7 @@
   max-width: 100%;
   width:  min(100%, 2000px);
   overflow-y: scroll;
+  padding-bottom: 10px;
 }
 .Room-Pane {
   align-items: center;

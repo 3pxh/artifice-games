@@ -154,7 +154,7 @@ export function RenderPromptGuess(props: {
     return <div>
       {props.room.definition.introVideo.url 
         ? <iframe class="YoutubeEmbed" src={`${props.room.definition.introVideo.url}?autoplay=1`}></iframe>
-        : "Instruction video not found."}
+        : "No instruction video for this game yet."}
       <SingleUseButton 
         key="IntroContinue"
         buttonText="Done watching" 
@@ -168,7 +168,7 @@ export function RenderPromptGuess(props: {
       label={myTemplate.value.display}
       submittedValue={myPrompt.value}
       placeholder=""
-      buttonText="Very funny!"
+      buttonText="Generate!"
       postSubmitMessage="Waiting on other players..."
       maxLength={80} />
   } else if (renderState.value === "Lie") {
@@ -183,8 +183,8 @@ export function RenderPromptGuess(props: {
             key="LieInput"
             onSubmit={(v: string) => {submit("Lie", v)}}
             submittedValue={myLie.value}
-            label={myLie.value ? "" : "Fool others with some artifice:"}
-            buttonText="Lie!"
+            label={myLie.value ? "" : "Fool others with an alternate prompt:"}
+            buttonText="submit"
             postSubmitMessage="Waiting on other players..."
             maxLength={70} />
           : ""}
@@ -206,6 +206,7 @@ export function RenderPromptGuess(props: {
     } else {
       return <>
         <Generation generation={currentGeneration.value} />
+        <p>Guess what really generated it!</p>
         <TextOptions
           key="VoteOptions" 
           disableUserOption={true}

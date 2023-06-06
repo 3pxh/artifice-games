@@ -120,19 +120,23 @@ export function RenderAIJudge(props: {
       throw new Error("Trying to render answer without a question");
     }
     // TODO #async: check if they've already answered
-    return <SubmittableInput 
-      key="AnswerInput"
-      onSubmit={(v: string) => {submit("Answer", v)}} 
-      label={currentQ.value}
-      submittedValue={myAnswer.value}
-      placeholder="write a great answer to get chosen"
-      buttonText="That's a good one!" 
-      postSubmitMessage="Waiting on other players..."
-      maxLength={80} />
+    return <>
+      <p>Write an answer the AI will pick for the question:</p>
+      <SubmittableInput 
+        key="AnswerInput"
+        onSubmit={(v: string) => {submit("Answer", v)}} 
+        label={currentQ.value}
+        submittedValue={myAnswer.value}
+        placeholder="write your answer"
+        buttonText="submit" 
+        postSubmitMessage="Waiting on other players..."
+        maxLength={80} />
+    </>
   } else if (renderState.value === "Vote" && generation.value) {
     // TODO #async: show their vote if they already voted
     return <>
-      <p>{currentQ.value}</p>
+      <p>Which answer will the AI pick to the question:</p>
+      <>{currentQ.value}</>
       <TextOptions
         key="VoteOptions"
         voteValue={myVote.value}
@@ -142,7 +146,8 @@ export function RenderAIJudge(props: {
   } else if (renderState.value === "Score" && generation.value) {
     // TODO #async: check if they're ready to continue, don't render button
     return <>
-      <p>{currentQ.value}</p>
+      <p>Here's what the AI picked to answer:</p>
+      <>{currentQ.value}</>
       <ScoredTextOptions
         key="ScoreOptions"
         options={answers.value}
