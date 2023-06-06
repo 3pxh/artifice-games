@@ -98,6 +98,14 @@ const Actions = {
   },
 
   ChatDirect(room: Room, message: Message) {
+    if (room.gameState.state !== "Chat") {
+      return;
+    }
+    const lastMessage = arrayFromKeyedObject(room.gameState.chat1 ?? {}).pop();
+    if (message.value === "" || message.uid === lastMessage?.author) {
+      // They could send two messages quickly / hit the button twice
+      return;
+    }
     const now = Date.now();
     const msg = {message: message.value, author: message.uid};
     room.gameState.chat1 = room.gameState.chat1 ?? {};
@@ -138,13 +146,12 @@ const Actions = {
   },
 
   ICallRobot(room: Room, message: Message) {
-    // Check if we're in MITM or Chat
     room.gameState.whoCalledRobot = message.uid;
     Actions.TransitionState(room, ROOM_FINISHED_STATE);
   },
 
   ProcessGeneration(room: Room, message: Message) {
-    if (room.gameState.generations && room.gameState.generations[message.uid]) {
+    if (room.gameState.state === "MITM" && room.gameState.generations && room.gameState.generations[message.uid]) {
       const chat = (message.uid === room.gameState.player1 ? room.gameState.chat1 : room.gameState.chat2) ?? {};
       // Calculate the average typing speed      
       const chatArray = Object.entries(chat).sort((a,b) => { return parseInt(a[0]) - parseInt(b[0]) });
@@ -154,7 +161,7 @@ const Actions = {
         totalTime += parseInt(chatArray[i][0]) - parseInt(chatArray[i - 1][0]);
         totalWords += chatArray[i][1].message.split(" ").length;
       }
-      const rate = .6 * totalTime / totalWords; // TODO: make the rate somewhat variable?
+      const rate = (.6 + .2 * Math.random()) * totalTime / totalWords;
       const generatedValue = room.gameState.generations[message.uid]?.generation ?? "";
       const parse = (input: string) => {
         const regex = /\[\[(.*?)\]\]/;  // Regular expression to match the string inside double square brackets
@@ -169,8 +176,8 @@ const Actions = {
       const indicator = `${chatArray.length % 2 ? 2 : 1}:`
       parsedResponse = parsedResponse.indexOf(indicator) === 0 ? parsedResponse.slice(parsedResponse.indexOf(indicator) + 2) : parsedResponse;
       parsedResponse = parsedResponse.trim();
-      const now = Math.floor(parseInt(chatArray[chatArray.length - 1][0]) + rate * parsedResponse.split(" ").length);
-      chat[now] = {message: parsedResponse, author: "robot"};
+      const displayTime = Math.floor(parseInt(chatArray[chatArray.length - 1][0]) + rate * parsedResponse.split(" ").length);
+      chat[displayTime] = {message: parsedResponse, author: "robot"};
       delete room.gameState.generations[message.uid];
     }
   },
