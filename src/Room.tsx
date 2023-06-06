@@ -1,4 +1,4 @@
-import { ref, onValue, DataSnapshot } from "@firebase/database";
+import { ref, onValue, DataSnapshot, query, limitToLast } from "@firebase/database";
 import { db } from "./firebaseClient";
 import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
@@ -111,6 +111,12 @@ export function Room(props: {room: RoomData}) {
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
   }
+  const updateGameStateKey = (key: string, snapshot: DataSnapshot, onlyLast: boolean) => {
+    (gameState.value as any) = {
+      ...(gameState.value || {}),
+      [key]: onlyLast ? {...((gameState.value as any) || {})[key], ...snapshot.val()} : snapshot.val()
+    };
+  }
   const updatePlayerState = (snapshot: DataSnapshot) => {
     players.value = snapshot.val();
   }
@@ -118,12 +124,39 @@ export function Room(props: {room: RoomData}) {
     scratchpad.value = snapshot.val();
   }
 
+  const engines:Record<EngineName, any> = {
+    "PromptGuess": RenderPromptGuess,
+    "AIJudge": AIJudge.RenderAIJudge,
+    "Quip": Quip.RenderQuip,
+    "MITM": MITM.RenderMitm,
+  }
+  const subscriptions:Record<EngineName, any> = {
+    "PromptGuess": undefined,
+    "AIJudge": undefined,
+    "Quip": undefined,
+    "MITM": MITM.Subscriptions,
+  }
+  const Game = engines[props.room.definition.engine];
+  const GameStateSubscriptions = subscriptions[props.room.definition.engine];
+
   useEffect(() => {
     // TODO: Make this ack when the game updates here.
     // As is, they have to reload the room to ack.
     setRoomLastSeenNow(props.room.id);
-    const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
-    onValue(stateRef, updateGameState);
+    if (GameStateSubscriptions) {
+      const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
+      onValue(stateRef, updateGameState, {onlyOnce: true});
+      Object.keys(GameStateSubscriptions).forEach((key) => {
+        const keyRef = ref(db, `rooms/${props.room.id}/gameState/${key}`);
+        const q = GameStateSubscriptions[key] ? query(keyRef, limitToLast(1)) : keyRef;
+        onValue(q, (snapshot: DataSnapshot) => {
+          updateGameStateKey(key, snapshot, GameStateSubscriptions[key]);
+        });
+      });
+    } else {
+      const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
+      onValue(stateRef, updateGameState);
+    }
     const playerRef = ref(db, `rooms/${props.room.id}/players`);
     onValue(playerRef, updatePlayerState);
     const scratchpadRef = ref(db, `rooms/${props.room.id}/scratchpad`);
@@ -194,15 +227,6 @@ export function Room(props: {room: RoomData}) {
     </>
   }
 
-  
-  const engines:Record<EngineName, any> = {
-    "PromptGuess": RenderPromptGuess,
-    "AIJudge": AIJudge.RenderAIJudge,
-    "Quip": Quip.RenderQuip,
-    "MITM": MITM.RenderMitm,
-  }
-  const Game = engines[props.room.definition.engine];
-
   const switchTab = (tab: "game" | "chat") => {
     if (activeTab === "chat" || tab === "chat") {
       setHasUnreadMessages(false);
@@ -210,7 +234,7 @@ export function Room(props: {room: RoomData}) {
     setActiveTab(tab);
   }
 
-  if (isWaiting) {
+  if (isWaiting || !gameState.value) {
     return <>
       <Header />
       <WaitTime />

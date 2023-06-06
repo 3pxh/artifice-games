@@ -6,7 +6,19 @@ import { AuthContext } from "../../AuthProvider";
 import { messageRoom } from "../../actions";
 import SingleUseButton from "../../components/SingleUseButton";
 import "./mitm.css";
-import { arrayFromKeyedObject } from "../../../functions/src/utils";
+
+export const Subscriptions:Record<keyof MITM.Room["gameState"], boolean> = {
+  "timer": false,
+  "state": false,
+  "player1": false,
+  "player2": false,
+  "chat1": true,
+  "chat2": true,
+  "whoCalledRobot": false,
+  "stepsBeforeMITM": false,
+  "currentStep": false,
+  "generations": false,
+}
 
 export function RenderMitm(props: {
   room: MITM.Room & {id: string},
