@@ -222,12 +222,12 @@ const Actions = {
     gs.donePlayers[gs.currentPlayer] = true;
     gs.generations = {};
     room.scratchpad = {input: ""};
+    gs.roundPrompt = chooseOneInObject(room.definition.roundPrompts);
     if (Object.keys(gs.donePlayers).length < Actions.activePlayerCount(room)) {
       const nextPlayer = chooseOneKeyInObject(objectFilter(room.players, (p, uid) => p.isPlayer && !gs.donePlayers[uid]));
       gs.currentPlayer = nextPlayer;
       Actions.TransitionState(room, "Input");
     } else {
-      gs.roundPrompt = chooseOneInObject(room.definition.roundPrompts);
       if (gs.round < gs.maxRound) {
         gs.round += 1;
         gs.quips = {};
