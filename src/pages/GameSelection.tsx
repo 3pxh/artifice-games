@@ -139,6 +139,10 @@ export default function GameSelection() {
     return <>
     <div class="GameSelection-Container">
       <h1>Hello, human :)</h1>
+      {!authContext.user ? <>
+        <p><Link href="/auth">Log in</Link> to create or join a game, or try the single player <a href="/intro">tutorial</a> to get a feel for the games.</p>
+      </>: ""}
+      
       <h2><em>free this week</em></h2>
       <GameList games={Object.entries(gameList).filter(([_, v]) => v.tier === "Free")} onSelect={setSelectedGame} />
       <h2><em>full catalogue</em></h2>
