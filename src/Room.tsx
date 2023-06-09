@@ -1,4 +1,4 @@
-import { ref, onValue, DataSnapshot, query, limitToLast } from "@firebase/database";
+import { ref, onValue, DataSnapshot, query, limitToLast, Unsubscribe } from "@firebase/database";
 import { db } from "./firebaseClient";
 import { h, Fragment } from "preact";
 import { useContext, useEffect, useState } from "preact/hooks";
@@ -139,6 +139,7 @@ export function Room(props: {room: RoomData}) {
   const Game = engines[props.room.definition.engine];
   const GameStateSubscriptions = subscriptions[props.room.definition.engine];
 
+  const unsubscribes:Unsubscribe[] = []
   useEffect(() => {
     // TODO: Make this ack when the game updates here.
     // As is, they have to reload the room to ack.
@@ -149,18 +150,19 @@ export function Room(props: {room: RoomData}) {
       Object.keys(GameStateSubscriptions).forEach((key) => {
         const keyRef = ref(db, `rooms/${props.room.id}/gameState/${key}`);
         const q = GameStateSubscriptions[key] ? query(keyRef, limitToLast(1)) : keyRef;
-        onValue(q, (snapshot: DataSnapshot) => {
+        const unsub = onValue(q, (snapshot: DataSnapshot) => {
           updateGameStateKey(key, snapshot, GameStateSubscriptions[key]);
         });
+        unsubscribes.push(unsub);
       });
     } else {
       const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
-      onValue(stateRef, updateGameState);
+      unsubscribes.push(onValue(stateRef, updateGameState));
     }
     const playerRef = ref(db, `rooms/${props.room.id}/players`);
-    onValue(playerRef, updatePlayerState);
+    unsubscribes.push(onValue(playerRef, updatePlayerState));
     const scratchpadRef = ref(db, `rooms/${props.room.id}/scratchpad`);
-    onValue(scratchpadRef, updateScratchpadState);
+    unsubscribes.push(onValue(scratchpadRef, updateScratchpadState));
     // TODO: When we add async rooms, how do we handle queuing?
     // In case the component has been rerendered.
     if (isWaiting) {
@@ -168,7 +170,7 @@ export function Room(props: {room: RoomData}) {
         pingRoom(props.room.id);
       }, 5000);
       const roomRef = ref(db, `rooms/${props.room.id}/_queue`);
-      onValue(roomRef, (snapshot: DataSnapshot) => {
+      const unsub = onValue(roomRef, (snapshot: DataSnapshot) => {
         const v = snapshot.val() as QueueData;
         if (!v.inQueue) {
           window.clearInterval(id);
@@ -177,11 +179,22 @@ export function Room(props: {room: RoomData}) {
           setStartTime(v.startTime);
         }
       });
+      unsubscribes.push(unsub);
     }
     // TODO: should we return a cleanup function that clears the interval?
     // The interval might continue going if we unmount?
   }, [props.room.id]);
 
+  useEffect(() => {
+    // Cleanup subscriptions on unmount.
+    // 1. Lessens data usage when not viewing a given room
+    // 2. Prevents subscribing to the same room multiple times and crashing
+    return () => {
+      unsubscribes.forEach((unsub) => {
+        unsub();
+      });
+    }
+  }, []);
 
   const Header = () => {
     // TODO: for async games, this room code could well be expired.

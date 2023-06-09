@@ -88,16 +88,14 @@ const getRoom = (id: string, cb: (r: RoomData) => void) => {
       id
     )
   });
-  const unsubscribe = onValue(roomRef, (v) => {
-    const roomSnapshot = v.val() as RoomData;
-    const isInitialized = roomSnapshot._initialized;
+  const initializedRef = ref(db, `rooms/${id}/_initialized`);
+  const unsubscribe = onValue(initializedRef, (v) => {
+    const isInitialized = v.val() as boolean;
     if (isInitialized) {
-      cb({
-        ...roomSnapshot,
-        id: id, // This sits above the snapshot itself
+      get(roomRef).then((v) => {
+        cb(v.val())
+        unsubscribe();
       });
-      // We NEED to clean this up. Keeping a full room sub alive is bad.
-      unsubscribe();
     }
   });
 }
