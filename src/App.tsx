@@ -22,20 +22,20 @@ const AuthRoute = () => {
   </>
 }
 
-const RootRedirect = () => {
-  useEffect(() => {
-    auth.onAuthStateChanged(() => {
-      if (!auth.currentUser) {
-        route("/create");
-      } else if (window.location.pathname === "/auth") {
-        window.history.back();
-      } else {
-        route("/create");
-      }
-    });
-  });
-  return null;
-}
+// const RootRedirect = () => {
+//   useEffect(() => {
+//     auth.onAuthStateChanged(() => {
+//       if (!auth.currentUser) {
+//         route("/create");
+//       } else if (window.location.pathname === "/auth") {
+//         window.history.back();
+//       } else {
+//         route("/create");
+//       }
+//     });
+//   });
+//   return null;
+// }
 
 export default function App() {
   const authContext = useAuth();
@@ -50,7 +50,7 @@ export default function App() {
     <TopNav /> 
     <div id="appbody">
       <Router onChange={handleRoute}>
-        <Route path="/" component={RootRedirect} />
+        <Route path="/" component={GameSelection} />
         <Route path="/welcome" component={Welcome} />
         <Route path="/intro" component={Intro} />
         <Route path="/auth" component={AuthRoute} />
