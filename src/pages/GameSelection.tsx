@@ -131,14 +131,7 @@ export default function GameSelection() {
     }
   }
 
-  if (!authContext.user) {
-    return <>Must be logged in to create or join a game.</>
-  } else if (!authContext.user.emailVerified) {
-    return <>
-      Verify {authContext.user.email} to create a game. Refresh after verification.
-      <button onClick={() => authContext.verify()}>Re-send verification email</button>
-    </>
-  }
+  
 
   if (loadingRoom) {
     return <p>Loading room data...</p>
@@ -156,6 +149,19 @@ export default function GameSelection() {
       <GameList games={Object.entries(gameList).filter(([_, v]) => v.tier !== "Free")} onSelect={setSelectedGame} />
     </div>
   </>
+  } else if (!authContext.user) {
+    return <div class="GameSelection">
+      <button onClick={() => {setSelectedGame(null)}}
+        style="border-radius:50%;width:36px;height:36px;background-color:yellow;border:none; font-size:20pt;">←</button>
+      <Link href="/auth">Log in</Link> to create or join a game.
+    </div>
+  } else if (!authContext.user.emailVerified) {
+    return <div class="GameSelection">
+      <button onClick={() => {setSelectedGame(null)}}
+        style="border-radius:50%;width:36px;height:36px;background-color:yellow;border:none; font-size:20pt;">←</button>
+      Verify {authContext.user.email} to create a game. Refresh after verification.
+      <button onClick={() => authContext.verify()}>Re-send verification email</button>
+    </div>
   } else {
     
     return <div class="GameSelection">

@@ -26,7 +26,7 @@ const RootRedirect = () => {
   useEffect(() => {
     auth.onAuthStateChanged(() => {
       if (!auth.currentUser) {
-        route("/welcome");
+        route("/create");
       } else if (window.location.pathname === "/auth") {
         window.history.back();
       } else {
