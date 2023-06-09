@@ -27,6 +27,13 @@ export function RenderMitm(props: {
   isInputOnly: boolean,
 }) {
   const { user } = useContext(AuthContext);
+
+  // TODO: This triggers a full rerender 5x a second.
+  // We use time in order to determine what chats to display.
+  // Better would be to have the player's chat be a signal with only
+  // the chats after the present time. When we receive new chats,
+  // schedule a timeout to add them to the signal's value at the right time.
+  // However even with the current sloppiness it doesn't seem to impact perf.
   const [time, setTime] = useState(Date.now());
   
 
@@ -104,10 +111,22 @@ export function RenderMitm(props: {
       <button disabled={c.length < 10} onClick={() => message("ICallRobot", "woo!")}>I Call Robot!</button>
     </div>
   } else if (renderState.value === "Finish") {
+    // TODO: refactor rendering the chat. This is almost verbatim from above.
+    const chatArray = myChat.value ? Object.entries(myChat.value) : [];
+    const chatEntries:[number, {author:string, message:string}][] = chatArray.map(([timestamp, message]) => { return [parseInt(timestamp), message] });
+    const c = chatEntries.sort(([t1, _], [t2, __]) => {return t1 - t2});
     return <>
       {props.gameState.value.whoCalledRobot === user.uid ? <p>You called robot!</p> : <p>The other player called robot!</p>}
       {props.gameState.value.currentStep >= props.gameState.value.stepsBeforeMITM ? <p>And you were both talking to robots.</p> : <p>But it was called too early.</p>}
       <p>You're all winners!</p>
+      <div class="MITM-Container">
+      <div class="MITM-Chats" id="MITM-ScrollingContainer">
+        {c.map(([t, message]) => {
+          const style = (message.author === "robot") ? "MITM-Chat--FromRobot" : (message.author === user.uid ? "MITM-Chat--FromMe" : "MITM-Chat--FromThem");
+          return t < time ? <p key={t} class={style}><p class="MITM-ChatText">{message.message}</p></p> : "";
+        })}
+      </div>
+    </div>
       <p>
         I originally conceived of this game as an installation with the players each in a telephone booth,
         where the audience outside can see both transcripts as they happen.

@@ -32,6 +32,11 @@
     background-color: #007AFF;
 }
 
+.MITM-Chat--FromRobot .MITM-ChatText {
+    background-color: #c85a00;
+    color: white;
+}
+
 #MITM-MessageInput {
     width: 100%;
     border: none;
