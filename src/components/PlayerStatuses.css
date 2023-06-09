@@ -1,11 +1,11 @@
 .PlayerStatuses {
-	border-bottom: 1px solid var(--border-color);
-	border-top: 1px solid var(--border-color);
+	border-bottom: 1px solid white;
+	border-top: 1px solid white;
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 	margin: 10px 0;
-  padding-top: 10px;
+	padding: 10px 0 5px 0;
 }
 .PlayerStatuses > div {
   margin-right: 10px;

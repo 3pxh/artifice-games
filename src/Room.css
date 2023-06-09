@@ -1,7 +1,7 @@
 .Room {
 	display: flex;
-  max-width: 100%;
-  width:  min(100%, 2000px);
+  max-width: 600px;
+  /* width:  min(100%, 2000px); */
   overflow-y: scroll;
   padding-bottom: 10px;
 }
@@ -9,6 +9,15 @@
   align-items: center;
   display: flex;
   flex-direction: column;
+}
+.Room-PlayerHandleInput {
+  margin: 10px 0;
+}
+.Room-PlayerHandleInput input {
+  border: none;
+  border-radius: 16px;
+  font-size: 16pt;
+  padding: 5px;
 }
 
 @media (max-width: 10000px) {

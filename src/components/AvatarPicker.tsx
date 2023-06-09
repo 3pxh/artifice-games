@@ -3,6 +3,7 @@ import { useComputed, signal, Signal } from "@preact/signals";
 import { ref, listAll, getDownloadURL } from "@firebase/storage";
 import { storage } from "../firebaseClient";
 import { PromptGuessRoom } from "../../functions/src/games/promptGuessBase";
+import "./AvatarPicker.css";
 
 const AVATARS:Signal<string[]> = signal([]);
 listAll(ref(storage, "avatars")).then((res) => {
@@ -39,7 +40,7 @@ export default function AvatarPicker(props: {
       width="64" />
   }
 
-  return <div>
+  return <div class="AvatarPicker">
     {AVATARS.value.map(url => {
       return <Avatar url={url} selections={selections} onSelect={props.onSelect} />
     })}

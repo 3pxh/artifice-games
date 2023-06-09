@@ -215,7 +215,7 @@ export function Room(props: {room: RoomData}) {
   }
 
   const PlayerHandleInput = () => {
-    return <>
+    return <div class="Room-PlayerHandleInput">
       <label for="PlayerName">Name: </label>
       <SlowBroadcastInput 
         broadcast={(v: string) => {
@@ -224,7 +224,7 @@ export function Room(props: {room: RoomData}) {
         }}
         input={<input id="PlayerName" />} 
       />
-    </>
+    </div>
   }
 
   const switchTab = (tab: "game" | "chat") => {

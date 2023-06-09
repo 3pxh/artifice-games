@@ -131,6 +131,7 @@ a:hover {
 }
 
 .PromptGuessGeneration-Image {
+	border-radius: 10px;
 	max-width: min(512px, 100%);
 }
 .PromptGuessGeneration-Truth {
