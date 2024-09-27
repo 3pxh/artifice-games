@@ -21,7 +21,7 @@ export type ChatGPTDef = {
 }
 export type SDDef = {
   name: "StableDiffusion",
-  version: "1.5" | "2.1",
+  version: "1.6" | "xl",
 }
 export type DalleDef = {
   name: "DALLE",
@@ -62,10 +62,10 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   const MAX_TRIES = 2;
   const model = r.model as SDDef;
   const modelPaths:Record<SDDef["version"], string> = {
-    "1.5": "stable-diffusion-v1-5",
-    "2.1": "stable-diffusion-512-v2-1"
+    "1.6": "stable-diffusion-v1-6",
+    "xl": "stable-diffusion-xl-1024-v1-0"
   }
-  const version = model.version ?? "2.1";
+  const version = model.version ?? "1.6";
   const engineId = modelPaths[version];
   const apiHost = "https://api.stability.ai";
   const url = `${apiHost}/v1beta/generation/${engineId}/text-to-image`;
