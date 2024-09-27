@@ -667,18 +667,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@firebase/auth@npm:^0.21.1":
-  version: 0.21.3
-  resolution: "@firebase/auth@npm:0.21.3"
+"@firebase/auth@npm:^1.7.9":
+  version: 1.7.9
+  resolution: "@firebase/auth@npm:1.7.9"
   dependencies:
-    "@firebase/component": 0.6.3
-    "@firebase/logger": 0.4.0
-    "@firebase/util": 1.9.2
-    node-fetch: 2.6.7
+    "@firebase/component": 0.6.9
+    "@firebase/logger": 0.4.2
+    "@firebase/util": 1.10.0
     tslib: ^2.1.0
+    undici: 6.19.7
   peerDependencies:
     "@firebase/app": 0.x
-  checksum: 375ba410793dae5e7bd185c6169364c3cd4e47f2ffc93dee9719f3eacbc0756bbb0e108a5205b35fc91e0075604aff57a8ca0e96008ffc8a96f12e827dca0697
+    "@react-native-async-storage/async-storage": ^1.18.1
+  peerDependenciesMeta:
+    "@react-native-async-storage/async-storage":
+      optional: true
+  checksum: f6ce5151dae619ed18dc2e205e3d6c17280a7f05fa0b6416b3dbb8d75c694c9feefaf8b30bca3d3a01ebaafd8865d6fb8b38fe46b5c23ec998278a834a1976a9
   languageName: node
   linkType: hard
 
@@ -699,6 +703,16 @@ __metadata:
     "@firebase/util": 1.9.2
     tslib: ^2.1.0
   checksum: 75cb5b1a147c25053a0f69f5de5f79271aec1ad6a29f6774a007237503bfc1fc9ae1e7667e7947d5b7d80232f80618d0d7992a15d918500568c0f45998849700
+  languageName: node
+  linkType: hard
+
+"@firebase/component@npm:0.6.9":
+  version: 0.6.9
+  resolution: "@firebase/component@npm:0.6.9"
+  dependencies:
+    "@firebase/util": 1.10.0
+    tslib: ^2.1.0
+  checksum: f047109220b08eb1ff3509563c597c62bfef98c0190c4201a1c98de755931a7d3783c1de083888f600336a92865fc3f75d211467963191eaa86453d13b9ac704
   languageName: node
   linkType: hard
 
@@ -760,6 +774,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@firebase/logger@npm:0.4.2":
+  version: 0.4.2
+  resolution: "@firebase/logger@npm:0.4.2"
+  dependencies:
+    tslib: ^2.1.0
+  checksum: a0d288debe32108095af691fa8797c5ee2023b0f4e0f5024992f7e49b5353d1fb0280ea950d8bfd5d93af514cf839f663fd3559303d0591fcb8b0efe3d879f0e
+  languageName: node
+  linkType: hard
+
 "@firebase/messaging-interop-types@npm:0.2.0":
   version: 0.2.0
   resolution: "@firebase/messaging-interop-types@npm:0.2.0"
@@ -778,6 +801,15 @@ __metadata:
   peerDependencies:
     "@firebase/app": 0.x
   checksum: 85c8c11ca4bf6bdbd09fb9ac94fc4640d8cae480a09449c3cc6c06f07ee02d4064b6b18480d0e999c42b6e6957558298845ddb81aa4fd2a40be23ccdfee4bf8c
+  languageName: node
+  linkType: hard
+
+"@firebase/util@npm:1.10.0":
+  version: 1.10.0
+  resolution: "@firebase/util@npm:1.10.0"
+  dependencies:
+    tslib: ^2.1.0
+  checksum: 3fb8f0e58145f10bf2de0497c89293cf76bcb79d440b818466f8e1e272e4051e04926443c611f930f862af00e174bd49dc9f0b2513ba1719263a5297d4837709
   languageName: node
   linkType: hard
 
@@ -1943,7 +1975,7 @@ __metadata:
   resolution: "artifice-games@workspace:."
   dependencies:
     "@firebase/app": ^0.9.1
-    "@firebase/auth": ^0.21.1
+    "@firebase/auth": ^1.7.9
     "@firebase/database": ^0.14.1
     "@firebase/firestore": ^3.8.3
     "@firebase/functions": ^0.9.1
@@ -5824,6 +5856,13 @@ __metadata:
     has-symbols: ^1.0.3
     which-boxed-primitive: ^1.0.2
   checksum: b7a1cf5862b5e4b5deb091672ffa579aa274f648410009c81cca63fed3b62b610c4f3b773f912ce545bb4e31edc3138975b5bc777fc6e4817dca51affb6380e9
+  languageName: node
+  linkType: hard
+
+"undici@npm:6.19.7":
+  version: 6.19.7
+  resolution: "undici@npm:6.19.7"
+  checksum: ccf7f311cc2f7109e03c433190cb13d45c581905a70674992b0d8469c36ec1ae011824f41ba0c4a85b9771e4dd30a94228315c316215f76fafcb8e3b91ffbc22
   languageName: node
   linkType: hard
 
