@@ -52,9 +52,9 @@ export default function Auth() {
     if (loginState === LoginState.Choosing) {
       return <div class="Auth">
         <SubmittableInput
-          label="Don't even type, just hit goooo!"
+          label="Email:"
           buttonText="Log in/sign up"
-          onSubmit={anonAuth}
+          onSubmit={emailAuth}
           />
         {/* <h2>or</h2>
         <button onClick={anonAuth}>
