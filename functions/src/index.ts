@@ -202,19 +202,23 @@ export const newGameRequestCreated = functions.database.ref("/newGameRequests/{u
   .onCreate(async (snapshot, context) => {
     const msg = snapshot.val() as CreateRequest;
     functions.logger.log("Processing new game request", {val: msg});
-    const user = await admin.auth().getUser(context.params.uid);
     const gameData = (await admin.database().ref(`/games/${msg.gameId}`).get()).val();
-    const isUnderwriter = user.customClaims && user.customClaims.stripeRole === "underwriter";
     if (!gameData) {
       functions.logger.error("newGameRequestCreated: Game not found", {msg});
       return snapshot.ref.update({
         error: `Game with id ${msg.gameId} not found!`
       } as CreateResponse);
-    } else if (gameData.tier !== "Free" && !isUnderwriter && false /* TODO: reenable billing? */) {
+    } 
+    /* TODO: reenable billing
+    const user = await admin.auth().getUser(context.params.uid);
+    const isUnderwriter = user.customClaims && user.customClaims.stripeRole === "underwriter";
+    else if (gameData.tier !== "Free" && !isUnderwriter) {
       return snapshot.ref.update({
         error: "Support Artifice to start that game."
       } as CreateResponse);
-    } else {
+    } 
+    */
+    else {
       return createRoom(msg, snapshot.ref);
     }
 });
