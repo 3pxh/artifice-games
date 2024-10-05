@@ -25,7 +25,7 @@ export const useAuth: () => AuthInterface = () => {
     auth.onAuthStateChanged(u => {
       if (u) {
         u.getIdTokenResult(true).then((idTokenResult) => {
-          setStripeRole(idTokenResult.claims.stripeRole);
+          setStripeRole(idTokenResult.claims.stripeRole as Role);
         });
       }
       if (u && (!user || user.uid !== u.uid)) {
@@ -59,6 +59,7 @@ export const useAuth: () => AuthInterface = () => {
       handleCodeInApp: true,
     };
     window.localStorage.setItem("emailForSignIn", email);
+    try {
     createUserWithEmailAndPassword(auth, email, crypto.randomUUID())
       .then((c) => {
         sendEmailVerification(c.user);
@@ -72,6 +73,15 @@ export const useAuth: () => AuthInterface = () => {
             console.error("Email link auth error", {error})
           });
       });
+    } catch {
+      sendSignInLinkToEmail(auth, email, actionCodeSettings)
+          .then(() => {
+            console.log("auth link sent to email");
+          })
+          .catch((error) => {
+            console.error("Email link auth error", {error})
+          });
+    }
   }
 
   const anonAuth = () => {

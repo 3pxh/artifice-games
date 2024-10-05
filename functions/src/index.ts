@@ -4,13 +4,13 @@ import { Reference } from "firebase-admin/database";
 import { generate, GenerationRequest } from "./generate";
 import App from "./app";
 
-import { engines, MessageTypes, GameCreateData, EngineName } from "./games/games";
+import { engines, GameCreateData, EngineName } from "./games/games";
 import { ROOM_FINISHED_STATE } from "./utils";
 
 App.instance;
 
 export type CreateRequest = {
-  gameId: string, // Found in games/{gameId}
+  gameId: string, // games/{gameId} in the database
 } & GameCreateData;
 
 type GameData = {
@@ -133,9 +133,7 @@ export type CreateResponse = {
   }
   error?: string
 }
-// TODO: #billing move this to be a "roomCreateRequest/{key}"
-// Just like a join request. A free user cannot create rooms of pro games,
-// and also "active #rooms" check on that user.
+
 export const createRoom = async (req: CreateRequest, createRequestRef: Reference) => {
     // TODO: Disallow creating many rooms at once.
     // Could be done via DB permissions.
@@ -156,20 +154,20 @@ export const createRoom = async (req: CreateRequest, createRequestRef: Reference
         error: "Error generating room id"
       } as CreateResponse);
     }
-    const engineName:EngineName = (gameData as GameData).engine; // Or get from msg!
-    const gameRoom = engines[engineName].init(msg, gameData as any); // TODO: typechecking on multiple games
-    const t = new Date().getTime();
+    const engineName:EngineName = (gameData as GameData).engine;
+    const gameRoom = engines[engineName].init(msg, gameData as any);
+    const now = new Date().getTime();
     const shortcode: string = await createShortcode(key);
     const roomWithQueueState = {
       ...gameRoom,
       _shortcode: shortcode,
-      _startPing: t,
-      _createDate: t,
+      _startPing: now,
+      _createDate: now,
       _queue: {
         inQueue: true,
         startTime: 0, 
       },
-      _creator: msg._creator, // Used for administration in database.rules
+      _creator: msg._creator,
       _initialized: true,
       _isAsync: msg._isAsync,
       _isFinished: false,
@@ -194,11 +192,7 @@ export const createRoom = async (req: CreateRequest, createRequestRef: Reference
 export const roomPingedToStart = functions.database.ref("/rooms/{id}/_startPing")
   .onUpdate(async (snapshot, context) => {
     const thisRoom = (await snapshot.before.ref.parent?.get())?.val() as QueueRoom;
-    // TODO: Account for abandoned rooms to speed up the queue.
-    // This should work for now, but if 1000 people queue up, and then a bunch leave,
-    // we probably want to notice they aren't pinging.
-    // i.e. we could do a similar "roomStartTime" calculation
-    // filtering out rooms not pinged in the past 2 minutes
+    // TODO: Account for abandoned rooms to speed up the queue?
     if (thisRoom._queue.startTime < new Date().getTime()) {
       return admin.database().ref(`/rooms/${context.params.id}/_queue/inQueue`).set(false);
     }
@@ -216,22 +210,17 @@ export const newGameRequestCreated = functions.database.ref("/newGameRequests/{u
       return snapshot.ref.update({
         error: `Game with id ${msg.gameId} not found!`
       } as CreateResponse);
-    } else if (gameData.tier === "Free" || isUnderwriter) {
-      return createRoom(msg, snapshot.ref);
-    } else if (gameData.tier !== "Free" || !isUnderwriter) {
+    } else if (gameData.tier !== "Free" && !isUnderwriter && false /* TODO: reenable billing? */) {
       return snapshot.ref.update({
         error: "Support Artifice to start that game."
       } as CreateResponse);
     } else {
-      return snapshot.ref.update({
-        error: "Out of free credits. Support Artifice to start a game."
-      } as CreateResponse);
+      return createRoom(msg, snapshot.ref);
     }
 });
 
 export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{code}/{k}")
   .onCreate(async (snapshot, context) => {
-    functions.logger.log("Processing join request", {val: snapshot.val()});
     const isPlayer = snapshot.val().isPlayer;
     let roomId;
     if (snapshot.val().roomId) { // Made via an invite link.
@@ -252,12 +241,8 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
     if (room._isFinished && !hasAlreadyJoined) {
       return snapshot.ref.child("error").set("That room is no longer active and cannot be joined.");
     }
-    // TODO: move this off of gameState and into room.hasStarted, and room.allowObservers
-    // gameState should only ever be accessed by a game runner, and its schema should be
-    // allowed to change only there.
-    // But then, when the game is started, is the game runner responsible for mutating Room?
     const user = await admin.auth().getUser(context.params.uid);
-    const isAnonymous = !user.email; // This is not a great proxy.
+    const isAnonymous = !user.email;
     if (room._isAsync && isAnonymous) {
       return snapshot.ref.child("error").set("Cannot join async rooms anonymously. Log in with an email address.");
     } else if (hasAlreadyJoined) {
@@ -267,13 +252,13 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
       });
     } else {
       // Right now we let people join at any time. Is there any reason why not?
-      // Abuse prevention of people spamming requests to all room codes?
+      // Abuse prevention of people spamming requests to all room codes? (We can rate limit that.)
       await admin.database().ref(`/rooms/${roomId}/messages`).push({
         type: "NewPlayer",
         uid: context.params.uid,
         isPlayer: isPlayer,
       });
-      // The user's player key must exist when they try to access the room.
+      // The user's player key must exist in order to access the room via permissions.
       await admin.database().ref(`/rooms/${roomId}/players/${context.params.uid}/_init`).set(true);
       await createMembership({
         gameName: room.definition.name,
@@ -287,16 +272,13 @@ export const joinRequestCreated = functions.database.ref("/joinRequests/{uid}/{c
         timestamp: new Date().getTime()
       });
     } 
-    // TODO: Clean up old join requests.
-    // But since we create a new one each time, and adding a uid should be idempotent,
+    // TODO: Clean up old join requests (expire after a day?)
+    // Since we create a new one each time, and adding a uid should be idempotent,
     // it's just a sanitation problem not a functionality problem.
 });
 
 export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
   .onCreate(async (snapshot, context) => {
-    // TODO: this should be a transaction on the gameState, not the room.
-    // Players may be frequently changing their states under room/{id}/players
-    // which could invalidate the transaction more than we'd like.
     let oldState, newState;
     let players:string[] = [];
     await snapshot.ref.parent!.parent!.transaction((room) => {
@@ -304,12 +286,11 @@ export const roomMessaged = functions.database.ref("/rooms/{id}/messages/{key}")
         oldState = room.gameState.state;
         players = Object.keys(room.players);
         const engineName = room.definition.engine as EngineName;
-        const message = snapshot.val() as MessageTypes[typeof engineName]; // Not sure abt this
+        const message = snapshot.val();
         const reducer = engines[engineName].reducer;
-        const gs = reducer(room, message as any); // TODO: typechecking broken here.
+        const gs = reducer(room, message as any);
         room.gameState = gs;
         newState = gs.state;
-        // TODO: schedule deletion for the future, for now leave it as a log.
         room.messages[context.params.key].read = true;
       }
       return room;
@@ -334,13 +315,12 @@ export const GENERATION_FULFILLED_MSG:GENERATION_FULFILLED_MSG_TYPE = "_Generati
 
 // We trigger this after the game state mutations because they're done 
 // in a transaction and we don't want to accidentally retry API requests.
+// Additionally they're much slower than other game state mutations.
 export const generationRequest = functions
   .runWith({ secrets: ["OPENAI_API_KEY", "STABILITY_API_KEY", "AWS_ACCESS_KEY", "AWS_SECRET_KEY"] })
   .database.ref("/rooms/{roomId}/gameState/generations/{uid}")
   .onCreate(async (snapshot, context) => {
-    // TODO: check that the owner of the room is in good standing
-    // And that we're willing to fulfill the request.
-    // Another possibility: schedule the request to run after a delay.
+    // TODO (abuse prevention): check that the owner of the room is in good standing
     const apiReq = {
       ...snapshot.val(),
       room: context.params.roomId,

@@ -1,14 +1,14 @@
 import * as functions from "firebase-functions";
 import { ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE, arrayFromKeyedObject } from "../utils";
 import { GENERATION_FULFILLED_MSG, GENERATION_FULFILLED_MSG_TYPE } from "../index";
-import { ChatGPTDef, GenerationResponse, GenerationRequest } from "../generate";
+import { GPT4oDef, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
 export type GameDefinition = {
   engine: "MITM",
   name: string,
   description: string,
-  model: ChatGPTDef,
+  model: GPT4oDef,
   introVideo: {
     url: string,
     durationSeconds: number,
@@ -31,7 +31,7 @@ export type Timer = {
 type ChatMessage = {message: string, author: UserID | "robot"};
 export type Generation = Omit<GenerationRequest, "room" | "template" | "prompt"> & 
   GenerationResponse<string> & {
-    model: ChatGPTDef,
+    model: GPT4oDef,
     uid: string,
     fulfilled: boolean,
     error?: string,
@@ -130,7 +130,7 @@ const Actions = {
     const aiSpeaker = message.uid === room.gameState.player1 ? "2" : "1";
     const messages = [
       {role: "system", content: "You are a helpful assistant."},
-      {role: "user", content: `Two people are having a dialogue.\n\n${dialogue}\n\nWrite the next line of dialogue to be in a consistent tone with speaker ${aiSpeaker}. First, explain the tone of speaker ${aiSpeaker}, and then output their line of dialogue. Format the speaker's response like so [[${aiSpeaker}: ...]].`},
+      {role: "user", content: `Below is the transcript for a dialogue between two speakers, numbered 1 and 2.\n\n${dialogue}\n\nContinue the transcript with a response for speaker ${aiSpeaker}. Make it sound like it came from speaker 1, and keep it under 20 words. Format it like so [[${aiSpeaker}: ...]].`},
     ];
     room.gameState.generations = room.gameState.generations ?? {};
     room.gameState.generations[message.uid] = {

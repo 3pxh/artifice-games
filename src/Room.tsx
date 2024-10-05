@@ -18,11 +18,8 @@ import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functi
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
 import PlayerStatuses from "./components/PlayerStatuses";
-import Chat from "./components/Chat";
 import "./Room.css";
 
-// TODO: make the type of this depend on the game in question
-// Or rather, include the various room types
 type RoomProps = {
   id: string,
   isPlayer: boolean,
@@ -35,7 +32,6 @@ type GameState = {
   state: "Lobby"
 }
 
-
 const GameTimer = (props: {roomId: string, uid: string, gameState: Signal<GameState | null>}) => {
   const timer = useComputed<PromptGuessTimer | null>(() => props.gameState.value?.timer ?? null);
   const timeRemaining = signal(
@@ -43,9 +39,6 @@ const GameTimer = (props: {roomId: string, uid: string, gameState: Signal<GameSt
       ? Math.floor((timer.value.started + timer.value.duration - new Date().getTime())/1000)
       : 3600 * 24);
   const [endTime, setEndTime] = useState(0);
-  // Only message once per timer expiry. There was a bug which was flooding
-  // the server with messages (once a second). There's probably a better
-  // pattern than this, but it will do for now.
   const [hasMessaged, setHasMessaged] = useState(false);
 
   useEffect(() => {
@@ -76,6 +69,7 @@ const GameTimer = (props: {roomId: string, uid: string, gameState: Signal<GameSt
   });
 
   if (timer.value && timer.value.duration > 0 && timeRemaining.value < 3600*24) {
+    // TODO: styling. e.g. make this a bar with a % width based on time left.
     return <div key="GameTimer" class="Room-Timer">
       {timeRemaining.value > 0 ? `Time remaining: ${timeRemaining.value} seconds` : "Out of time!"}
     </div>
@@ -84,10 +78,32 @@ const GameTimer = (props: {roomId: string, uid: string, gameState: Signal<GameSt
   }
 }
 
+const WaitTime = (props: {startTime: number}) => {
+  const [currentTime, setCurrentTime] = useState<number>(new Date().getTime());
+
+  useEffect(() => {
+    const i = window.setInterval(() => {
+      console.log(props.startTime);
+      setCurrentTime(new Date().getTime());
+    }, 1000);
+    return () => { window.clearInterval(i); }
+  });
+
+  const waitTimeS = Math.floor((props.startTime - currentTime)/1000);
+  // TODO: format with a padded 0, e.g. 0:06
+  const formattedWaitTime = `${Math.floor(waitTimeS/60)}:${waitTimeS % 60}`;
+  if (props.startTime > 0 && waitTimeS > 0) {
+    return <p>This room is #{1+Math.floor(waitTimeS/15)} in the queue, it will appear in {formattedWaitTime}</p>
+  } else if (props.startTime > 0 && waitTimeS <= 0) {
+    return <p>Initializing game...</p>
+  } else {
+    return <p>Calculating queue...</p>
+  }
+}
+
 export function Room(props: {room: RoomData}) {
   const [isWaiting, setIsWaiting] = useState<boolean>(true);
   const [startTime, setStartTime] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<"game" | "chat">("game");
   const gameState = useSignal<GameState | null>(null);
   const players = useSignal<PromptGuessRoom["players"] | null>(null);
   const scores = useComputed<Scores | null>(() => gameState.value?.scores ?? null);
@@ -106,7 +122,6 @@ export function Room(props: {room: RoomData}) {
     }
     return false;
   })
-  const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
 
   const updateGameState = (snapshot: DataSnapshot) => {
     gameState.value = snapshot.val();
@@ -141,8 +156,6 @@ export function Room(props: {room: RoomData}) {
 
   const unsubscribes:Unsubscribe[] = []
   useEffect(() => {
-    // TODO: Make this ack when the game updates here.
-    // As is, they have to reload the room to ack.
     setRoomLastSeenNow(props.room.id);
     if (GameStateSubscriptions) {
       const stateRef = ref(db, `rooms/${props.room.id}/gameState`);
@@ -161,10 +174,10 @@ export function Room(props: {room: RoomData}) {
     }
     const playerRef = ref(db, `rooms/${props.room.id}/players`);
     unsubscribes.push(onValue(playerRef, updatePlayerState));
+    // TODO: remove scratchpad // put it under gamestate for quip engine.
+    // This was only used before we had subscription splitting.
     const scratchpadRef = ref(db, `rooms/${props.room.id}/scratchpad`);
     unsubscribes.push(onValue(scratchpadRef, updateScratchpadState));
-    // TODO: When we add async rooms, how do we handle queuing?
-    // In case the component has been rerendered.
     if (isWaiting) {
       const id = window.setInterval(() => {
         pingRoom(props.room.id);
@@ -205,57 +218,14 @@ export function Room(props: {room: RoomData}) {
     </p>
   }
 
-  const WaitTime = () => {
-    const [currentTime, setCurrentTime] = useState<number>(new Date().getTime());
-
-    useEffect(() => {
-      const i = window.setInterval(() => {
-        console.log(startTime);
-        setCurrentTime(new Date().getTime());
-      }, 1000);
-      return () => { window.clearInterval(i); }
-    })
-    const waitTimeS = Math.floor((startTime - currentTime)/1000);
-    // TODO: format with a padded 0, e.g. 0:06
-    const formattedWaitTime = `${Math.floor(waitTimeS/60)}:${waitTimeS % 60}`;
-    if (startTime > 0 && waitTimeS > 0) {
-      return <p>This room is #{1+Math.floor(waitTimeS/15)} in the queue, it will appear in {formattedWaitTime}</p>
-    } else if (startTime > 0 && waitTimeS <= 0) {
-      return <p>Initializing game...</p>
-    } else {
-      return <p>Calculating queue...</p>
-    }
-  }
-
-  const PlayerHandleInput = () => {
-    return <div class="Room-PlayerHandleInput">
-      <label for="PlayerName">Name: </label>
-      <SlowBroadcastInput 
-        broadcast={(v: string) => {
-          const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
-          updatePlayer(props.room.id, m);
-        }}
-        input={<input id="PlayerName" />} 
-      />
-    </div>
-  }
-
-  const switchTab = (tab: "game" | "chat") => {
-    if (activeTab === "chat" || tab === "chat") {
-      setHasUnreadMessages(false);
-    }
-    setActiveTab(tab);
-  }
-
   if (isWaiting || !gameState.value) {
     return <>
       <Header />
-      <WaitTime />
+      <WaitTime startTime={startTime} />
     </>
   } else if (isLoaded && authContext.user) {
     return <div className="Room">
       <div className="Room-Pane">
-        {/* <div className={`Room-Pane ${activeTab === "game" ? "Room-Pane--active" : "Room-Pane--inactive"}`}> */}
           <Header />
           <GameTimer 
             key={"timer"} 
@@ -266,7 +236,16 @@ export function Room(props: {room: RoomData}) {
           // TODO: improve the UX.
           // As soon as they set avatar/name this disappears, no confirmation
           ? <>
-            <PlayerHandleInput />
+            <div class="Room-PlayerHandleInput">
+              <label for="PlayerName">Name: </label>
+              <SlowBroadcastInput 
+                broadcast={(v: string) => {
+                  const m:Partial<PromptGuessRoom["players"]["uid"]> = {"handle": v}
+                  updatePlayer(props.room.id, m);
+                }}
+                input={<input id="PlayerName" />} 
+              />
+            </div>
             <AvatarPicker 
               players={players as Signal<PromptGuessRoom["players"]>}
               onSelect={(v: string) => {
@@ -283,34 +262,12 @@ export function Room(props: {room: RoomData}) {
           <Game 
             key={"game"}
             room={props.room as any}
-            // TODO: How do we do manage type checking at the room level?
             gameState={gameState as any}
             players={players as any}
             scratchpad={scratchpad as any}
             isPlayer={props.room.isPlayer}
             isInputOnly={props.room.isInputOnly} />
         </div>
-        {/* <div className="Room-Pane" >
-          <Chat 
-            key={"chat"} 
-            roomId={props.room.id} 
-            players={players}
-            isActive={activeTab === "chat"}
-            setHasUnreadMessages={setHasUnreadMessages} />
-        </div> */}
-      {/* </div>
-      <div className="Room-TabSelector">
-        <div 
-          className={`Room-Tab ${activeTab === "game" ? "Room-Tab--active" : ""}`} 
-          onClick={() => switchTab("game")}>
-            🕹️
-        </div>
-        <div 
-          className={`Room-Tab ${activeTab === "chat" ? "Room-Tab--active" : ""}`} 
-          onClick={() => switchTab("chat")}>
-            💬{activeTab !== "chat" && hasUnreadMessages ? <span class="Room-Tab--Unread"></span> : ""}
-        </div>
-      </div> */}
     </div>
   } else {
     return <Header />

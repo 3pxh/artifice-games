@@ -34,11 +34,3 @@ export const engines:Record<EngineName, GameEngine> = {
   "Quip": Quip.engine,
   "MITM": MITM.engine,
 }
-
-// TODO: this doesn't seem quite right as far as managing types...
-export type MessageTypes = {
-  "PromptGuess": PG.PromptGuessMessage,
-  "AIJudge": Judge.Message,
-  "Quip": Quip.Message,
-  "MITM": MITM.Message,
-}

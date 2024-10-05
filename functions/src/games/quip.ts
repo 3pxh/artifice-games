@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import { ROOM_FINISHED_STATE, ROOM_FINISHED_STATE_TYPE, chooseOneInObject, arrayFromKeyedObject, objectFilter, chooseOneKeyInObject } from "../utils";
-import { ChatGPTDef, GenerationResponse, GenerationRequest } from "../generate";
+import { GPT4oDef, GenerationResponse, GenerationRequest } from "../generate";
 import { GameCreateData } from "./games";
 
 type ChatGPTMessage = {role: string, content: string};
@@ -10,7 +10,7 @@ export type GameDefinition = {
   engine: "Quip",
   name: string,
   description: string,
-  model: ChatGPTDef,
+  model: GPT4oDef,
   introVideo: {
     url: string,
     durationSeconds: number,
@@ -32,7 +32,7 @@ const STATE_TRANSITIONS:Record<State, State> = {
 }
 export type Generation = Omit<GenerationRequest, "room" | "template" | "prompt"> & 
   GenerationResponse<QuipResponse> & {
-    model: ChatGPTDef,
+    model: GPT4oDef,
     uid: string,
     fulfilled: boolean,
     error?: string,

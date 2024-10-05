@@ -59,9 +59,9 @@ function Generation(props: {
         onClick={props.skip} />
     </>
   }
-  if (props.generation.model.name === "StableDiffusion" || props.generation.model.name === "DALLE") {
+  if (props.generation.model.name === "StableDiffusion") {
     return <ImageGeneration generation={props.generation} showPrompt={props.showPrompt} />
-  } else if (props.generation.model.name === "GPT3") {
+  } else if (props.generation.model.name === "gpt-4o") {
     return <TextGeneration generation={props.generation} showPrompt={props.showPrompt} />
   } else {
     return <>Renderer not implemented for that model type.</>

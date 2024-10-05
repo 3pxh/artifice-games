@@ -68,7 +68,7 @@ const FeaturedPGGames: {[k: string]: GameDefBase & PG.GameDefinition} = {
     "shortAbout": "silly fun with lists",
     "emoji": "📝😂",
     "color": "#ffe666",
-    "model": {"name": "GPT3"},
+    "model": {"name": "gpt-4o"},
     "templates": {
       "0": {"template": "List the top 5 best {1}, don't explain why", "display": "List the top 5 best..."},
       "1": {"template": "List the top 5 most ridiculous ways to {1}, don't explain why", "display": "List the top 5 most ridiculous ways to..."},
@@ -89,7 +89,7 @@ const FeaturedPGGames: {[k: string]: GameDefBase & PG.GameDefinition} = {
     "shortAbout": "AI ate my homework",
     "emoji": "💌👩‍👧",
     "color": "#66ff80",
-    "model": {"name": "GPT3"},
+    "model": {"name": "gpt-4o"},
     "templates": {
       "0": {"template": "To whom it may concern, {1}", "display": "To whom it may concern..."},
       "1": {"template": "You won't believe this one weird trick to {1}! ", "display": "You won't believe this one weird trick to..."},
@@ -108,10 +108,10 @@ const FeaturedPGGames: {[k: string]: GameDefBase & PG.GameDefinition} = {
     "engine": "PromptGuess",
     "name": "Poems",
     "about": "Write prompts to make poems, make up alternative prompts, and guess the truth!",
-    "shortAbout": "AI AI burning bright...",
+    "shortAbout": "Taiger Taiger...",
     "emoji": "✍️🎭",
     "color": "#ffe666",
-    "model": {"name": "GPT3"},
+    "model": {"name": "gpt-4o"},
     "templates": {
       "0": {"template": "Write a haiku about {1}, but don't mention \"{1}\"\n", "display": "Write a haiku about..."},
       "1": {"template": "Write a heroic couplet about {1}, but don't mention \"{1}\"\n", "display": "Write a heroic couplet about..."},
@@ -134,7 +134,7 @@ const FeaturedPGGames: {[k: string]: GameDefBase & PG.GameDefinition} = {
     "shortAbout": "3 emojis to describe anything",
     "emoji": "👍😂🔥",
     "color": "#66ff99",
-    "model": {"name": "GPT3"},
+    "model": {"name": "gpt-4o"},
     "templates": {
       "0": {"template": "List 3 emojis to describe {1} (don't explain why)\n\n", "display": "List 3 emojis to describe [a memory]"},
       "1": {"template": "List 3 emojis to describe {1} (don't explain why)\n\n", "display": "List 3 emojis to describe [an abstract noun]"},
@@ -156,7 +156,7 @@ const FeaturedPGGames: {[k: string]: GameDefBase & PG.GameDefinition} = {
     "shortAbout": "what movie is that?",
     "emoji": "🍿🎥🎬",
     "color": "#ff6666",
-    "model": {"name": "GPT3"},
+    "model": {"name": "gpt-4o"},
     "templates": {
       "0": {"template": "Given the following description, what is the movie which best fits it?\n\n{1}\n\nGive your output in the form: Title (year), e.g. The Matrix (1999).\n\n", "display": "Give a description, and I'll name a movie"},
     },
@@ -164,7 +164,7 @@ const FeaturedPGGames: {[k: string]: GameDefBase & PG.GameDefinition} = {
       "url": "https://www.youtube.com/embed/HXyHkJlMTp8",
       "durationSeconds": 59
     },
-    "tier": "Free",
+    "tier": "Underwriter",
     "hidden": false
   },
 }
@@ -179,7 +179,7 @@ const FeaturedJudgeGames: {[k: string]: GameDefBase & Judge.GameDefinition} = {
     "color": "#66ccff",
     "questionPreface": "Select the best answer to the question.\n\n",
     "model": {
-      "name": "GPT3",
+      "name": "gpt-4o",
       "stopSequences": {"0": ")"},
       "maxTokens": 10,
       "temperature": 0.2
@@ -196,7 +196,7 @@ const FeaturedJudgeGames: {[k: string]: GameDefBase & Judge.GameDefinition} = {
   //   "name": "Kyle Says... 🎉",
   //   "questionPreface": "You are a cynical existentialist named Kyle.\n\nSelect the best answer to the question.\n\n",
   //   "model": {
-  //     "name": "GPT3",
+  //     "name": "gpt-4o",
   //     "stopSequences": {"0": ")"},
   //     "maxTokens": 10,
   //     "temperature": 0.2
@@ -217,7 +217,7 @@ const FeaturedJudgeGames: {[k: string]: GameDefBase & Judge.GameDefinition} = {
     "shortAbout": "quiz an AI doggo",
     "questionPreface": "You are a golden retriever who loves humans.\n\nSelect the best answer to the question.\n\n",
     "model": {
-      "name": "GPT3",
+      "name": "gpt-4o",
       "stopSequences": {"0": ")"},
       "maxTokens": 10,
       "temperature": 0.2
@@ -226,7 +226,7 @@ const FeaturedJudgeGames: {[k: string]: GameDefBase & Judge.GameDefinition} = {
       "url": "https://www.youtube.com/embed/O9GhGMHiq_8",
       "durationSeconds": 60
     },
-    "tier": "Free",
+    "tier": "Underwriter",
     "hidden": false
   },
   // "think_tank_sf": {
@@ -234,7 +234,7 @@ const FeaturedJudgeGames: {[k: string]: GameDefBase & Judge.GameDefinition} = {
   //   "name": "🤖 says... 🧠",
   //   "questionPreface": "You are the spiritual zeitgeist of San Francisco and Silicon Valley put together.\n\nSelect the best answer to the question.\n\n",
   //   "model": {
-  //     "name": "GPT3",
+  //     "name": "gpt-4o",
   //     "stopSequences": {"0": ")"},
   //     "maxTokens": 10,
   //     "temperature": 0.2
@@ -298,7 +298,7 @@ const FeaturedQuipGames: {[k: string]: GameDefBase & Quip.GameDefinition} = {
       "2": {"role": "assistant", "content": "Hear me, followers! Which of you has something to say, to show you are a good Globian, for me to pass judgment?"}
     },
     "model": {
-      "name": "ChatGPT",
+      "name": "gpt-4o",
       "maxTokens": 250,
       "temperature": 0.7
     },
@@ -375,7 +375,7 @@ const FeaturedMITMGames: {[k: string]: GameDefBase & MITM.GameDefinition} = {
     "color": "#66ffcc",
     "description": "Can you tell if you're talking to your friend?",
     "model": {
-      "name": "ChatGPT",
+      "name": "gpt-4o",
       "maxTokens": 250,
       "temperature": 0.7
     },

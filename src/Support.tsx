@@ -21,7 +21,6 @@ export default function Support() {
   const [priceIds, setPriceIds] = useState<{interval: "month" | "year", unit_amount: number, id: string}[]>([])
 
   const getProducts = async () => {
-    // const products = await getDocs(query(collection(firestore, "products"), where("active", "==", true)));
     const products = await getDocs(collection(firestore, "products"));
     products.forEach(async p => {
       const priceSnap = await getDocs(collection(p.ref, "prices"));
@@ -46,8 +45,6 @@ export default function Support() {
           const sub = collection(firestore, `customers/${auth.currentUser!.uid}/subscriptions`)
           onSnapshot(sub, (snap) => {
             // TODO: #billing what if they have purchased/canceled several subscriptions?
-            // Find the Subscription with the most recent created.seconds, or ends last
-            // console.log("how many subs?", snap.docs.length)
             console.log(snap.docs[0].data());
             setSubscriptionData(snap.docs[0].data() as Subscription);
           });

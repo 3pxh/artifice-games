@@ -143,13 +143,15 @@ export default function GameSelection() {
         <p><Link href="/auth">Log in</Link> to create or join a game, or try the single player <a href="/intro">tutorial</a> to get a feel for the games.</p>
       </>: ""}
       
-      <h2><em>free this week</em></h2>
+      {/*TODO: reenable billing <h2><em>free this week</em></h2> */}
+      <h2><em>featured</em></h2>
       <GameList games={Object.entries(gameList).filter(([_, v]) => v.tier === "Free")} onSelect={setSelectedGame} />
       <h2><em>full catalogue</em></h2>
-      <div>{!authContext.isPaid() 
-        ? <small><Link href="/support">support artifice and get access to the full catalogue ➔</Link></small> 
+      {/* TODO: reenable billing <h2><em>full catalogue</em></h2> */}
+      {/* <div>{!authContext.isPaid() 
+        ? <small><a href="https://www.patreon.com/artifice_games">support artifice and get access to the full catalogue ➔</a></small> 
         : "Thanks for supporting our games!"
-      }</div>
+      }</div> */}
       <GameList games={Object.entries(gameList).filter(([_, v]) => v.tier !== "Free")} onSelect={setSelectedGame} />
     </div>
   </>
@@ -181,7 +183,7 @@ export default function GameSelection() {
       </>
       : ""}
       <p>{gameList[selectedGame].about}</p>
-      {gameList[selectedGame].tier === "Underwriter" && !authContext.isPaid() 
+      {gameList[selectedGame].tier === "Underwriter" && !authContext.isPaid() && false /* TODO: reenable billing */
       ? <><Link href="/support">Support Artifice</Link> to play this game.</>
       : <>
         {/* TODO: #APP re-enable async games  */}

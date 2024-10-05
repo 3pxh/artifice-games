@@ -2,17 +2,9 @@ import axios, { AxiosError } from "axios";
 import * as AWS from "aws-sdk";
 import App from "./app";
 
-export type Models =  "GPT3" | "StableDiffusion" | "DALLE" | "ChatGPT" | "GPT4"
-export type GPT3Def = {
-  name: "GPT3",
-  stopSequences?: {
-    [k: string]: string
-  },
-  maxTokens?: number,
-  temperature?: number,
-}
-export type ChatGPTDef = {
-  name: "ChatGPT" | "GPT4",
+export type Models =  "gpt-4o" | "StableDiffusion"
+export type GPT4oDef = {
+  name: "gpt-4o",
   stopSequences?: {
     [k: string]: string
   },
@@ -21,12 +13,9 @@ export type ChatGPTDef = {
 }
 export type SDDef = {
   name: "StableDiffusion",
-  version: "1.6" | "xl",
+  version: "2.1" | "xl",
 }
-export type DalleDef = {
-  name: "DALLE",
-}
-export type ModelDef = GPT3Def | SDDef | DalleDef | ChatGPTDef;
+export type ModelDef = GPT4oDef | SDDef;
 type Schema = {[key: string]: "string" | "number"};
 // type ParsedSchema = {[key: string]: string | number};
 export type GenerationRequest = {
@@ -52,7 +41,7 @@ const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY,
   secretAccessKey: process.env.AWS_SECRET_KEY
 });
-const BUCKET_NAME = "artifice-1";
+const BUCKET_NAME = "artifice-games";
 
 async function runStableDiffusion(r: GenerationRequest, tryCount = 0): GenerationPromise {
   if (!process.env.STABILITY_API_KEY) {
@@ -60,65 +49,31 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   }
   
   const MAX_TRIES = 2;
-  const model = r.model as SDDef;
-  const modelPaths:Record<SDDef["version"], string> = {
-    "1.6": "stable-diffusion-v1-6",
-    "xl": "stable-diffusion-xl-1024-v1-0"
-  }
-  const version = model.version ?? "1.6";
-  const engineId = modelPaths[version];
-  const apiHost = "https://api.stability.ai";
-  const url = `${apiHost}/v1beta/generation/${engineId}/text-to-image`;
+  // We don't use the model def at the moment, just the cheapest.
+  // const model = r.model as SDDef;
 
   const prompt = r.template.template.replace("{1}", r.prompt);
-  const weightedPrompts = prompt.split("|").map(p => {
-    if (p.indexOf(":")) {
-      const weight = p.split(":").pop();
-      if (weight && parseFloat(weight)) {
-        // Do as I say, not as I do.
-        return {
-          "text": p.split(":").slice(0,-1).join(":").trim(),
-          "weight": parseFloat(weight)
-        };
-      }
-    }
-    return {"text": p.trim(), "weight": 1};
-  });
 
   let response;
   try {
     response = await axios({
-      url: url,
+      url: "https://api.stability.ai/v2beta/stable-image/generate/core",
       method: "POST",
       responseType: "stream",
       headers: {
-        "Content-Type": "application/json",
-        Accept: "image/png",
-        Authorization: process.env.STABILITY_API_KEY,
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${process.env.STABILITY_API_KEY}`,
+        Accept: "image/*",
       },
-      data: JSON.stringify({
-        cfg_scale: 7,
-        clip_guidance_preset: "FAST_BLUE",
-        height: 512,
-        width: 512,
-        samples: 1,
-        // seed: 0,
-        steps: 30,
-        text_prompts: weightedPrompts,
-      })
-    });
+      data: {
+        prompt: prompt,
+        output_format: "png"
+      },
+    })
+    // response.data.pipe(fs.createWriteStream('./lighthouse.png'))
   } catch (e) {
     const err = e as AxiosError<unknown, any>;
-    if (err.status === 400) {
-      // (note, this if() never returns true. Also, we don't know exactly why this failed:
-      // https://api.stability.ai/docs#tag/v1alphageneration/operation/v1alpha/generation#textToImage
-      // It's either invalid_samples, invalid_height_or_width, or invalid_prompts.
-      // Since we control samples, and h/w, it's the prompt.
-      // Axios unfortunately masks the name. It might be better to move to node-fetch. idk.
-      throw new Error("Your prompt was not valid and may have contained filtered words.")
-    }
-    // TODO: the above is broken--err.status is apparently empty, but shows if you log it. wtf.
-    throw new Error("Your prompt was not valid and may have contained filtered words.")
+    throw new Error("The call to stable diffusion failed with error: " + err.message)
   }
 
   if (!response || !response.headers) {
@@ -157,47 +112,6 @@ async function runStableDiffusion(r: GenerationRequest, tryCount = 0): Generatio
   };
 }
 
-async function runDalle(r: GenerationRequest): GenerationPromise {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new  Error("Missing OPENAI_API_KEY");
-  }
-  const prompt = r.template.template.replace(/\{1\}/g, r.prompt);
-  const response = await axios({
-    url: "https://api.openai.com/v1/images/generations",
-    headers: {
-      Authorization: "Bearer " + process.env.OPENAI_API_KEY, 
-      "Content-Type": "application/json" 
-    },
-    method: "POST",
-    data: JSON.stringify({
-      "prompt": prompt,
-      "n": 1,
-      "size": "512x512",
-    })
-  });
-  if (response.status !== 200) {
-    throw new Error("Response from Dalle not ok");
-  }
-  const imgUrl = response.data.data[0].url;
-  const response2 = await axios({
-    url: imgUrl,
-    method: "GET",
-    responseType: "stream",
-  });
-  const filename = `images/Dalle/${r.room}/${Math.random()}.png`;
-  const uploadParams = {
-    Bucket: BUCKET_NAME,
-    Key: filename,
-    Body: response2.data
-  };
-  const res = await s3.upload(uploadParams).promise();
-  return {
-    _context: { },
-    generation: res.Location,
-    timeFulfilled: new Date().getTime(),
-  }
-}
-
 function parseWithSchema(res: string, schema: Schema) {
   try {
     const parsed = JSON.parse(res);
@@ -214,18 +128,25 @@ function parseWithSchema(res: string, schema: Schema) {
   }
 }
 
-async function runChatCompletion(modelName: "gpt-3.5-turbo" | "gpt-4", r: GenerationRequest, retries=1): GenerationPromise {
+async function runChatCompletion(modelName: "gpt-4o", r: GenerationRequest, retries=1): GenerationPromise {
   const MAX_RETRIES = 2;
   if (!process.env.OPENAI_API_KEY) {
     throw new Error("Missing OPENAI_API_KEY");
   }
+  let messages = [];
   if (!r.chatGPTParams) {
-    throw new Error("Trying to run ChatGPT without defining chatGPTMessages");
+    const prompt = r.template.template.replace("{1}", r.prompt);
+    messages = [
+      {role: "system", content: "You are a helpful assistant."},
+      {role: "user", content: prompt},
+    ];
+  } else {
+    messages = r.chatGPTParams.messages;
   }
-  const model = r.model as ChatGPTDef;
+  const model = r.model as GPT4oDef;
   const params:any = {
     "model": modelName,
-    "messages": r.chatGPTParams.messages,
+    "messages": messages,
     "temperature": model.temperature ?? 0.7,
     "max_tokens": model.maxTokens ?? 256,
     "top_p": 1,
@@ -243,7 +164,7 @@ async function runChatCompletion(modelName: "gpt-3.5-turbo" | "gpt-4", r: Genera
   });
   const response = await res.data;
   if (response.choices && response.choices[0] && response.choices[0].message && response.choices[0].message.content) {
-    if (r.chatGPTParams.schema) {
+    if (r.chatGPTParams && r.chatGPTParams.schema) {
       const parsed = parseWithSchema(response.choices[0].message.content, r.chatGPTParams.schema);
       if (parsed !== null) {
         return {
@@ -266,55 +187,12 @@ async function runChatCompletion(modelName: "gpt-3.5-turbo" | "gpt-4", r: Genera
   }
 }
 
-async function runGPT3(r: GenerationRequest): GenerationPromise {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new  Error("Missing OPENAI_API_KEY");
-  }
-  const model = r.model as GPT3Def;
-  // TODO: where do we template? Eventually we might want multipart templates.
-  // /\{1\}/g for global replacement.
-  const prompt = r.template.template.replace(/\{1\}/g, r.prompt);
-  const params:any = {
-    "model": "text-davinci-003",
-    "prompt": prompt,
-    "temperature": model.temperature ?? 0.7,
-    "max_tokens": model.maxTokens ?? 256,
-    "top_p": 1,
-    "frequency_penalty": 0,
-    "presence_penalty": 0,
-  }
-  if (model.stopSequences) {
-    params["stop"] = Object.entries(model.stopSequences).map(([_, v]) => v);
-  }
-  const res = await axios({
-    url: "https://api.openai.com/v1/completions",
-    headers: {
-      Authorization: "Bearer " + process.env.OPENAI_API_KEY, 
-      "Content-Type": "application/json" 
-    },
-    method: "POST",
-    data: JSON.stringify(params)
-  });
-  const response = await res.data;
-  if (response.choices && response.choices[0] && response.choices[0].text) {
-    return {
-      _context: {},
-      generation: response.choices[0].text,
-      timeFulfilled: new Date().getTime(),
-    }
-  } else {
-    throw new Error(`GPT3 runner failed on response: ${JSON.stringify(response)}`)
-  }
-}
 
 type GenerationPromise = Promise<GenerationResponse<any> | Error>;
 type Generator = (r: GenerationRequest) => GenerationPromise;
 const runners:Record<Models, Generator>  = {
-  "GPT3": runGPT3,
   "StableDiffusion": runStableDiffusion,
-  "DALLE": runDalle,
-  "ChatGPT": (r: GenerationRequest) => runChatCompletion("gpt-3.5-turbo", r),
-  "GPT4": (r: GenerationRequest) => runChatCompletion("gpt-4", r),
+  "gpt-4o": (r: GenerationRequest) => runChatCompletion("gpt-4o", r),
 }
 
 export async function generate(r: GenerationRequest): Promise<GenerationResponse<any> | Error> {
