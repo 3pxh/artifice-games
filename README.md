@@ -1,5 +1,7 @@
 # Artifice Games
 
+Licensed CC0. See the LICENSE
+
 # Developing in codebase
 
 ## Install and configure dependencies 
