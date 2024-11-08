@@ -67,7 +67,7 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
       state: "Lobby",
       player1: roomOpts._creator,
       currentStep: 0,
-      stepsBeforeMITM: 10 + Math.floor(Math.random() * 30)
+      stepsBeforeMITM: 4 + Math.floor(Math.random() * 8)
     },
     players: {
       [roomOpts._creator]: {state: "Lobby", handle: "Player 1"}
@@ -130,7 +130,7 @@ const Actions = {
     const aiSpeaker = message.uid === room.gameState.player1 ? "2" : "1";
     const messages = [
       {role: "system", content: "You are a helpful assistant."},
-      {role: "user", content: `Below is the transcript for a dialogue between two speakers, numbered 1 and 2.\n\n${dialogue}\n\nContinue the transcript with a response for speaker ${aiSpeaker}. Make it sound like it came from speaker 1, and keep it under 20 words. Format it like so [[${aiSpeaker}: ...]].`},
+      {role: "user", content: `Below is the transcript for a dialogue between two speakers, numbered 1 and 2.\n\n${dialogue}\n\nContinue the transcript with a response for speaker ${aiSpeaker}. Make it sound like it came from speaker ${aiSpeaker} (don't make it too upbeat, make it sound natural), and keep it consistent with the length of speaker ${aiSpeaker}'s messages. Return only the message, not the number, and no additional explanation.`},
     ];
     room.gameState.generations = room.gameState.generations ?? {};
     room.gameState.generations[message.uid] = {
@@ -163,21 +163,8 @@ const Actions = {
       }
       const rate = (.6 + .2 * Math.random()) * totalTime / totalWords;
       const generatedValue = room.gameState.generations[message.uid]?.generation ?? "";
-      const parse = (input: string) => {
-        const regex = /\[\[(.*?)\]\]/;  // Regular expression to match the string inside double square brackets
-        const match = regex.exec(input);  // Find the match using the regex
-        if (match && match.length > 1) {
-          return match[1];
-        } else {
-          return `Failed to parse ${input}`;
-        }
-      }
-      let parsedResponse = parse(generatedValue);
-      const indicator = `${chatArray.length % 2 ? 2 : 1}:`
-      parsedResponse = parsedResponse.indexOf(indicator) === 0 ? parsedResponse.slice(parsedResponse.indexOf(indicator) + 2) : parsedResponse;
-      parsedResponse = parsedResponse.trim();
-      const displayTime = Math.floor(parseInt(chatArray[chatArray.length - 1][0]) + rate * parsedResponse.split(" ").length);
-      chat[displayTime] = {message: parsedResponse, author: "robot"};
+      const displayTime = Math.floor(parseInt(chatArray[chatArray.length - 1][0]) + rate * generatedValue.split(" ").length);
+      chat[displayTime] = {message: generatedValue, author: "robot"};
       delete room.gameState.generations[message.uid];
     }
   },
