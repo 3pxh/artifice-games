@@ -108,7 +108,7 @@ export function RenderMitm(props: {
       </div>
       <input id="MITM-MessageInput" type="text" onKeyPress={(e) => {if (e.key === "Enter") {sendMessage()}}} />
       <button disabled={!isMyTurn || (!!c && !!c.length && (c[c.length - 1][0] > time))} onClick={sendMessage}>Send</button>
-      <button disabled={c.length < 10} onClick={() => message("ICallRobot", "woo!")}>I Call Robot!</button>
+      <button disabled={c.length < 4} onClick={() => message("ICallRobot", "woo!")}>I Call Robot!</button>
     </div>
   } else if (renderState.value === "Finish") {
     // TODO: refactor rendering the chat. This is almost verbatim from above.
