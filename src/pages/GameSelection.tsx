@@ -177,7 +177,7 @@ export default function GameSelection() {
         {gameList[selectedGame].name} {gameList[selectedGame].emoji}
       </h1>
       <p style="color:yellow;">{errorMessage}</p>
-      {gameList[selectedGame].introVideo.url 
+      {'introVideo' in gameList[selectedGame] && gameList[selectedGame].introVideo.url 
       ? <>
         <iframe class="YoutubeEmbed" src={`${gameList[selectedGame].introVideo.url}`}></iframe>
       </>

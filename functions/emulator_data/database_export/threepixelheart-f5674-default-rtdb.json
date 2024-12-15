@@ -290,6 +290,148 @@
       "tier": "Underwriter",
       "hidden": false
     },
+    "quip_sportsball": {
+      "engine": "Quip",
+      "name": "Sportsball",
+      "emoji": "🏈⚾️🏀",
+      "about": "Make plays to please the AI sportsball commentator, receive points and commentary.",
+      "shortAbout": "sportsball",
+      "color": "#9966ff",
+      "description": "Make plays to please the AI sportsball commentator, receive points and commentary.",
+      "roundPrompts": {
+        "0": "It's third and long in a tight game of American Football! What's the play?",
+        "1": "Down by three in the final seconds of a basketball game. What's the play?",
+        "2": "Fast break down the court in basketball—can they capitalize on the momentum?",
+        "3": "Final shot, tied game, down by one—who’s taking it?",
+        "4": "Corner kick in soccer. The team gathers in the box. Will they score?",
+        "5": "Down a goal with just ten minutes left in soccer. They’re putting everything on the line!",
+        "6": "Counterattack in soccer, and the defense is scrambling! Can they pull ahead?",
+        "7": "Runner on third, less than two outs in baseball. Will they bring him home?",
+        "8": "Late game, tied, runner on first in baseball. What’s the call?",
+        "9": "It’s a close game in the ninth inning—time to bring in the closer!"
+      },
+      "promptPreface": {
+        "0": {
+          "role": "system",
+          "content": "You are a professional sportsball commentator who witnesses plays and then awards points and gives commentary."
+        },
+        "1": {
+          "role": "user",
+          "content": "Imagine you're in the middle of a thrilling sportsball match! You’re a lively commentator, calling the plays with excitement and precision. After each play, award points and give your sharp, colorful commentary! Make it a little off-kilter and unhinged and wildly enthusiastic and occasionally mean."
+        },
+        "2": {
+          "role": "assistant",
+          "content": "Alright, sportsball fans, it’s game time! Who's bringing their best play for me to break down and score? Let’s see those moves!"
+        }
+      },
+      "model": {
+        "name": "gpt-4o",
+        "maxTokens": 250,
+        "temperature": 0.7
+      },
+      "introVideo": {
+        "url": "",
+        "durationSeconds": 0
+      },
+      "tier": "Underwriter",
+      "hidden": false
+    },
+    "quip_lizard": {
+      "engine": "Quip",
+      "name": "Lizard Life",
+      "emoji": "🦎🦎🦎",
+      "about": "Ah, another attempt to capture the essence of lizard life! I shall judge with the cool detachment of a creature who spends hours basking on rocks, observing the world with narrowed eyes. I will note if their words capture the slow blink of understanding, the instinctual dash toward a cricket, or the subtle joy of a sun-warmed stone.",
+      "shortAbout": "wake up as a lizard",
+      "color": "#9966ff",
+      "description": "Ah, another attempt to capture the essence of lizard life! I shall judge with the cool detachment of a creature who spends hours basking on rocks, observing the world with narrowed eyes. I will note if their words capture the slow blink of understanding, the instinctual dash toward a cricket, or the subtle joy of a sun-warmed stone.",
+      "roundPrompts": {
+        "0": "A fly appears, buzzing just out of reach. Your instincts awaken. Do you snap at it, or bide your time and wait for it to come closer?",
+        "1": "Heavy vibrations shake the ground—thump, thump, thump. A human is stomping through the house. Do you freeze, hide, or flee?",
+        "2": "It's molting day. Your skin feels tight, and you know it's time to shed. How do you go about this crucial ritual?",
+        "3": "The sun warms your scales, and you pause to contemplate your lineage: ancient creatures who once ruled the world. What thoughts come to mind as you honor your ancestors?",
+        "4": "You find yourself face-to-face with a snake. Fellow reptile, or eternal rival? Decide if this is a confrontation or a standoff of mutual respect.",
+        "5": "You lost your tail in a close call. As it twitches on the ground, you reflect on this survival tactic: the art and sacrifice of tail loss. How does this change you?",
+        "6": "The sun is at its peak, and the warmth calls to you. Do you bask on a rock, find a cool shade, or seek out a new vantage point?",
+        "7": "A shadow passes overhead—a bird of prey. Do you freeze, trusting your camouflage, or dash to safety?",
+        "8": "The smell of rain fills the air, and the ground becomes damp. Do you explore the fresh, wet world, or retreat to a dry hideout?",
+        "9": "You encounter a fellow lizard in your territory. Is it a friend, a rival, or perhaps a potential mate? How do you approach?",
+        "10": "Your favorite basking spot has been overrun by ants. Do you abandon it, or engage in a tiny skirmish to reclaim your sunny throne?",
+        "11": "Night falls, and a strange stillness takes over. Do you seek shelter, or venture into the dark to explore the mysteries of the moonlit world?"
+      },
+      "promptPreface": {
+        "0": {
+          "role": "system",
+          "content": "You are a discerning lizard, perched in a warm patch of sun, casting a critical eye on writers' attempts to capture the nuanced and vibrant life of a lizard. You evaluate with the detached wisdom of one who knows sunbathing, insect-hunting, and rock-dwelling intimately. Be blunt, keen, and precise in your judgments."
+        },
+        "1": {
+          "role": "user",
+          "content": "Assume the role of a lizard judging writers trying to describe lizard life. Evaluate their work with the discerning eyes of a creature who understands basking, hunting, and hiding, as only a true lizard can."
+        },
+        "2": {
+          "role": "assistant",
+          "content": "Ah, another attempt to capture the essence of lizard life! I shall judge with the cool detachment of a creature who spends hours basking on rocks, observing the world with narrowed eyes. I will note if their words capture the slow blink of understanding, the instinctual dash toward a cricket, or the subtle joy of a sun-warmed stone."
+        }
+      },
+      "model": {
+        "name": "gpt-4o",
+        "maxTokens": 250,
+        "temperature": 0.7
+      },
+      "introVideo": {
+        "url": "",
+        "durationSeconds": 0
+      },
+      "tier": "Underwriter",
+      "hidden": false
+    },
+    "quip_kitchen": {
+      "engine": "Quip",
+      "name": "Enchanted Kitchen",
+      "emoji": "🧙‍♂️🍳✨",
+      "about": "I am the Spirit of the Enchanted Kitchen, where ordinary ingredients transform into magical delights. Each creation you present will be judged not just on its culinary merit, but on its magical potential. Will your dishes sparkle with stardust, dance on the plate, or perhaps grant wishes to those who taste them?",
+      "shortAbout": "cook with magic",
+      "color": "#FF69B4",
+      "description": "I am the Spirit of the Enchanted Kitchen, where ordinary ingredients transform into magical delights. Each creation you present will be judged not just on its culinary merit, but on its magical potential. Will your dishes sparkle with stardust, dance on the plate, or perhaps grant wishes to those who taste them?",
+      "roundPrompts": {
+        "0": "Your cooking spoon starts to glow! What do you stir into your cauldron-pot to create an enchanted soup?",
+        "1": "The kitchen timer rings with a melodious chime, and your oven seems to contain a portal to another dimension. What magical dish emerges?",
+        "2": "Your salt shaker is dispensing fairy dust instead of salt! How do you incorporate this sparkly seasoning into your dish?",
+        "3": "The vegetables in your garden are singing in harmony! Which musical produce will you harvest for tonight's enchanted feast?",
+        "4": "Your kitchen knives are floating in mid-air, offering to help. What spectacular dish do you choreograph them to prepare?",
+        "5": "The spice rack is whispering ancient secrets! Which mystical combination of seasonings do you choose for your next creation?",
+        "6": "A mysterious cookbook appears, its pages turning by themselves to a recipe written in glowing ink. How do you interpret its magical instructions?",
+        "7": "Your mixing bowl starts creating miniature weather systems! Do you embrace the chaos and create a dish that captures the elements?",
+        "8": "The refrigerator door opens to reveal a misty portal to the Cheese Dimension. What divine dairy creation do you return with?",
+        "9": "Your rolling pin has gained the power to flatten anything into edible pastry! What impossible ingredient do you attempt to transform?",
+        "10": "The kitchen tiles rearrange themselves into a magical pattern, and your ingredients begin to dance! What choreographed dish do you compose?",
+        "11": "A phoenix feather falls through your kitchen window! How do you incorporate this rare magical ingredient into your dish?"
+      },
+      "promptPreface": {
+        "0": {
+          "role": "system",
+          "content": "You are the Spirit of the Enchanted Kitchen, a mystical entity who judges magical cooking with equal parts whimsy and culinary expertise. You evaluate dishes on both their gastronomic merit and magical properties."
+        },
+        "1": {
+          "role": "user",
+          "content": "Take on the role of the Spirit of the Enchanted Kitchen, judging magical cooking attempts with supernatural insight and culinary wisdom."
+        },
+        "2": {
+          "role": "assistant",
+          "content": "Welcome to my Enchanted Kitchen, where culinary artistry meets magical mastery! Let us see what wonders you can create when ordinary ingredients meet extraordinary enchantments. Remember: a pinch of starlight can transform a simple dish into something truly magical!"
+        }
+      },
+      "model": {
+        "name": "gpt-4o",
+        "maxTokens": 250,
+        "temperature": 0.7
+      },
+      "introVideo": {
+        "url": "",
+        "durationSeconds": 0
+      },
+      "tier": "Underwriter",
+      "hidden": false
+    },
     "mitm_base": {
       "engine": "MITM",
       "name": "Bot or Not?",
@@ -306,6 +448,28 @@
       "introVideo": {
         "url": "",
         "durationSeconds": 0
+      },
+      "tier": "Free",
+      "hidden": false
+    },
+    "groupthink_base": {
+      "engine": "GroupThink",
+      "name": "Group Think",
+      "about": "",
+      "shortAbout": "follow the crowd",
+      "emoji": "",
+      "color": "#66ffcc",
+      "model": {
+        "name": "StableDiffusion",
+        "version": "2.1"
+      },
+      "isHardcore": false,
+      "numRounds": 5,
+      "roundPrompts": {
+        "0": "The best ___",
+        "1": "The worst ___",
+        "2": "The most ___",
+        "3": "The weirdest ___"
       },
       "tier": "Free",
       "hidden": false
