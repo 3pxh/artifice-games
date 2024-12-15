@@ -32,7 +32,6 @@ export type PromptGuessTimer = {
   duration: number,
   stateDurations: Record<PromptGuessState, number>,
 }
-export type PromptGuessGameName = "farsketched" | "gisticle" | "tresmojis"
 export type PromptGuessRoom = {
   definition: GameDefinition,
   stateTransitions: Record<PromptGuessState, PromptGuessState>,

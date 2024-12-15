@@ -67,7 +67,7 @@ const init = (roomOpts: GameCreateData, def: GameDefinition): Room => {
       state: "Lobby",
       player1: roomOpts._creator,
       currentStep: 0,
-      stepsBeforeMITM: 4 + Math.floor(Math.random() * 8)
+      stepsBeforeMITM: 4 + Math.floor(Math.random() * 12)
     },
     players: {
       [roomOpts._creator]: {state: "Lobby", handle: "Player 1"}

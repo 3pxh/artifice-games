@@ -10,9 +10,12 @@ export default function Account() {
     return <div class="Account">
       <span>You're logged in as {authContext.user.email || "anonymous"}<br/>
       <button onClick={authContext.logout}>Log out</button></span><br/>
+      {/* 
+      TODO: Reenable billing
       <Link href="/support">
         Support Artifice / Manage Billing
-      </Link>
+      </Link> 
+      */}
     </div>
   } else {
     // We shouldn't get here...

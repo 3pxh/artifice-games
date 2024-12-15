@@ -21,12 +21,15 @@ export default function TopNav() {
         <Link activeClassName="TopNav--active" href="/join">
           Join
         </Link>
+        {/* 
+        These were for when we wanted long-lived async games
         <Link activeClassName="TopNav--active" href="/games/active">
           Active
         </Link>
         <Link activeClassName="TopNav--active" href="/games/past">
           Past
-        </Link>
+        </Link> 
+        */}
         <Link activeClassName="TopNav--active" href="/account">
           Account
         </Link>

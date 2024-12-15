@@ -14,6 +14,7 @@ import { RenderPromptGuess } from "./games/PromptGuess/Renderer";
 import * as AIJudge from "./games/AIJudge/Renderer";
 import * as Quip from "./games/Quip/Renderer";
 import * as MITM from "./games/MITM/Renderer";
+import * as GroupThink from "./games/GroupThink/Renderer";
 import { PromptGuessRoom, PromptGuessTimer, PromptGuessMessage } from "../functions/src/games/promptGuessBase";
 import SlowBroadcastInput from "./components/SlowBroadcastInput";
 import AvatarPicker from "./components/AvatarPicker";
@@ -144,12 +145,14 @@ export function Room(props: {room: RoomData}) {
     "AIJudge": AIJudge.RenderAIJudge,
     "Quip": Quip.RenderQuip,
     "MITM": MITM.RenderMitm,
+    "GroupThink": GroupThink.RenderGroupThink,
   }
   const subscriptions:Record<EngineName, any> = {
     "PromptGuess": undefined,
     "AIJudge": undefined,
     "Quip": undefined,
     "MITM": MITM.Subscriptions,
+    "GroupThink": GroupThink.Subscriptions,
   }
   const Game = engines[props.room.definition.engine];
   const GameStateSubscriptions = subscriptions[props.room.definition.engine];
