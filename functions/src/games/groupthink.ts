@@ -211,9 +211,6 @@ const Actions = {
       delete room.gameState.roundPrompt;
       room.gameState.generations = {};
       room.gameState.votes = {};
-      const playerOrder: {[k: number]: UserID} = {};
-      shuffle(Object.keys(room.players)).forEach((p, i) => playerOrder[i] = p);
-      room.gameState.playerOrder = room.gameState.playerOrder ?? playerOrder;
       Actions.TransitionState(room, "RoundPrompt");
     } else {
       Actions.TransitionState(room, ROOM_FINISHED_STATE);
