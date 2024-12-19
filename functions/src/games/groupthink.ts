@@ -184,8 +184,9 @@ const Actions = {
       maxVotes = Math.max(maxVotes, acc[v]);
       return acc;
     }, {} as {[k: string]: number});
+    const singleMax = Object.values(reversedVotes).filter(v => v === maxVotes).length === 1;
     const pointValues = Object.entries(reversedVotes).reduce((acc, [uid, v]) => {
-      acc[uid] = v === maxVotes ? 0 : v;
+      acc[uid] = v === (maxVotes && singleMax) ? 0 : v;
       return acc;
     }, {} as {[uid: string]: number});
     // Move current score to previous

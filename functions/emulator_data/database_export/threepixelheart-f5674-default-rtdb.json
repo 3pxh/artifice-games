@@ -466,10 +466,10 @@
       "isHardcore": false,
       "numRounds": 5,
       "roundPrompts": {
-        "0": "The best ___",
-        "1": "The worst ___",
-        "2": "The most ___",
-        "3": "The weirdest ___"
+        "0": "The best...",
+        "1": "The worst...",
+        "2": "The most...",
+        "3": "The weirdest..."
       },
       "tier": "Free",
       "hidden": false

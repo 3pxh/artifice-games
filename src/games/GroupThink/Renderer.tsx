@@ -98,7 +98,7 @@ export function RenderGroupThink(props: {
         key="RoundPrompt"
         onSubmit={(v: string) => {submit("RoundPrompt", v)}}
         onChange={(v: string) => {setScratchpad(props.room.id, {input: v})}}
-        label={roundPromptPrompt.value}
+        label={`Fill in the blank: ${roundPromptPrompt.value}`}
         submittedValue={roundPrompt.value}
         placeholder=""
         buttonText="So original!"
@@ -116,7 +116,7 @@ export function RenderGroupThink(props: {
       <SubmittableInput
         key="ImagePrompt"
         onSubmit={(v: string) => {submit("MakingImages", v)}}
-        label="Make an image!"
+        label="Describe an image!"
         submittedValue={myImage.value ? myImage.value.prompt : undefined}
         placeholder=""
         buttonText="So original!"
@@ -134,7 +134,6 @@ export function RenderGroupThink(props: {
         postSubmitContent={<>Waiting on others</>} />
       </div>
   } else if (renderState.value === "Vote" && generations.value) {
-    // TODO #async: show their vote if they already voted
     return <div style="width: 100%;">
       <p>{roundPromptPrompt.value}: {roundPrompt.value}</p>
       <p>Pick one.</p>
@@ -167,8 +166,9 @@ export function RenderGroupThink(props: {
       maxVotes = Math.max(maxVotes, acc[v]);
       return acc;
     }, {} as {[k: string]: number});
+    const singleMax = Object.values(reversedNumVotes).filter(v => v === maxVotes).length === 1;
     const pointValues = Object.entries(reversedNumVotes).reduce((acc, [uid, v]) => {
-      acc[uid] = v === maxVotes ? -1 : v;
+      acc[uid] = v === (maxVotes && singleMax) ? -1 : v;
       return acc;
     }, {} as {[uid: string]: number});
     return <>
